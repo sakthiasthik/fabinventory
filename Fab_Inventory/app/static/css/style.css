@@ -1,0 +1,146 @@
+/* ===============================
+   GLOBAL
+================================ */
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f5f6fa;
+}
+
+.container {
+    padding: 40px;
+}
+
+
+/* ===============================
+   TOP HEADER
+================================ */
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 20px 40px;
+
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.company-info {
+    font-size: 14px;
+    color: #555;
+}
+
+
+/* ===============================
+   NAVIGATION BAR
+================================ */
+
+.navbar {
+    display: flex;
+    gap: 40px;
+
+    padding: 15px 40px;
+
+    background: white;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    color: #4f46e5;
+}
+
+
+/* ===============================
+   PAGE TITLE
+================================ */
+
+.page-title {
+    margin-bottom: 30px;
+}
+
+
+/* ===============================
+   DASHBOARD STATS
+================================ */
+
+.stats-container {
+    display: flex;
+    gap: 30px;
+}
+
+
+/* ===============================
+   STAT CARDS
+================================ */
+
+.stat-card {
+    background: white;
+    padding: 30px;
+    width: 220px;
+
+    border-radius: 12px;
+    text-align: center;
+
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+    transition: all 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+
+/* ===============================
+   CARD CONTENT
+================================ */
+
+.icon {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 42px;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+}
+
+
+/* ===============================
+   CARD COLORS
+================================ */
+
+.projects {
+    border-top: 5px solid #4f46e5;
+}
+
+.components {
+    border-top: 5px solid #7c3aed;
+}
+
+.lowstock {
+    border-top: 5px solid #f59e0b;
+}
+
+.order {
+    border-top: 5px solid #ef4444;
+}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="page-title">Dashboard</h1>
+
+<div class="stats-container">
+
+    <div class="stat-card projects">
+
+        <div class="icon">📁</div>
+        <div class="stat-number">12</div>
+        <div class="stat-label">Projects</div>
+
+    </div>
+
+    <div class="stat-card components">
+
+        <div class="icon">🔧</div>
+        <div class="stat-number">248</div>
+        <div class="stat-label">Components</div>
+
+    </div>
+
+    <div class="stat-card lowstock">
+
+        <div class="icon">⚠️</div>
+        <div class="stat-number">9</div>
+        <div class="stat-label">Low Stock</div>
+
+    </div>
+
+    <div class="stat-card order">
+
+        <div class="icon">🛒</div>
+        <div class="stat-number">32</div>
+        <div class="stat-label">To Order</div>
+
+    </div>
+
+</div>
+
+{% endblock %}
