@@ -205,3 +205,57 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# -----------------------
+# Python
+# -----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.env/
+.venv/
+
+# -----------------------
+# Environment Variables
+# -----------------------
+.env
+.env.*
+
+# -----------------------
+# Logs
+# -----------------------
+*.log
+
+# -----------------------
+# OS Files
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# IDE
+# -----------------------
+.vscode/
+.idea/
+
+# -----------------------
+# Temporary Uploads
+# -----------------------
+temp/
+uploads/
+
+# -----------------------
+# Session files (if later used)
+# -----------------------
+sessions/
+
+# -----------------------
+# Build artifacts
+# -----------------------
+dist/
+build/
