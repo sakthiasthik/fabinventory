@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Dashboard</h1>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Projects</h5>
+                <h2 class="card-text">{{ projects|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Components</h5>
+                <h2 class="card-text">{{ inventory_summary.total_components }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">To Order</h5>
+                <h2 class="card-text">{{ inventory_summary.total_to_order }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Pending Orders</h5>
+                <h2 class="card-text">{{ order_summary.pending_orders }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Items to Order -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Items to Order</h5>
+            </div>
+            <div class="card-body">
+                {% if items_to_order %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>ID</th><th>Component</th><th>Required</th><th>Stock</th><th>To Order</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items_to_order %}
+                            <tr>
+                                <td><code>{{ item.internal_id }}</code></td>
+                                <td>{{ item.value }} ({{ item.footprint }})</td>
+                                <td>{{ item.total_required }}</td>
+                                <td>{{ item.current_stock }}</td>
+                                <td class="fw-bold text-warning">{{ item.to_order }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('create_order') }}" class="btn btn-primary btn-sm">Create Order</a>
+                {% else %}
+                <p class="text-muted">No items need ordering</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('projects') }}" class="btn btn-outline-primary d-block mb-2">
+                    <i class="bi bi-plus-circle"></i> Add Project
+                </a>
+                <a href="{{ url_for('create_order') }}" class="btn btn-outline-success d-block mb-2">
+                    <i class="bi bi-cart-plus"></i> Create Order
+                </a>
+                <a href="{{ url_for('git_settings') }}" class="btn btn-outline-info d-block">
+                    <i class="bi bi-git"></i> Git Sync
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Projects -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if projects %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Name</th><th>Components</th><th>Total Qty</th><th>Updated</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects[:5] %}
+                            <tr>
+                                <td><strong>{{ project.name }}</strong></td>
+                                <td>{{ project.component_count }}</td>
+                                <td>{{ project.total_quantity }}</td>
+                                <td>{{ project.updated_at[:10] }}</td>
+                                <td>
+                                    <a href="{{ url_for('project_detail', name=project.name) }}" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No projects yet. <a href="{{ url_for('projects') }}">Create one</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

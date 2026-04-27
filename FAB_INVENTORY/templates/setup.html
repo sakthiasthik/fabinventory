@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Setup{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Welcome to FabInventory!</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="company_prefix" class="form-label">Company Prefix (2 letters)</label>
+                        <input type="text" class="form-control" id="company_prefix" name="company_prefix" 
+                               maxlength="2" pattern="[A-Za-z]{2}" required placeholder="e.g., SA">
+                        <div class="form-text">This will be used for internal part numbers (e.g., SA-ELE-00001)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="repo_path" class="form-label">Data Repository Path</label>
+                        <input type="text" class="form-control" id="repo_path" name="repo_path" 
+                               value="./fabinventory_data">
+                        <div class="form-text">Where your inventory data will be stored</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Initialize FabInventory</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
