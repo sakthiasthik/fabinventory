@@ -12,36 +12,44 @@
 <!-- Stats Cards -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Projects</h5>
-                <h2 class="card-text">{{ projects|length }}</h2>
+        <a href="{{ url_for('projects') }}" style="text-decoration: none;">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Projects</h5>
+                    <h2 class="card-text">{{ projects|length }}</h2>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Components</h5>
-                <h2 class="card-text">{{ inventory_summary.total_components }}</h2>
+        <a href="{{ url_for('inventory') }}" style="text-decoration: none;">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Components</h5>
+                    <h2 class="card-text">{{ inventory_summary.total_components }}</h2>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">To Order</h5>
-                <h2 class="card-text">{{ inventory_summary.total_to_order }}</h2>
+        <a href="{{ url_for('create_order') }}" style="text-decoration: none;">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">To Order</h5>
+                    <h2 class="card-text">{{ inventory_summary.total_to_order }}</h2>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title">Pending Orders</h5>
-                <h2 class="card-text">{{ order_summary.pending_orders }}</h2>
+        <a href="{{ url_for('orders') }}" style="text-decoration: none;">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Orders</h5>
+                    <h2 class="card-text">{{ order_summary.pending_orders }}</h2>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 

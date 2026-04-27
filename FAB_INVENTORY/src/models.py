@@ -81,6 +81,14 @@ class Order:
     @property
     def total_items(self):
         return sum(item.qty_ordered for item in self.line_items)
+
+    @property
+    def estimated_cost(self):
+        # Simple placeholder logic
+        return sum(
+            getattr(item, "qty_ordered", 0) * 10  # assume ₹10 per item
+            for item in self.line_items
+        )
     
     def to_dict(self):
         return {

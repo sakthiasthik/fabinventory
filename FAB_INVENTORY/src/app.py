@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 import json
 
@@ -16,7 +16,7 @@ from src.bom_parser import BOMParser
 from src.models import Config
 
 # Create Flask app
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fabinventory-secret-key-change-this')
 app.config['UPLOAD_FOLDER'] = Path('static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -136,34 +136,56 @@ def project_detail(name):
         return redirect(url_for('projects'))
     
     summary = state.project_manager.get_project_summary(name)
-    return render_template('project_detail.html', project=project, summary=summary)
+    return render_template('project_details.html', project=project, summary=summary)
 
 @app.route('/project/create', methods=['POST'])
 def create_project():
     """Create a new project"""
     if not state.init_app():
         return jsonify({'error': 'App not initialized'}), 500
-    
+
     name = request.form.get('name')
     description = request.form.get('description', '')
-    
+
     try:
+        # Step 1: Create project
         project = state.project_manager.create_project(name, description)
+
         if project:
-            # Refresh inventory
+            # Step 2: Handle BOM upload (optional)
+            bom_file = request.files.get('bom_file')
+
+            if bom_file and bom_file.filename != "":
+                filename = secure_filename(bom_file.filename)
+                filepath = app.config['UPLOAD_FOLDER'] / filename
+                bom_file.save(filepath)
+
+                try:
+                    # Use your existing parser system ✅
+                    state.project_manager.update_project_bom(name, str(filepath))
+                except Exception as e:
+                    flash(f'Error parsing BOM: {str(e)}', 'error')
+                finally:
+                    # Clean temp file
+                    if filepath.exists():
+                        filepath.unlink()
+
+            # Step 3: Refresh inventory
             projects = list(state.project_manager.projects.values())
             state.inventory_manager.update_inventory(projects)
-            
-            # Commit to Git
+
+            # Step 4: Git commit
             if state.git_manager:
                 state.git_manager.commit(f"Created project '{name}'")
-            
+
             flash(f'Project "{name}" created successfully!', 'success')
+
         else:
             flash(f'Failed to create project "{name}"', 'error')
+
     except ValueError as e:
         flash(str(e), 'error')
-    
+
     return redirect(url_for('projects'))
 
 @app.route('/project/<name>/upload', methods=['POST'])
@@ -237,6 +259,22 @@ def export_bom(name):
     """Export project BOM as CSV"""
     if not state.init_app():
         return jsonify({'error': 'App not initialized'}), 500
+
+    return "Export not implemented yet"
+
+
+@app.route('/download-bom-template')
+def download_bom_template():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, '..', 'static', 'templates')
+
+    print("Looking in:", template_path)
+
+    return send_from_directory(
+        directory=template_path,
+        path='bom_template.xlsx',
+        as_attachment=True
+    )
     
     import io
     import pandas as pd
@@ -329,18 +367,22 @@ def create_order():
                         'internal_id': internal_id,
                         'qty': qty
                     })
+        print("FORM DATA:", request.form)
         
         if not items:
             flash('No items selected for order', 'error')
             return redirect(url_for('create_order'))
         
         order = state.inventory_manager.create_order(supplier, items, notes)
+        print("ORDER OBJECT:", order)
         if order:
+            print("ORDER DATA:", order.__dict__)
             if state.git_manager:
                 state.git_manager.commit(f"Created order {order.order_id}")
             flash(f'Order {order.order_id} created successfully!', 'success')
             return redirect(url_for('orders'))
         else:
+            print("ORDER CREATION FAILED ❌")
             flash('Failed to create order', 'error')
     
     # GET request - show form
@@ -432,11 +474,10 @@ def api_order_details(order_id):
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
-    return jsonify(order.dict())
+    return jsonify(order.__dict__)
 
 @app.route('/api/orders')
 def api_orders():
-    """API endpoint for orders with filtering"""
     if not state.init_app():
         return jsonify({'error': 'Not initialized'}), 500
     
@@ -450,7 +491,7 @@ def api_orders():
     if status_filter:
         orders = [o for o in orders if o.status == status_filter]
     
-    return jsonify([o.dict() for o in orders])
+    return jsonify([o.__dict__ for o in orders])   # ✅ FIXED
 
 @app.route('/api/inventory')
 def api_inventory():

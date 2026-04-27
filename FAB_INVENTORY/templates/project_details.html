@@ -61,6 +61,9 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
+                <a href="{{ url_for('download_bom_template') }}" class="btn btn-success mb-2">
+                    <i class="bi bi-download"></i> Download BOM Template
+                </a>
                 <form method="POST" action="{{ url_for('upload_bom', name=project.name) }}" enctype="multipart/form-data">
                     <div class="input-group">
                         <input type="file" class="form-control" name="bom_file" accept=".csv,.xlsx,.xls" required>

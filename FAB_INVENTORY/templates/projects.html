@@ -3,11 +3,21 @@
 {% block title %}Projects{% endblock %}
 
 {% block content %}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Projects</h1>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
-        <i class="bi bi-plus-circle"></i> New Project
-    </button>
+
+    <div class="d-flex gap-2">
+        <!-- Download BOM Template -->
+        <a href="{{ url_for('download_bom_template') }}" class="btn btn-outline-success">
+            <i class="bi bi-download"></i> BOM Template
+        </a>
+
+        <!-- New Project -->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+            <i class="bi bi-plus-circle"></i> New Project
+        </button>
+    </div>
 </div>
 
 {% if projects %}
@@ -47,7 +57,7 @@
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('create_project') }}">
+            <form method="POST" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -57,13 +67,14 @@
                         <label for="name" class="form-label">Project Name *</label>
                         <input type="text" class="form-control" id="name" name="name" required>
                     </div>
-                     <div class="mb-3">
-                        <label for="name" class="form-label">Project added *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload BOM (Excel)</label>
+                        <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
+                        <div class="form-text">Optional: Upload BOM now or later</div>
                     </div>
                 </div>
                 <div class="modal-footer">

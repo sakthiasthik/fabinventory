@@ -179,8 +179,29 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         """Save purchase order to disk"""
         try:
             order_file = self.orders_dir / f"{order.order_id}.json"
-            self._save_json(order_file, order.dict())
+            
+            # Convert everything to pure JSON-safe dict
+            order_data = {
+                "order_id": order.order_id,
+                "supplier": order.supplier,
+                "status": order.status,
+                "notes": order.notes,
+                "created_at": order.created_at,
+                "received_at": getattr(order, "received_at", None),
+                "line_items": [
+                    {
+                        "internal_id": li.internal_id,
+                        "qty_ordered": li.qty_ordered,
+                        "unit_price": li.unit_price,
+                        "manufacturer_part_number": li.manufacturer_part_number
+                    }
+                    for li in order.line_items
+                ]
+            }
+
+            self._save_json(order_file, order_data)
             return True
+
         except Exception as e:
             print(f"Error saving order: {e}")
             return False
@@ -189,30 +210,47 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         """Load purchase order from disk"""
         order_file = self.orders_dir / f"{order_id}.json"
         data = self._load_json(order_file)
+        
         if data:
-            from src.models import Order
+            from src.models import Order, OrderLineItem
+            
+            # 🔥 Convert dict → OrderLineItem objects
+            line_items = [
+                OrderLineItem(**li) for li in data.get("line_items", [])
+            ]
+            
+            data["line_items"] = line_items
+            
             return Order(**data)
+        
         return None
     
     def list_orders(self, status: Optional[str] = None):
-        """List all purchase orders, optionally filtered by status"""
-        from src.models import Order
+        from src.models import Order, OrderLineItem
         
         orders = []
         if self.orders_dir.exists():
             for file in self.orders_dir.glob("*.json"):
                 data = self._load_json(file)
                 if data:
+                    # 🔥 FIX: convert dict → OrderLineItem
+                    line_items = [
+                        OrderLineItem(**li) for li in data.get("line_items", [])
+                    ]
+                    data["line_items"] = line_items
+                    
                     order = Order(**data)
+                    
                     if status is None or order.status == status:
                         orders.append(order)
+        
         return sorted(orders, key=lambda x: x.created_at, reverse=True)
     
     # Configuration
     def save_config(self, config) -> bool:
         """Save configuration to disk"""
         try:
-            self._save_json(self.config_file, config.dict())
+            self._save_json(self.config_file, config.__dict__)
             return True
         except Exception as e:
             print(f"Error saving config: {e}")
