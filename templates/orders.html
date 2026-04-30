@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Purchase Orders</h1>
+    <a href="{{ url_for('create_order') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create New Order
+    </a>
+</div>
+
+{% if orders %}
+<div class="row">
+    <!-- Filter tabs -->
+    <ul class="nav nav-tabs mb-3" id="orderTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                All Orders ({{ orders|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                Pending ({{ orders|selectattr('status', 'equalto', 'pending')|list|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
+                Received ({{ orders|selectattr('status', 'equalto', 'received')|list|length }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <div class="tab-content">
+        <!-- All Orders Tab -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Items</th>
+                            <th>Total Quantity</th>
+                            <th>Est. Cost</th>
+                            <th>Created Date</th>
+                            <th>Received Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><code>{{ order.order_id }}</code></td>
+                            <td><strong>{{ order.supplier }}</strong></td>
+                            <td>
+                                {% if order.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif order.status == 'received' %}
+                                <span class="badge bg-success">Received</span>
+                                {% else %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.line_items|length }}</td>
+                            <td>{{ order.total_items }}</td>
+                            <td>
+                                {% if order.estimated_cost %}
+                                ${{ "%.2f"|format(order.estimated_cost) }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at[:10] }}</td>
+                            <td>
+                                {% if order.received_at %}
+                                {{ order.received_at[:10] }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('{{ order.order_id }}')">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                {% if order.status == 'pending' %}
+                                <button class="btn btn-sm btn-success" onclick="receiveOrder('{{ order.order_id }}')">
+                                    <i class="bi bi-check-circle"></i> Receive
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pending Orders Tab -->
+        <div class="tab-pane fade" id="pending" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Supplier</th>
+                            <th>Items</th>
+                            <th>Total Quantity</th>
+                            <th>Est. Cost</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders if order.status == 'pending' %}
+                        <tr>
+                            <td><code>{{ order.order_id }}</code></td>
+                            <td><strong>{{ order.supplier }}</strong></td>
+                            <td>{{ order.line_items|length }}</td>
+                            <td>{{ order.total_items }}</td>
+                            <td>
+                                {% if order.estimated_cost %}
+                                ${{ "%.2f"|format(order.estimated_cost) }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at[:10] }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('{{ order.order_id }}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="receiveOrder('{{ order.order_id }}')">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Received Orders Tab -->
+        <div class="tab-pane fade" id="received" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Supplier</th>
+                            <th>Items</th>
+                            <th>Total Quantity</th>
+                            <th>Est. Cost</th>
+                            <th>Created Date</th>
+                            <th>Received Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders if order.status == 'received' %}
+                        <tr>
+                            <td><code>{{ order.order_id }}</code></td>
+                            <td><strong>{{ order.supplier }}</strong></td>
+                            <td>{{ order.line_items|length }}</td>
+                            <td>{{ order.total_items }}</td>
+                            <td>
+                                {% if order.estimated_cost %}
+                                ${{ "%.2f"|format(order.estimated_cost) }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at[:10] }}</td>
+                            <td>{{ order.received_at[:10] if order.received_at else '—' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('{{ order.order_id }}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// View order details
+function viewOrderDetails(orderId) {
+    fetch(`/api/order/${orderId}`)
+        .then(response => response.json())
+        .then(order => {
+            const modalBody = document.getElementById('orderDetailsContent');
+            modalBody.innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Order ID:</strong> ${order.order_id}<br>
+                        <strong>Supplier:</strong> ${order.supplier}<br>
+                        <strong>Status:</strong> <span class="badge bg-${order.status === 'pending' ? 'warning' : 'success'}">${order.status}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Created:</strong> ${order.created_at}<br>
+                        <strong>Received:</strong> ${order.received_at || 'Not yet'}<br>
+                        <strong>Notes:</strong> ${order.notes || 'None'}
+                    </div>
+                </div>
+                <h6>Line Items:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Internal ID</th>
+                                <th>MPN</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.line_items.map(item => `
+                                <tr>
+                                    <td><code>${item.internal_id}</code></td>
+                                    <td>${item.manufacturer_part_number || '—'}</td>
+                                    <td>${item.qty_ordered}</td>
+                                    <td>${item.unit_price ? '$' + item.unit_price : '—'}</td>
+                                    <td>${item.unit_price ? '$' + (item.unit_price * item.qty_ordered).toFixed(2) : '—'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                <td><strong>${order.estimated_cost ? '$' + order.estimated_cost.toFixed(2) : '—'}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+        });
+}
+
+// Receive order
+function receiveOrder(orderId) {
+    if (confirm('Mark this order as received? Stock quantities will be updated automatically.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/order/${orderId}/receive`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No orders yet. 
+    <a href="{{ url_for('create_order') }}">Create your first purchase order</a>
+</div>
+{% endif %}
+{% endblock %}
