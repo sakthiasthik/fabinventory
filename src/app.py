@@ -463,6 +463,13 @@ def git_settings():
                          commits=commits,
                          remotes=remotes)
 
+@app.context_processor
+def inject_git_status():
+    if state.initialized and state.git_manager:
+        return {'git_status': state.git_manager.get_status()}
+    return {'git_status': None}
+
+
 # API endpoints
 @app.route('/api/order/<order_id>')
 def api_order_details(order_id):
@@ -517,7 +524,7 @@ def main():
     state.init_app()
     
     # Run app
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=9000)
 
 if __name__ == '__main__':
     main()

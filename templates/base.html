@@ -39,17 +39,62 @@
                             <i class="bi bi-cart"></i> Orders
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('order_summary') }}">
-                            <i class="bi bi-graph-up"></i> Summary
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('git_settings') }}">
-                            <i class="bi bi-git"></i> Git
-                        </a>
-                    </li>
                 </ul>
+
+                <!-- Sync status widget -->
+                {% if git_status %}
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <button class="btn btn-sm {% if git_status.is_dirty %}btn-warning{% else %}btn-outline-success{% endif %} dropdown-toggle sync-status-btn"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if git_status.is_dirty %}
+                                <i class="bi bi-exclamation-circle-fill"></i> Unsynced changes
+                            {% else %}
+                                <i class="bi bi-check-circle-fill"></i> Synced
+                            {% endif %}
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3 sync-dropdown" style="min-width: 280px;">
+                            <div class="mb-2">
+                                <small class="text-muted">Branch:</small>
+                                <span class="badge bg-secondary ms-1">{{ git_status.current_branch or 'main' }}</span>
+                                {% if git_status.has_remotes %}
+                                <span class="badge bg-success ms-1"><i class="bi bi-cloud"></i> Remote set</span>
+                                {% else %}
+                                <span class="badge bg-secondary ms-1">No remote</span>
+                                {% endif %}
+                            </div>
+                            <hr class="my-2">
+                            <form method="POST" action="{{ url_for('git_settings') }}" class="mb-0">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" name="message"
+                                           placeholder="Commit message…">
+                                </div>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <button type="submit" name="action" value="commit"
+                                            class="btn btn-sm btn-primary flex-fill">
+                                        <i class="bi bi-check-circle"></i> Commit
+                                    </button>
+                                    <button type="submit" name="action" value="push"
+                                            class="btn btn-sm btn-success flex-fill"
+                                            {% if not git_status.has_remotes %}disabled{% endif %}>
+                                        <i class="bi bi-cloud-upload"></i> Push
+                                    </button>
+                                    <button type="submit" name="action" value="pull"
+                                            class="btn btn-sm btn-info flex-fill"
+                                            {% if not git_status.has_remotes %}disabled{% endif %}>
+                                        <i class="bi bi-cloud-download"></i> Pull
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="mt-2 text-end">
+                                <a href="{{ url_for('git_settings') }}" class="text-muted" style="font-size:0.75rem;">
+                                    Full git settings →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
