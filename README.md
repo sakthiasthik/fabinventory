@@ -16,13 +16,39 @@ FabInventory helps hardware teams manage multiple project BOMs, aggregate master
 
 ## Installation
 
+### Prerequisites
+- Python 3.8 or higher
+- pip (Python package manager)
+- git
+
+### Setup Steps
+
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/yourusername/fabinventory.git
 cd fabinventory
 
-# Install dependencies
+# 2. Create a virtual environment
+python3 -m venv venv
+
+# 3. Activate the virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+
+# On Windows:
+venv\Scripts\activate
+
+# 4. Install dependencies
 pip install -r requirements.txt
 
-# Install the package
+# 5. Install the package in development mode
 pip install -e .
+
+# 6. Copy the environment file and configure if needed
+cp .env.example .env
+
+# 7. Run the application
+python run.py
+```
+
+The application will be available at `http://localhost:5000`
