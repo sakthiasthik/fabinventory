@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Purchase Orders</h1>
+    <a href="{{ url_for('create_order') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Order
+    </a>
+</div>
+
+{% if orders %}
+
+<!-- Filter pills -->
+<div class="d-flex gap-2 mb-3">
+    <button class="btn btn-sm btn-dark filter-btn active" data-filter="all">
+        All <span class="badge bg-secondary ms-1">{{ orders|length }}</span>
+    </button>
+    <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="pending">
+        Pending <span class="badge bg-warning text-dark ms-1">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</span>
+    </button>
+    <button class="btn btn-sm btn-outline-success filter-btn" data-filter="received">
+        Received <span class="badge bg-success ms-1">{{ orders|selectattr('status', 'equalto', 'received')|list|length }}</span>
+    </button>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover" id="ordersTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Order ID</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th class="text-center">Line Items</th>
+                <th class="text-center">Total Qty</th>
+                <th>Created</th>
+                <th>Received</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr data-status="{{ order.status }}">
+                <td><code>{{ order.order_id }}</code></td>
+                <td><strong>{{ order.supplier }}</strong></td>
+                <td>
+                    {% if order.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif order.status == 'received' %}
+                    <span class="badge bg-success">Received</span>
+                    {% else %}
+                    <span class="badge bg-danger">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ order.line_items|length }}</td>
+                <td class="text-center">{{ order.total_items }}</td>
+                <td>{{ order.created_at[:10] }}</td>
+                <td>{{ order.received_at[:10] if order.received_at else '—' }}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="viewOrderDetails('{{ order.order_id }}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    {% if order.status == 'pending' %}
+                    <button class="btn btn-sm btn-success" onclick="confirmReceiveOrder('{{ order.order_id }}', {{ order.line_items|length }}, {{ order.total_items }})">
+                        <i class="bi bi-check-circle"></i> Receive
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receive Order Confirmation Modal -->
+<div class="modal fade" id="receiveOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Mark <strong id="receiveOrderId"></strong> as received?</p>
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    This will add <strong id="receiveOrderQty"></strong> units across
+                    <strong id="receiveOrderLines"></strong> components to your stock.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="receiveOrderForm" method="POST">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Confirm Receipt
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No orders yet.
+    <a href="{{ url_for('create_order') }}">Create your first purchase order</a>
+</div>
+{% endif %}
+
+<script>
+// Filter pills
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active', 'btn-dark', 'btn-warning', 'btn-success');
+            b.classList.add('btn-outline-' + (b.dataset.filter === 'pending' ? 'warning' : b.dataset.filter === 'received' ? 'success' : 'secondary'));
+        });
+        const filter = this.dataset.filter;
+        this.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
+        this.classList.add('active', filter === 'pending' ? 'btn-warning' : filter === 'received' ? 'btn-success' : 'btn-dark');
+
+        document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+        });
+    });
+});
+
+function viewOrderDetails(orderId) {
+    fetch(`/api/order/${orderId}`)
+        .then(r => r.json())
+        .then(order => {
+            const statusColor = order.status === 'pending' ? 'warning' : 'success';
+            document.getElementById('orderDetailsContent').innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Order ID:</strong> <code>${order.order_id}</code><br>
+                        <strong>Supplier:</strong> ${order.supplier}<br>
+                        <strong>Status:</strong> <span class="badge bg-${statusColor} ${order.status === 'pending' ? 'text-dark' : ''}">${order.status}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Created:</strong> ${order.created_at ? order.created_at.slice(0,10) : '—'}<br>
+                        <strong>Received:</strong> ${order.received_at ? order.received_at.slice(0,10) : 'Not yet'}<br>
+                        <strong>Notes:</strong> ${order.notes || '—'}
+                    </div>
+                </div>
+                <h6>Line Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Internal ID</th><th>MPN</th><th>Qty</th></tr></thead>
+                        <tbody>
+                            ${order.line_items.map(item => `
+                                <tr>
+                                    <td><code>${item.internal_id}</code></td>
+                                    <td>${item.manufacturer_part_number || '—'}</td>
+                                    <td>${item.qty_ordered}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+        });
+}
+
+function confirmReceiveOrder(orderId, lineItems, totalQty) {
+    document.getElementById('receiveOrderId').textContent = orderId;
+    document.getElementById('receiveOrderLines').textContent = lineItems;
+    document.getElementById('receiveOrderQty').textContent = totalQty;
+    document.getElementById('receiveOrderForm').action = `/order/${orderId}/receive`;
+    new bootstrap.Modal(document.getElementById('receiveOrderModal')).show();
+}
+</script>
+{% endblock %}

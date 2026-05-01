@@ -78,3 +78,24 @@ body {
     height: 1rem;
     border-width: 0.2em;
 }
+
+/* Sync status widget */
+.sync-status-btn {
+    font-size: 0.8rem;
+}
+
+.sync-dropdown {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Danger zone card */
+.card.border-danger .card-header {
+    border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* MPN inline list */
+.mpn-list {
+    max-width: 200px;
+    white-space: normal;
+    line-height: 1.6;
+}
