@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Master Inventory</h1>
+    <input type="text" id="inventorySearch" class="form-control w-auto" placeholder="Search components…" style="min-width:220px;">
+</div>
+
+{% if inventory %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="inventoryTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Value</th>
+                <th>Footprint</th>
+                <th>MPNs</th>
+                <th>Required</th>
+                <th>Stock</th>
+                <th>To Order</th>
+                <th>Projects</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td><code>{{ item.internal_id }}</code></td>
+                <td><strong>{{ item.value }}</strong></td>
+                <td>{{ item.footprint }}</td>
+                <td>
+                    {% if item.associated_mpns %}
+                    <div class="mpn-list">
+                        {% for mpn in item.associated_mpns %}
+                            {% if mpn %}<code class="text-muted me-1" style="font-size:0.8em;">{{ mpn }}</code>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.total_required }}</td>
+                <td>
+                    <span class="stock-value" data-id="{{ item.internal_id }}">{{ item.current_stock }}</span>
+                    <button class="btn btn-sm btn-outline-primary edit-stock"
+                            data-id="{{ item.internal_id }}"
+                            data-stock="{{ item.current_stock }}"
+                            data-value="{{ item.value }}"
+                            data-footprint="{{ item.footprint }}"
+                            data-required="{{ item.total_required }}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </td>
+                <td class="{% if item.to_order > 0 %}text-warning fw-bold{% endif %}">{{ item.to_order }}</td>
+                <td><small class="text-muted">{{ item.used_in_projects|join(', ') }}</small></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No components in inventory. Upload BOMs to projects to build inventory.
+</div>
+{% endif %}
+
+<!-- Edit Stock Modal -->
+<div class="modal fade" id="editStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('update_stock') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <div class="fw-bold" id="modalComponentName"></div>
+                        <div class="text-muted" id="modalComponentFootprint" style="font-size:0.9em;"></div>
+                        <div class="mt-1">
+                            <small class="text-muted">Required across all projects:</small>
+                            <strong id="modalComponentRequired" class="ms-1"></strong>
+                        </div>
+                    </div>
+                    <input type="hidden" name="internal_id" id="editStockId">
+                    <div class="mb-3">
+                        <label for="stock" class="form-label">Current Stock</label>
+                        <input type="number" class="form-control" id="stock" name="stock" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.edit-stock').forEach(button => {
+        button.addEventListener('click', function() {
+            document.getElementById('editStockId').value = this.dataset.id;
+            document.getElementById('stock').value = this.dataset.stock;
+            document.getElementById('modalComponentName').textContent = this.dataset.value;
+            document.getElementById('modalComponentFootprint').textContent = this.dataset.footprint;
+            document.getElementById('modalComponentRequired').textContent = this.dataset.required;
+            new bootstrap.Modal(document.getElementById('editStockModal')).show();
+        });
+    });
+
+    document.getElementById('inventorySearch').addEventListener('keyup', function() {
+        const term = this.value.toLowerCase();
+        document.querySelectorAll('#inventoryTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}
