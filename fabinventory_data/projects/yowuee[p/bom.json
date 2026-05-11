@@ -1,0 +1,15 @@
+[
+  {
+    "si_no": 1,
+    "reference": "R1",
+    "value": "10k",
+    "footprint": "603",
+    "manufacturer_part_number": "RC0603FR-0710KL",
+    "manufacturer_name": "Yageo",
+    "manufacturer_part_number_lcsc": "",
+    "manufacturer_name_lcsc": "",
+    "lcsc_sku": "",
+    "qty": 10,
+    "dnp": false
+  }
+]
