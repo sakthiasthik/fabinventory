@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>FabInventory Login</title>
+
+```
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to right, #000000, #3a3a3a);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        width: 320px;
+        text-align: center;
+        box-shadow: 0px 0px 15px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+        color: white;
+        position: absolute;
+        top: 30px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .github-btn {
+        width: 100%;
+        padding: 10px;
+        background: #24292e;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    input {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 10px;
+        background: black;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .divider {
+        margin: 15px 0;
+        font-size: 14px;
+        color: #777;
+    }
+    .password-container{
+    position: relative;
+    width: 100%;
+}
+
+.password-container input{
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.toggle-password{
+    position: absolute;
+    right: 18px;
+    top: 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1>Welcome to FabInventory</h1>
+
+<div class="container">
+
+<!-- GitHub Login -->
+<a href="/github">
+    <button class="github-btn">Login with GitHub</button>
+</a>
+
+<div class="divider">or</div>
+
+<a href="/user-details">
+    <button class="login-btn">
+        Continue Without Login
+    </button>
+</a>
+</div>
+</body>
+</html>
