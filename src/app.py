@@ -1,11 +1,17 @@
 """FabInventory Web Application"""
 
 import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 import json
-
+from flask import session
+from flask_dance.contrib.github import make_github_blueprint, github
+# from flask_dance.contrib.google import make_google_blueprint, google
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import or_
 # Fix imports - use correct class names
 from src.file_manager import FileManager
 from src.git_manager import GitManager
@@ -15,9 +21,23 @@ from src.aggregator import Aggregator
 from src.bom_parser import BOMParser
 from src.models import Config
 
+
+
 # Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fabinventory-secret-key-change-this')
+# GitHub OAuth Setup
+github_bp = make_github_blueprint(
+    client_id="Ov23li8EiKqV3wTp2Z6C",
+    client_secret="244de9e124523f233d9d4e58885fe8e65135c6ac",
+)
+
+app.register_blueprint(github_bp, url_prefix="/login")
+app.secret_key = "super-secret-key-123"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+app.config['SESSION_TYPE'] = 'filesystem'
 app.config['UPLOAD_FOLDER'] = Path('static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
@@ -26,6 +46,16 @@ app.template_folder = template_dir
 app.config['UPLOAD_FOLDER'].mkdir(parents=True, exist_ok=True)
 
 # Global application state
+
+class User(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    username = db.Column(db.String(100), unique=True, nullable=False)
+
+    email = db.Column(db.String(150), unique=True, nullable=False)
+
+    password = db.Column(db.String(200), nullable=False)
 class AppState:
     def __init__(self):
         self.repo_path = os.environ.get('REPO_PATH', './fabinventory_data')
@@ -67,11 +97,52 @@ class AppState:
 state = AppState()
 
 # Routes
+
+@app.route('/login-page')
+def login_page():
+    return render_template("login.html")
+
+@app.route("/github")
+def github_login():
+
+    if not github.authorized:
+        return redirect(url_for("github.login"))
+
+    response = github.get("/user")
+
+    if not response.ok:
+        return "Failed to fetch GitHub user"
+
+    user_info = response.json()
+
+    # Store GitHub username in session
+    session["user"] = user_info["login"]
+
+    return redirect(url_for("user_details"))
+
+
+@app.route('/user-details', methods=['GET', 'POST'])
+def user_details():
+
+    if request.method == 'POST':
+
+        company = request.form.get("company")
+        person = request.form.get("person")
+
+        session["company"] = company
+        session["user"] = person
+
+        return redirect("/dashboard")
+
+    return render_template("user_details.html")
+
+
 @app.route('/')
 def index():
-    """Home page - redirect to dashboard or setup"""
-    if not state.init_app():
-        return redirect(url_for('setup'))
+
+    if not session.get("user"):
+        return redirect(url_for("login_page"))
+
     return redirect(url_for('dashboard'))
 
 @app.route('/setup', methods=['GET', 'POST'])
@@ -97,24 +168,36 @@ def setup():
 
 @app.route('/dashboard')
 def dashboard():
-    """Main dashboard with overview"""
-    if not state.init_app():
-        return redirect(url_for('setup'))
+    if not session.get("user"):
+        return redirect(url_for("login_page"))
+
+    # ❌ COMMENT THIS LINE (IMPORTANT)
+    # if not state.init_app():
+    #     return redirect(url_for('setup'))
     
-    # Get statistics
-    projects = state.project_manager.list_projects()
-    inventory_summary = state.inventory_manager.get_inventory_summary()
-    order_summary = state.inventory_manager.get_order_summary()
-    
-    # Get recent items to order
-    items_to_order = state.inventory_manager.get_items_to_order()[:10]
-    
+    projects = []
+    inventory_summary = {}
+    order_summary = {}
+    items_to_order = []
+
+    try:
+        state.init_app()
+        projects = state.project_manager.list_projects()
+        inventory_summary = state.inventory_manager.get_inventory_summary()
+        order_summary = state.inventory_manager.get_order_summary()
+        items_to_order = state.inventory_manager.get_items_to_order()[:10]
+    except:
+        print("INIT ISSUE - ignoring for now")
+
     return render_template('dashboard.html',
                          projects=projects,
                          inventory_summary=inventory_summary,
                          order_summary=order_summary,
                          items_to_order=items_to_order)
-
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for("login_page"))
 @app.route('/projects')
 def projects():
     """List all projects"""
@@ -517,7 +600,8 @@ def api_projects():
     
     projects = state.project_manager.list_projects()
     return jsonify(projects)
-
+with app.app_context():
+    db.create_all()
 def main():
     """Run the Flask application"""
     # Ensure initialization on startup
@@ -527,4 +611,8 @@ def main():
     app.run(debug=True, host='0.0.0.0', port=9000)
 
 if __name__ == '__main__':
+
+    with app.app_context():
+        db.create_all()
+
     main()
