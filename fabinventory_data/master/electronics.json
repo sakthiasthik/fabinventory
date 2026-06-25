@@ -1,6 +1,518 @@
 [
   {
-    "internal_id": "SA-ELE-00018",
+    "internal_id": "RD-ELE-00148",
+    "value": "Antenna_Shield",
+    "footprint": "ANT:CONUFL001-SMD-T",
+    "total_required": 9,
+    "current_stock": 0,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "CONUFL001-SMD-T"
+    ],
+    "last_updated": "2026-06-25T19:03:54.798991"
+  },
+  {
+    "internal_id": "RD-ELE-00149",
+    "value": "ADCH002/MAN0826C230",
+    "footprint": "ANT:ADCH002",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "ADCH002 / MAN0826C230"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799017"
+  },
+  {
+    "internal_id": "RD-ELE-00150",
+    "value": "YPGS001AA",
+    "footprint": "ANT:YPGS001AA",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "YPGS001AA"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799030"
+  },
+  {
+    "internal_id": "RD-ELE-00151",
+    "value": "SKRKAGE020",
+    "footprint": "Button_Switch_SMD:SW_Push_SPST_NO_Alps_SKRK",
+    "total_required": 9,
+    "current_stock": 3,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "SKRKAGE020"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799037"
+  },
+  {
+    "internal_id": "RD-ELE-00152",
+    "value": "22uf/25V",
+    "footprint": "Capacitor_SMD:C_1206_3216Metric",
+    "total_required": 24,
+    "current_stock": 8,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "CL31A226KAHNNNE"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799044"
+  },
+  {
+    "internal_id": "RD-ELE-00153",
+    "value": "100nf",
+    "footprint": "Capacitor_SMD:C_0603_1608Metric",
+    "total_required": 18,
+    "current_stock": 6,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MC0603B104K250CT"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799050"
+  },
+  {
+    "internal_id": "RD-ELE-00154",
+    "value": "10uf/25V",
+    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-6032-28_Kemet-C",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "TAJC106K025RNJ"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799057"
+  },
+  {
+    "internal_id": "RD-ELE-00155",
+    "value": "100uf/6V3",
+    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-3528-21_Kemet-B",
+    "total_required": 6,
+    "current_stock": 2,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "TC212B107K006B"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799062"
+  },
+  {
+    "internal_id": "RD-ELE-00156",
+    "value": "10uf",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "total_required": 6,
+    "current_stock": 2,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      " CL21A106KAYNNNG"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799068"
+  },
+  {
+    "internal_id": "RD-ELE-00157",
+    "value": "100pf",
+    "footprint": "Capacitor_SMD:C_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MC0603N101J500CT"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799074"
+  },
+  {
+    "internal_id": "RD-ELE-00158",
+    "value": "BLUE_LED",
+    "footprint": "LED_SMD:LED_0805_2012Metric",
+    "total_required": 6,
+    "current_stock": 2,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MP000442"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799080"
+  },
+  {
+    "internal_id": "RD-ELE-00159",
+    "value": "RED_LED",
+    "footprint": "LED_SMD:LED_0805_2012Metric",
+    "total_required": 15,
+    "current_stock": 5,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MP006842"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799085"
+  },
+  {
+    "internal_id": "RD-ELE-00160",
+    "value": "USB4105 - Type C USB 2.0 Connector",
+    "footprint": "USB:USB_C_Receptacle_Palconn_UTC16-G",
+    "total_required": 6,
+    "current_stock": 2,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "USB4105-15-A-120"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799095"
+  },
+  {
+    "internal_id": "RD-ELE-00161",
+    "value": "EC200U",
+    "footprint": "wireless_network:EG-21",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "EC200U"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799101"
+  },
+  {
+    "internal_id": "RD-ELE-00162",
+    "value": "ESP32-C3-WROOM-02",
+    "footprint": "Espressif:ESP32-C3-WROOM-02",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "ESP-C3-WROOM-02"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799106"
+  },
+  {
+    "internal_id": "RD-ELE-00163",
+    "value": "4R7uH",
+    "footprint": "Inductor:L_APV_APH0650_6045",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "ASPI-0630LR-4R7M"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799112"
+  },
+  {
+    "internal_id": "RD-ELE-00164",
+    "value": "47nH",
+    "footprint": "Inductor_SMD:L_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "LQG18HN47NJ00D"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799118"
+  },
+  {
+    "internal_id": "RD-ELE-00165",
+    "value": "BC547",
+    "footprint": "Package_TO_SOT_SMD:SOT-23",
+    "total_required": 9,
+    "current_stock": 3,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "BC547"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799123"
+  },
+  {
+    "internal_id": "RD-ELE-00166",
+    "value": "SI2302",
+    "footprint": "Package_TO_SOT_SMD:SOT-23",
+    "total_required": 6,
+    "current_stock": 2,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "SI2302"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799129"
+  },
+  {
+    "internal_id": "RD-ELE-00167",
+    "value": "SI2301",
+    "footprint": "Package_TO_SOT_SMD:SOT-23-3",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "SI2301"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799135"
+  },
+  {
+    "internal_id": "RD-ELE-00168",
+    "value": "DMG6601LVT-7",
+    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "DMG6601LVT-7"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799142"
+  },
+  {
+    "internal_id": "RD-ELE-00169",
+    "value": "5K1",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 24,
+    "current_stock": 8,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X5101FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799151"
+  },
+  {
+    "internal_id": "RD-ELE-00170",
+    "value": "0R",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 39,
+    "current_stock": 13,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X000 PTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799157"
+  },
+  {
+    "internal_id": "RD-ELE-00171",
+    "value": "10K",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 18,
+    "current_stock": 6,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X1002FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799163"
+  },
+  {
+    "internal_id": "RD-ELE-00172",
+    "value": "56K",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X5602FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799169"
+  },
+  {
+    "internal_id": "RD-ELE-00173",
+    "value": "4K7",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 9,
+    "current_stock": 3,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X4701FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799175"
+  },
+  {
+    "internal_id": "RD-ELE-00174",
+    "value": "1K",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 9,
+    "current_stock": 3,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X1001FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799181"
+  },
+  {
+    "internal_id": "RD-ELE-00175",
+    "value": "10R",
+    "footprint": "Resistor_SMD:R_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 6,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "MCWR06X10R0FTL"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799189"
+  },
+  {
+    "internal_id": "RD-ELE-00176",
+    "value": "SY81103",
+    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "SY81103ABT"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799195"
+  },
+  {
+    "internal_id": "RD-ELE-00177",
+    "value": "NXB0104BQ-Q100X",
+    "footprint": "Nexperia:NXB0104BQQ100X",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "NXB0104BQ-Q100X"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799200"
+  },
+  {
+    "internal_id": "RD-ELE-00178",
+    "value": "6-pin_Nano_SIM_CARD_holder",
+    "footprint": "SIM Card Holder:KLS1-SIM-076_NANO_Push",
+    "total_required": 3,
+    "current_stock": 1,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "KLS1-SIM-076"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799206"
+  },
+  {
+    "internal_id": "RD-ELE-00179",
+    "value": "AMS1117-3.3",
+    "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+    "total_required": 3,
+    "current_stock": 6,
+    "used_in_projects": [
+      "ble",
+      "DRONE1",
+      "teyu"
+    ],
+    "associated_mpns": [
+      "AMS1117-3.3"
+    ],
+    "last_updated": "2026-06-25T19:03:54.799211"
+  },
+  {
+    "internal_id": "RD-ELE-00180",
     "value": "10k",
     "footprint": "603",
     "total_required": 10,
@@ -11,486 +523,6 @@
     "associated_mpns": [
       "RC0603FR-0710KL"
     ],
-    "last_updated": "2026-05-11T16:54:24.975426"
-  },
-  {
-    "internal_id": "SA-ELE-00019",
-    "value": "Antenna_Shield",
-    "footprint": "ANT:CONUFL001-SMD-T",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "CONUFL001-SMD-T"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975242"
-  },
-  {
-    "internal_id": "SA-ELE-00020",
-    "value": "ADCH002/MAN0826C230",
-    "footprint": "ANT:ADCH002",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ADCH002 / MAN0826C230"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975275"
-  },
-  {
-    "internal_id": "SA-ELE-00021",
-    "value": "YPGS001AA",
-    "footprint": "ANT:YPGS001AA",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "YPGS001AA"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975280"
-  },
-  {
-    "internal_id": "SA-ELE-00022",
-    "value": "SKRKAGE020",
-    "footprint": "Button_Switch_SMD:SW_Push_SPST_NO_Alps_SKRK",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SKRKAGE020"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975287"
-  },
-  {
-    "internal_id": "SA-ELE-00023",
-    "value": "22uf/25V",
-    "footprint": "Capacitor_SMD:C_1206_3216Metric",
-    "total_required": 16,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "CL31A226KAHNNNE"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975293"
-  },
-  {
-    "internal_id": "SA-ELE-00024",
-    "value": "100nf",
-    "footprint": "Capacitor_SMD:C_0603_1608Metric",
-    "total_required": 12,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MC0603B104K250CT"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975299"
-  },
-  {
-    "internal_id": "SA-ELE-00025",
-    "value": "10uf/25V",
-    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-6032-28_Kemet-C",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "TAJC106K025RNJ"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975305"
-  },
-  {
-    "internal_id": "SA-ELE-00026",
-    "value": "100uf/6V3",
-    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-3528-21_Kemet-B",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "TC212B107K006B"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975311"
-  },
-  {
-    "internal_id": "SA-ELE-00027",
-    "value": "10uf",
-    "footprint": "Capacitor_SMD:C_0805_2012Metric",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      " CL21A106KAYNNNG"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975317"
-  },
-  {
-    "internal_id": "SA-ELE-00028",
-    "value": "100pf",
-    "footprint": "Capacitor_SMD:C_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MC0603N101J500CT"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975325"
-  },
-  {
-    "internal_id": "SA-ELE-00029",
-    "value": "BLUE_LED",
-    "footprint": "LED_SMD:LED_0805_2012Metric",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MP000442"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975329"
-  },
-  {
-    "internal_id": "SA-ELE-00030",
-    "value": "RED_LED",
-    "footprint": "LED_SMD:LED_0805_2012Metric",
-    "total_required": 10,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MP006842"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975333"
-  },
-  {
-    "internal_id": "SA-ELE-00031",
-    "value": "USB4105 - Type C USB 2.0 Connector",
-    "footprint": "USB:USB_C_Receptacle_Palconn_UTC16-G",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "USB4105-15-A-120"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975336"
-  },
-  {
-    "internal_id": "SA-ELE-00032",
-    "value": "EC200U",
-    "footprint": "wireless_network:EG-21",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "EC200U"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975340"
-  },
-  {
-    "internal_id": "SA-ELE-00033",
-    "value": "ESP32-C3-WROOM-02",
-    "footprint": "Espressif:ESP32-C3-WROOM-02",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ESP-C3-WROOM-02"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975343"
-  },
-  {
-    "internal_id": "SA-ELE-00034",
-    "value": "4R7uH",
-    "footprint": "Inductor:L_APV_APH0650_6045",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ASPI-0630LR-4R7M"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975347"
-  },
-  {
-    "internal_id": "SA-ELE-00035",
-    "value": "47nH",
-    "footprint": "Inductor_SMD:L_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "LQG18HN47NJ00D"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975350"
-  },
-  {
-    "internal_id": "SA-ELE-00036",
-    "value": "BC547",
-    "footprint": "Package_TO_SOT_SMD:SOT-23",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "BC547"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975353"
-  },
-  {
-    "internal_id": "SA-ELE-00037",
-    "value": "SI2302",
-    "footprint": "Package_TO_SOT_SMD:SOT-23",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SI2302"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975357"
-  },
-  {
-    "internal_id": "SA-ELE-00038",
-    "value": "SI2301",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-3",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SI2301"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975361"
-  },
-  {
-    "internal_id": "SA-ELE-00039",
-    "value": "DMG6601LVT-7",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "DMG6601LVT-7"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975366"
-  },
-  {
-    "internal_id": "SA-ELE-00040",
-    "value": "5K1",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 16,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X5101FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975372"
-  },
-  {
-    "internal_id": "SA-ELE-00041",
-    "value": "0R",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 26,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X000 PTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975379"
-  },
-  {
-    "internal_id": "SA-ELE-00042",
-    "value": "10K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 12,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X1002FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975384"
-  },
-  {
-    "internal_id": "SA-ELE-00043",
-    "value": "56K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X5602FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975391"
-  },
-  {
-    "internal_id": "SA-ELE-00044",
-    "value": "4K7",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X4701FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975398"
-  },
-  {
-    "internal_id": "SA-ELE-00045",
-    "value": "1K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X1001FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975404"
-  },
-  {
-    "internal_id": "SA-ELE-00046",
-    "value": "10R",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X10R0FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975408"
-  },
-  {
-    "internal_id": "SA-ELE-00047",
-    "value": "SY81103",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SY81103ABT"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975412"
-  },
-  {
-    "internal_id": "SA-ELE-00048",
-    "value": "NXB0104BQ-Q100X",
-    "footprint": "Nexperia:NXB0104BQQ100X",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "NXB0104BQ-Q100X"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975415"
-  },
-  {
-    "internal_id": "SA-ELE-00049",
-    "value": "6-pin_Nano_SIM_CARD_holder",
-    "footprint": "SIM Card Holder:KLS1-SIM-076_NANO_Push",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "KLS1-SIM-076"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975418"
-  },
-  {
-    "internal_id": "SA-ELE-00050",
-    "value": "AMS1117-3.3",
-    "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "AMS1117-3.3"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975422"
+    "last_updated": "2026-06-25T19:03:54.799306"
   }
 ]

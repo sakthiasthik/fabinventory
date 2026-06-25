@@ -5,6 +5,107 @@
 {% block content %}
 <h1 class="mb-4">Create Purchase Order</h1>
 
+<!-- Project Selection Card -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-folder2-open"></i> Select Project to View Components
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-5">
+                <label for="projectSelect" class="form-label fw-bold">Choose Project:</label>
+                <select id="projectSelect" class="form-select" onchange="loadProjectComponents()">
+                    <option value="">-- Select a project --</option>
+                    {% for project in projects %}
+                    <option value="{{ project.name }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-7">
+                <label class="form-label fw-bold">Quick Actions:</label>
+                <div>
+                    <button class="btn btn-sm btn-success me-2" onclick="orderAllFromProject()">
+                        <i class="bi bi-cart-plus"></i> Order All Components
+                    </button>
+                    <button class="btn btn-sm btn-info me-2" onclick="exportProjectComponents()">
+                        <i class="bi bi-download"></i> Export to CSV
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="showAddComponentModal()">
+                        <i class="bi bi-plus-circle"></i> Add Custom Component
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project Components Display -->
+<div id="projectComponentsPanel" style="display: none;">
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-list-check"></i> Components for: <span id="selectedProjectName"></span>
+            </h5>
+            <span class="badge bg-light text-dark" id="componentCount"></span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="projectComponentsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllComponents" onchange="toggleAllComponents()">
+                            </th>
+                            <th>Component</th>
+                            <th>Footprint</th>
+                            <th>MPN</th>
+                            <th>Required Qty</th>
+                            <th>In Stock</th>
+                            <th>To Order</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectComponentsBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">Select a project to view components</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Additional Components Section -->
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong><i class="bi bi-plus-circle"></i> Additional Components for this Order</strong>
+                <button class="btn btn-sm btn-outline-primary" onclick="showAddComponentModal()">
+                    <i class="bi bi-plus"></i> Add Component
+                </button>
+            </div>
+            <div id="additionalComponentsList" class="mt-2">
+                <p class="text-muted small mb-0">No additional components added yet. Click "Add Component" to add custom parts.</p>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-light border-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Selected:</strong> <span id="selectedCount">0</span> components
+                    <span class="mx-2">|</span>
+                    <strong>Additional:</strong> <span id="additionalCount">0</span> components
+                    <span class="mx-2">|</span>
+                    <strong>Total Quantity:</strong> <span id="totalSelectedQty">0</span> units
+                </div>
+                <button class="btn btn-primary" onclick="orderSelectedComponents()" id="orderSelectedBtn" disabled>
+                    <i class="bi bi-cart-check"></i> Create Order (Selected + Additional)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if items_to_order %}
 <form method="POST" action="{{ url_for('create_order') }}">
     <div class="card mb-3">
@@ -72,26 +173,479 @@
     </div>
 </form>
 
+<!-- Add Custom Component Modal -->
+<div class="modal fade" id="addComponentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add Custom Component</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addComponentForm">
+                    <div class="mb-3">
+                        <label for="compValue" class="form-label">Component Value *</label>
+                        <input type="text" class="form-control" id="compValue" required placeholder="e.g., 10k, 100nF, ATMEGA328P">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compFootprint" class="form-label">Footprint / Package</label>
+                        <input type="text" class="form-control" id="compFootprint" placeholder="e.g., 0603, SOIC-8, DIP-40">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compMpn" class="form-label">Manufacturer Part Number (MPN)</label>
+                        <input type="text" class="form-control" id="compMpn" placeholder="e.g., ERJ-3EKF1002V">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compManufacturer" class="form-label">Manufacturer</label>
+                        <input type="text" class="form-control" id="compManufacturer" placeholder="e.g., Panasonic, Texas Instruments">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compQuantity" class="form-label">Quantity to Order *</label>
+                        <input type="number" class="form-control" id="compQuantity" required min="1" value="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compReference" class="form-label">Reference Designator (Optional)</label>
+                        <input type="text" class="form-control" id="compReference" placeholder="e.g., R1, C2, U1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="compNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="compNotes" rows="2" placeholder="Any special instructions"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addCustomComponent()">Add to Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Enable/disable quantity inputs based on checkbox
-    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const id = this.getAttribute('data-id');
-            const qtyInput = document.getElementById(`qty_${id}`);
-            qtyInput.disabled = !this.checked;
-            if (this.checked) {
-                qtyInput.value = 1;
+    // Store project components data
+    let currentProjectComponents = [];
+    let selectedComponents = new Set();
+    let additionalComponents = [];  // Store custom components
+    let nextAdditionalId = 1;
+
+    // Load project components via API
+    function loadProjectComponents() {
+        const projectName = document.getElementById('projectSelect').value;
+        if (!projectName) {
+            document.getElementById('projectComponentsPanel').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('selectedProjectName').textContent = projectName;
+        document.getElementById('projectComponentsPanel').style.display = 'block';
+        
+        // Fetch project components from API
+        fetch(`/api/project/${encodeURIComponent(projectName)}/components`)
+            .then(response => response.json())
+            .then(data => {
+                currentProjectComponents = data.components;
+                displayProjectComponents(data.components);
+                document.getElementById('componentCount').textContent = `${data.components.length} components`;
+            })
+            .catch(error => {
+                console.error('Error loading components:', error);
+                document.getElementById('projectComponentsBody').innerHTML = `
+                    <tr><td colspan="8" class="text-center text-danger">Error loading components</td>
+                </tr>
+            `;
+        });
+    }
+
+    // Display project components in table
+    function displayProjectComponents(components) {
+        const tbody = document.getElementById('projectComponentsBody');
+        selectedComponents.clear();
+        updateSelectedCount();
+        
+        if (!components || components.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No components found for this project</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = components.map(comp => `
+            <tr>
+                <td class="text-center">
+                    <input type="checkbox" class="component-checkbox" 
+                        data-id="${comp.internal_id}"
+                        data-type="project"
+                        data-qty="${comp.to_order}"
+                        data-value="${comp.value}"
+                        data-footprint="${comp.footprint}"
+                        data-mpn="${comp.mpn || ''}"
+                        data-manufacturer="${comp.manufacturer_name || ''}"
+                        onchange="updateComponentSelection(this)">
+                </td>
+                <td><strong>${comp.value}</strong><br><small class="text-muted">${comp.reference || ''}</small></td>
+                <td>${comp.footprint}</td>
+                <td><code class="text-muted small">${comp.mpn || comp.manufacturer_part_number || '—'}</code></td>
+                <td class="text-center">${comp.qty}</td>
+                <td class="text-center">${comp.current_stock}</td>
+                <td class="text-center fw-bold ${comp.to_order > 0 ? 'text-warning' : 'text-success'}">
+                    ${comp.to_order}
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary" onclick="orderSingleComponent('${comp.internal_id}', '${comp.value}', ${comp.to_order})">
+                        <i class="bi bi-cart"></i> Order
+                    </button>
+                </td>
+            </table>
+        `).join('');
+        
+        const selectAllCheckbox = document.getElementById('selectAllComponents');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    }
+
+    // Display additional components
+    function displayAdditionalComponents() {
+        const container = document.getElementById('additionalComponentsList');
+        
+        if (additionalComponents.length === 0) {
+            container.innerHTML = '<p class="text-muted small mb-0">No additional components added yet. Click "Add Component" to add custom parts.</p>';
+            document.getElementById('additionalCount').textContent = '0';
+            return;
+        }
+        
+        container.innerHTML = `
+            <table class="table table-sm table-bordered">
+                <thead class="table-secondary">
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Component</th>
+                        <th>Footprint</th>
+                        <th>MPN</th>
+                        <th>Qty</th>
+                        <th style="width: 80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${additionalComponents.map((comp, idx) => `
+                        <tr data-additional-id="${comp.id}">
+                            <td class="text-center">${idx + 1}</td>
+                            <td><strong>${comp.value}</strong><br><small class="text-muted">${comp.reference || ''}</small></td>
+                            <td>${comp.footprint || '—'}</td>
+                            <td><code class="text-muted small">${comp.mpn || '—'}</code></td>
+                            <td class="text-center fw-bold">${comp.qty}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-danger" onclick="removeAdditionalComponent(${comp.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        document.getElementById('additionalCount').textContent = additionalComponents.length;
+        updateSelectedCount();
+    }
+
+    // Show add component modal
+    function showAddComponentModal() {
+        document.getElementById('addComponentForm').reset();
+        new bootstrap.Modal(document.getElementById('addComponentModal')).show();
+    }
+
+    // Add custom component
+    function addCustomComponent() {
+        const value = document.getElementById('compValue').value.trim();
+        const quantity = parseInt(document.getElementById('compQuantity').value);
+        
+        if (!value) {
+            alert('Component Value is required');
+            return;
+        }
+        
+        if (!quantity || quantity < 1) {
+            alert('Please enter a valid quantity');
+            return;
+        }
+        
+        const newComponent = {
+            id: nextAdditionalId++,
+            type: 'custom',
+            value: value,
+            footprint: document.getElementById('compFootprint').value.trim() || 'Custom',
+            mpn: document.getElementById('compMpn').value.trim() || '',
+            manufacturer: document.getElementById('compManufacturer').value.trim() || '',
+            qty: quantity,
+            reference: document.getElementById('compReference').value.trim() || '',
+            notes: document.getElementById('compNotes').value.trim() || ''
+        };
+        
+        additionalComponents.push(newComponent);
+        displayAdditionalComponents();
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('addComponentModal')).hide();
+        
+        // Enable order button
+        document.getElementById('orderSelectedBtn').disabled = false;
+        
+        // Show success message
+        const toastHtml = `
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast show" role="alert">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Success</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        Added "${value}" (Qty: ${quantity}) to order
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', toastHtml);
+        setTimeout(() => {
+            const toast = document.querySelector('.toast');
+            if (toast) toast.remove();
+        }, 2000);
+    }
+
+    // Remove additional component
+    function removeAdditionalComponent(id) {
+        additionalComponents = additionalComponents.filter(c => c.id !== id);
+        displayAdditionalComponents();
+        updateSelectedCount();
+    }
+
+    // Toggle all components selection
+    function toggleAllComponents() {
+        const selectAll = document.getElementById('selectAllComponents').checked;
+        const checkboxes = document.querySelectorAll('.component-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll;
+            const id = checkbox.getAttribute('data-id');
+            if (selectAll) {
+                selectedComponents.add(id);
             } else {
-                qtyInput.value = 0;
+                selectedComponents.delete(id);
             }
         });
-    });
+        
+        updateSelectedCount();
+    }
+
+    // Update component selection
+    function updateComponentSelection(checkbox) {
+        const id = checkbox.getAttribute('data-id');
+        if (checkbox.checked) {
+            selectedComponents.add(id);
+        } else {
+            selectedComponents.delete(id);
+        }
+        updateSelectedCount();
+    }
+
+    // Update selected count display
+    function updateSelectedCount() {
+        const count = selectedComponents.size;
+        const orderBtn = document.getElementById('orderSelectedBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const totalQtySpan = document.getElementById('totalSelectedQty');
+        
+        selectedCountSpan.textContent = count;
+        const hasAdditional = additionalComponents.length > 0;
+        orderBtn.disabled = (count === 0 && !hasAdditional);
+        
+        // Calculate total quantity from project components
+        let totalQty = 0;
+        document.querySelectorAll('.component-checkbox:checked').forEach(cb => {
+            totalQty += parseInt(cb.getAttribute('data-qty')) || 0;
+        });
+        
+        // Add quantity from additional components
+        additionalComponents.forEach(comp => {
+            totalQty += comp.qty;
+        });
+        
+        totalQtySpan.textContent = totalQty;
+    }
+
+    // Order selected components (including additional)
+    function orderSelectedComponents() {
+        const selected = [];
+        
+        // Get selected project components
+        document.querySelectorAll('.component-checkbox:checked').forEach(cb => {
+            selected.push({
+                internal_id: cb.getAttribute('data-id'),
+                qty: parseInt(cb.getAttribute('data-qty')),
+                type: 'project',
+                value: cb.getAttribute('data-value'),
+                footprint: cb.getAttribute('data-footprint')
+            });
+        });
+        
+        // Add additional components
+        additionalComponents.forEach(comp => {
+            selected.push({
+                internal_id: `CUSTOM-${comp.id}`,
+                qty: comp.qty,
+                type: 'custom',
+                value: comp.value,
+                footprint: comp.footprint,
+                mpn: comp.mpn,
+                manufacturer: comp.manufacturer,
+                reference: comp.reference,
+                notes: comp.notes
+            });
+        });
+        
+        if (selected.length === 0) {
+            alert('No items selected for order');
+            return;
+        }
+        
+        const projectName = document.getElementById('projectSelect').value;
+        const supplier = prompt('Enter supplier name:', 'Mouser');
+        if (!supplier) return;
+        
+        // Show loading indicator
+        const orderBtn = document.getElementById('orderSelectedBtn');
+        const originalText = orderBtn.innerHTML;
+        orderBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating Order...';
+        orderBtn.disabled = true;
+        
+        fetch('/api/create-order', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                project_name: projectName,
+                supplier: supplier,
+                items: selected,
+                notes: `Order for project: ${projectName}. Additional components: ${additionalComponents.length}`
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Order ${data.order_id} created successfully!`);
+                // Reset selections
+                additionalComponents = [];
+                displayAdditionalComponents();
+                document.querySelectorAll('.component-checkbox:checked').forEach(cb => {
+                    cb.checked = false;
+                });
+                selectedComponents.clear();
+                updateSelectedCount();
+                location.reload();
+            } else {
+                alert('Failed to create order: ' + (data.error || 'Unknown error'));
+                orderBtn.innerHTML = originalText;
+                orderBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Error creating order: ' + error);
+            orderBtn.innerHTML = originalText;
+            orderBtn.disabled = false;
+        });
+    }
+
+    // Order single component
+    function orderSingleComponent(componentId, componentName, maxQty) {
+        const qty = prompt(`Enter quantity to order for ${componentName} (max ${maxQty}):`, maxQty);
+        if (!qty) return;
+        
+        const projectName = document.getElementById('projectSelect').value;
+        const supplier = prompt('Enter supplier name:', 'Mouser');
+        if (!supplier) return;
+        
+        fetch('/api/create-order', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                project_name: projectName,
+                supplier: supplier,
+                items: [{internal_id: componentId, qty: parseInt(qty)}],
+                notes: `Single item order for ${componentName}`
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Order ${data.order_id} created successfully!`);
+                location.reload();
+            } else {
+                alert('Failed to create order');
+            }
+        });
+    }
+
+    // Order all components from project
+    function orderAllFromProject() {
+        const selectAllCheckbox = document.getElementById('selectAllComponents');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = true;
+            toggleAllComponents();
+            orderSelectedComponents();
+        }
+    }
+
+    // Export project components to CSV
+    function exportProjectComponents() {
+        if (!currentProjectComponents.length) {
+            alert('No components to export');
+            return;
+        }
+        
+        const projectName = document.getElementById('projectSelect').value;
+        let csv = 'Component,Footprint,MPN,Reference,Required Qty,In Stock,To Order\n';
+        currentProjectComponents.forEach(comp => {
+            csv += `"${comp.value}","${comp.footprint}","${comp.mpn || ''}","${comp.reference || ''}",${comp.qty},${comp.current_stock},${comp.to_order}\n`;
+        });
+        
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.download = `${projectName}_components.csv`;
+        a.href = URL.createObjectURL(blob);
+        a.click();
+    }
 </script>
-{% else %}
-<div class="alert alert-success">
-    <h4>No items need ordering!</h4>
-    <p>All components have sufficient stock.</p>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
-</div>
-{% endif %}
+
+
+<style>
+
+#projectComponentsPanel {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.component-checkbox {
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+#projectSelect {
+    cursor: pointer;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    cursor: pointer;
+}
+
+#additionalComponentsList table {
+    font-size: 0.9rem;
+}
+
+</style>
 {% endblock %}
