@@ -26,22 +26,82 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ project.name }}</h5>
-                <p class="card-text text-muted">{{ project.description or 'No description' }}</p>
-                <div class="row mb-2">
-                    <div class="col-6">
-                        <small class="text-muted">Components:</small>
-                        <br><strong>{{ project.component_count }}</strong>
+
+                <div class="row">
+
+                    <!-- IMAGE -->
+                    <div class="col-md-4">
+
+                        {% if project.image %}
+
+                            <img src="{{ url_for('static', filename='uploads/projects/' + project.image) }}"
+                                class="project-image">
+
+                        {% else %}
+
+                            <div class="project-placeholder">
+                                No Image
+                            </div>
+
+                        {% endif %}
+
                     </div>
-                    <div class="col-6">
-                        <small class="text-muted">Total Qty:</small>
-                        <br><strong>{{ project.total_quantity }}</strong>
+
+
+                    <!-- DETAILS -->
+                    <div class="col-md-8">
+
+                        <h5 class="card-title">{{ project.name }}</h5>
+
+                        <p class="card-text text-muted">
+                            {{ project.description or 'No description' }}
+                        </p>
+
+                        <div class="row mb-2">
+
+                            <div class="col-6">
+
+                                <small class="text-muted">Components:</small>
+                                <br>
+                                <strong>{{ project.component_count }}</strong>
+
+                            </div>
+
+                            <div class="col-6">
+
+                                <small class="text-muted">Total Qty:</small>
+                                <br>
+                                <strong>{{ project.total_quantity }}</strong>
+
+                            </div>
+
+                        </div>
+
+                        <div class="btn-group" role="group">
+
+                            <a href="{{ url_for('project_detail', name=project.name) }}"
+                            class="btn btn-sm btn-outline-primary">
+
+                            View
+
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteProjectModal"
+                                    data-project="{{ project.name }}">
+
+                                    Delete
+
+                            </button>
+
+                        </div>
+
                     </div>
+
                 </div>
-                <div class="btn-group" role="group">
-                    <a href="{{ url_for('project_detail', name=project.name) }}" class="btn btn-sm btn-outline-primary">View</a>
-                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal" data-project="{{ project.name }}">Delete</button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -75,6 +135,16 @@
                         <label class="form-label">Upload BOM (Excel)</label>
                         <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
                         <div class="form-text">Optional: Upload BOM now or later</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Project Image</label>
+                        <input type="file"
+                            name="project_image"
+                            class="form-control"
+                            accept="image/*">
+                        <div class="form-text">
+                            Optional: Upload project image
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -80,7 +80,8 @@ class ProjectManager:
                 "created_at": project.created_at,
                 "updated_at": project.updated_at,
                 "component_count": len(project.bom),
-                "total_quantity": sum(row.qty for row in project.bom if not row.dnp)
+                "total_quantity": sum(row.qty for row in project.bom if not row.dnp),
+                "image": project.image
             })
         return projects_info
     
