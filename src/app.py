@@ -1096,12 +1096,41 @@ def save_pcb_repo(name):
 
         return redirect(url_for("projects"))
 
+    repo_name = request.form.get(
+        "pcb_repo_name",
+        ""
+    ).strip()
+
     repo_link = request.form.get(
         "pcb_repo_link",
         ""
     ).strip()
 
-    project.pcb_repo_link = repo_link
+    # ======================================
+    # CREATE LIST IF NOT EXISTS
+    # ======================================
+
+    if not hasattr(project, "github_links"):
+
+        project.github_links = []
+
+    # ======================================
+    # APPEND NEW REPO
+    # ======================================
+
+    if repo_name and repo_link:
+
+        project.github_links.append({
+
+            "name": repo_name,
+
+            "url": repo_link
+
+        })
+
+    # ======================================
+    # SAVE PROJECT
+    # ======================================
 
     state.project_manager.file_manager.save_project(project)
 
@@ -1119,7 +1148,6 @@ def save_pcb_repo(name):
             tab="pcb"
         )
     )
-
 
 def main():
     """Run the Flask application"""
