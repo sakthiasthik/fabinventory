@@ -313,7 +313,7 @@ except (ValueError, IndexError):
 
 ## 🟡 MEDIUM
 
-### [ ] BUG-012 — Broken HTML: Triple Backticks in login.html
+### [x] BUG-012 — Broken HTML: Triple Backticks in login.html ✅ FIXED
 - **File**: `templates/login.html:7,93`
 - **Severity**: 🟡 Medium
 - **Category**: UI Bug
