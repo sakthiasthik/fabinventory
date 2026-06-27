@@ -81,7 +81,23 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 "name": project.name,
                 "description": project.description,
                 "created_at": project.created_at,
-                "updated_at": datetime.now().isoformat()
+                "updated_at": datetime.now().isoformat(),
+                "image": project.image,
+                # ====================================
+                # EXTRA BOM FILES
+                # ====================================
+
+                "mechanical_bom": project.mechanical_bom,
+
+                "pcb_bom": project.pcb_bom,
+
+                "print3d_bom": project.print3d_bom,
+
+                "model_3d_file": project.model_3d_file,
+
+                "pcb_gerber_zip": project.pcb_gerber_zip,
+                "pcb_gerber_folder": project.pcb_gerber_folder,
+                "pcb_repo_link": project.pcb_repo_link
             }
             self._save_json(meta_file, meta_data)
             
@@ -118,7 +134,14 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 description=meta_data.get("description", ""),
                 created_at=meta_data.get("created_at", ""),
                 updated_at=meta_data.get("updated_at", ""),
-                bom=bom_rows
+                image=meta_data.get("image", ""),
+                bom=bom_rows,
+                mechanical_bom=meta_data.get("mechanical_bom"),
+                pcb_bom=meta_data.get("pcb_bom"),
+                print3d_bom=meta_data.get("print3d_bom"),
+                model_3d_file=meta_data.get("model_3d_file", ""),
+                pcb_gerber_zip=meta_data.get("pcb_gerber_zip"),
+                pcb_gerber_folder=meta_data.get("pcb_gerber_folder")
             )
             
             return project
