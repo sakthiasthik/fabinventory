@@ -52,7 +52,7 @@ def export_bom(name):
 
 ---
 
-### [ ] BUG-003 — Race Condition in ID Generation
+### [x] BUG-003 — Race Condition in ID Generation ✅ FIXED
 - **File**: `src/file_manager.py:193-198`
 - **Severity**: 🔴 Critical
 - **Category**: Data Integrity
@@ -147,7 +147,7 @@ Or use `textContent` instead of `innerHTML` where possible.
 
 ---
 
-### [ ] BUG-006 — Path Traversal via Project Names
+### [x] BUG-006 — Path Traversal via Project Names ✅ FIXED
 - **File**: `src/file_manager.py` (all file operations), `src/app.py` (all project routes)
 - **Severity**: 🔴 Critical
 - **Category**: Security
@@ -174,7 +174,7 @@ def create_project(self, name, description=""):
 
 ---
 
-### [ ] BUG-007 — `github_links` Saved in Memory but Never Persisted
+### [x] BUG-007 — `github_links` Saved in Memory but Never Persisted ✅ FIXED
 - **File**: `src/app.py:1113-1129` vs `src/file_manager.py:78-102` vs `src/models.py:27-77`
 - **Severity**: 🔴 Critical
 - **Category**: Data Loss
@@ -205,7 +205,7 @@ meta_data = {
 
 ## 🟠 HIGH
 
-### [ ] BUG-008 — Order ID Collision (Duplicate PO Numbers)
+### [x] BUG-008 — Order ID Collision (Duplicate PO Numbers) ✅ FIXED
 - **File**: `src/inventory_manager.py:52-56`
 - **Severity**: 🟠 High
 - **Category**: Data Integrity
@@ -234,7 +234,7 @@ order_num = max_num + 1
 
 ---
 
-### [ ] BUG-009 — No Input Validation on update_stock
+### [x] BUG-009 — No Input Validation on update_stock ✅ FIXED
 - **File**: `src/app.py:425-441`
 - **Severity**: 🟠 High
 - **Category**: Data Integrity
@@ -264,7 +264,7 @@ if not item:
 
 ---
 
-### [ ] BUG-010 — `/api/orders` Returns Non-Serializable Objects
+### [x] BUG-010 — `/api/orders` Returns Non-Serializable Objects ✅ FIXED
 - **File**: `src/app.py:766`
 - **Severity**: 🟠 High
 - **Category**: Runtime Error
@@ -285,7 +285,7 @@ return jsonify([o.to_dict() for o in orders])
 
 ---
 
-### [ ] BUG-011 — Bare `except: pass` Silently Swallows All Exceptions
+### [x] BUG-011 — Bare `except: pass` Silently Swallows All Exceptions ✅ FIXED
 - **File**: `src/inventory_manager.py:25-28`
 - **Severity**: 🟠 High
 - **Category**: Error Handling
@@ -402,7 +402,7 @@ to_order = max(0, bom_row.qty - stock_info.get('current_stock', 0))
 
 ---
 
-### [ ] BUG-017 — `Order.estimated_cost` Returns Hardcoded Values
+### [x] BUG-017 — `Order.estimated_cost` Returns Hardcoded Values ✅ FIXED
 - **File**: `src/models.py:132-137`
 - **Severity**: 🟡 Medium
 - **Category**: Logic Bug
@@ -452,7 +452,7 @@ The correct location should be `fabinventory_data/projects/<name>/files/` or sim
 
 ---
 
-### [ ] BUG-019 — Incomplete Order Status Workflow
+### [x] BUG-019 — Incomplete Order Status Workflow ✅ FIXED
 - **File**: `src/models.py:118-169`, `src/inventory_manager.py:78-95`
 - **Severity**: 🟠 High
 - **Category**: Missing Business Logic
@@ -482,7 +482,7 @@ The `receive_order()` function in `inventory_manager.py` doesn't validate that t
 
 ---
 
-### [ ] BUG-020 — No Authentication Despite Login Pages Existing
+### [x] BUG-020 — No Authentication Despite Login Pages Existing ✅ FIXED
 - **File**: `templates/login.html`, `templates/register.html`, `src/app.py`
 - **Severity**: 🟠 High
 - **Category**: Security / Missing Feature

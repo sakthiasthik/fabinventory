@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 
 # Load .env before anything else
 load_dotenv()
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, Response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, Response, session
 from werkzeug.utils import secure_filename
+from functools import wraps
 import json
 import io
 import pandas as pd
@@ -42,6 +43,32 @@ app.config['UPLOAD_FOLDER'] = Path('static/uploads')
 
 # Enable CSRF protection for all POST routes
 csrf = CSRFProtect(app)
+
+# Load admin password for local authentication
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'fabinventory')
+
+
+def login_required(f):
+    """Decorator to require authentication for routes."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('authenticated'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# Exempt API routes from login redirect (they return JSON instead)
+def api_login_required(f):
+    """Decorator for API routes — returns JSON error instead of redirect."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('authenticated'):
+            return jsonify({'error': 'Authentication required'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB limit
 template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
 app.template_folder = template_dir
@@ -89,7 +116,45 @@ class AppState:
 
 state = AppState()
 
+# Public endpoints that don't require authentication
+_PUBLIC_ENDPOINTS = {'login', 'setup', 'static'}
+
+
+@app.before_request
+def _require_auth():
+    """Require authentication for all POST requests except public endpoints."""
+    if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+        if request.endpoint and request.endpoint not in _PUBLIC_ENDPOINTS:
+            if not session.get('authenticated'):
+                # For API endpoints, return JSON
+                if request.path.startswith('/api/'):
+                    return jsonify({'error': 'Authentication required'}), 401
+                flash('Please log in to continue.', 'warning')
+                return redirect(url_for('login'))
+
+
 # Routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page"""
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if password == ADMIN_PASSWORD:
+            session['authenticated'] = True
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        flash('Invalid password', 'error')
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """Logout"""
+    session.pop('authenticated', None)
+    flash('Logged out.', 'info')
+    return redirect(url_for('login'))
+
+
 @app.route('/')
 def index():
     """Home page - redirect to dashboard or setup"""
@@ -437,10 +502,25 @@ def update_stock():
     """Update stock for an item"""
     if not state.init_app():
         return jsonify({'error': 'App not initialized'}), 500
-    
-    internal_id = request.form.get('internal_id')
-    new_stock = int(request.form.get('stock', 0))
-    
+
+    internal_id = request.form.get('internal_id', '').strip()
+
+    # Validate stock value
+    try:
+        new_stock = int(request.form.get('stock', 0))
+        if new_stock < 0:
+            flash('Stock cannot be negative', 'error')
+            return redirect(url_for('inventory'))
+    except (ValueError, TypeError):
+        flash('Invalid stock value', 'error')
+        return redirect(url_for('inventory'))
+
+    # Verify the item exists before updating
+    item = state.inventory_manager.find_item(internal_id)
+    if not item:
+        flash(f'Item "{internal_id}" not found in inventory', 'error')
+        return redirect(url_for('inventory'))
+
     updated = state.inventory_manager.update_stock(internal_id, new_stock)
     if updated:
         if state.git_manager:
@@ -448,7 +528,7 @@ def update_stock():
         flash(f'Stock updated for {internal_id}!', 'success')
     else:
         flash(f'Failed to update stock for {internal_id}', 'error')
-    
+
     return redirect(url_for('inventory'))
 
 @app.route('/orders')
@@ -774,7 +854,7 @@ def api_orders():
     if status_filter:
         orders = [o for o in orders if o.status == status_filter]
    
-    return jsonify([o.__dict__ for o in orders])   # ✅ FIXED
+    return jsonify([o.to_dict() for o in orders])
 
 @app.route('/api/projects')
 def api_projects():
@@ -1116,14 +1196,6 @@ def save_pcb_repo(name):
         "pcb_repo_link",
         ""
     ).strip()
-
-    # ======================================
-    # CREATE LIST IF NOT EXISTS
-    # ======================================
-
-    if not hasattr(project, "github_links"):
-
-        project.github_links = []
 
     # ======================================
     # APPEND NEW REPO
