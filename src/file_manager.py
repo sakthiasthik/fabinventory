@@ -28,7 +28,20 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         """Get project directory with path-traversal protection."""
         validate_project_name(project_name)
         return self.projects_dir / project_name
-    
+
+    def project_subdir(self, project_name: str, subdir: str) -> Path:
+        """Get (and create) a subdirectory within a project folder."""
+        d = self._project_dir(project_name) / subdir
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def save_project_file(self, project_name: str, subdir: str, filename: str, content: bytes) -> Path:
+        """Save an uploaded file into the project's folder. Returns the saved path."""
+        dest_dir = self.project_subdir(project_name, subdir)
+        dest_path = dest_dir / filename
+        dest_path.write_bytes(content)
+        return dest_path
+
     def _init_structure(self):
         """Create necessary directories if they don't exist"""
         self.projects_dir.mkdir(parents=True, exist_ok=True)

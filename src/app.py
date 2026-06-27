@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 import json
 import io
+import requests
 import pandas as pd
 
 # Fix imports - use correct class names
@@ -46,6 +47,11 @@ csrf = CSRFProtect(app)
 
 # Load admin password for local authentication
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'fabinventory')
+
+# GitHub OAuth configuration (optional — only if env vars are set)
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID', '')
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '')
+GITHUB_OAUTH_ENABLED = bool(GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET)
 
 
 def login_required(f):
@@ -117,20 +123,18 @@ class AppState:
 state = AppState()
 
 # Public endpoints that don't require authentication
-_PUBLIC_ENDPOINTS = {'login', 'setup', 'static'}
+_PUBLIC_ENDPOINTS = {'login', 'login_github', 'login_github_callback', 'setup', 'static'}
 
 
 @app.before_request
 def _require_auth():
-    """Require authentication for all POST requests except public endpoints."""
-    if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
-        if request.endpoint and request.endpoint not in _PUBLIC_ENDPOINTS:
-            if not session.get('authenticated'):
-                # For API endpoints, return JSON
-                if request.path.startswith('/api/'):
-                    return jsonify({'error': 'Authentication required'}), 401
-                flash('Please log in to continue.', 'warning')
-                return redirect(url_for('login'))
+    """Require authentication for all pages except public endpoints."""
+    if request.endpoint and request.endpoint not in _PUBLIC_ENDPOINTS:
+        if not session.get('authenticated'):
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Authentication required'}), 401
+            flash('Please log in to continue.', 'warning')
+            return redirect(url_for('login'))
 
 
 # Routes
@@ -153,6 +157,74 @@ def logout():
     session.pop('authenticated', None)
     flash('Logged out.', 'info')
     return redirect(url_for('login'))
+
+
+@app.route('/login/github')
+def login_github():
+    """Redirect to GitHub for OAuth authorization."""
+    if not GITHUB_OAUTH_ENABLED:
+        flash('GitHub login is not configured. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env', 'error')
+        return redirect(url_for('login'))
+    github_auth_url = (
+        f"https://github.com/login/oauth/authorize"
+        f"?client_id={GITHUB_CLIENT_ID}"
+        f"&redirect_uri={url_for('login_github_callback', _external=True)}"
+        f"&scope=repo,user"
+    )
+    return redirect(github_auth_url)
+
+
+@app.route('/login/github/callback')
+def login_github_callback():
+    """Handle GitHub OAuth callback — exchange code for access token."""
+    if not GITHUB_OAUTH_ENABLED:
+        flash('GitHub login is not configured.', 'error')
+        return redirect(url_for('login'))
+
+    code = request.args.get('code')
+    if not code:
+        flash('GitHub authorization failed.', 'error')
+        return redirect(url_for('login'))
+
+    # Exchange code for access token
+    try:
+        token_resp = requests.post(
+            'https://github.com/login/oauth/access_token',
+            data={
+                'client_id': GITHUB_CLIENT_ID,
+                'client_secret': GITHUB_CLIENT_SECRET,
+                'code': code,
+            },
+            headers={'Accept': 'application/json'},
+            timeout=15,
+        )
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+        if not access_token:
+            flash(f'GitHub auth failed: {token_data.get("error_description", "unknown error")}', 'error')
+            return redirect(url_for('login'))
+    except requests.RequestException as e:
+        flash(f'Could not reach GitHub: {e}', 'error')
+        return redirect(url_for('login'))
+
+    # Get user info
+    try:
+        user_resp = requests.get(
+            'https://api.github.com/user',
+            headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'},
+            timeout=15,
+        )
+        user_data = user_resp.json()
+        github_username = user_data.get('login', 'unknown')
+    except requests.RequestException:
+        github_username = 'unknown'
+
+    # Set session
+    session['authenticated'] = True
+    session['github_user'] = github_username
+    session['github_token'] = access_token
+    flash(f'Welcome, @{github_username}! Logged in via GitHub.', 'success')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/')
@@ -396,16 +468,11 @@ def upload_project_image(name):
         flash("No selected image", "danger")
         return redirect(url_for('project_detail', name=name))
 
-    # CREATE FOLDER
-    upload_folder = os.path.join('static', 'uploads', 'projects')
-    os.makedirs(upload_folder, exist_ok=True)
-
-    # SAFE FILENAME
+    # SAVE TO PROJECT FOLDER
     filename = secure_filename(file.filename)
-
-    # SAVE IMAGE
-    file_path = os.path.join(upload_folder, filename)
-    file.save(file_path)
+    saved = state.project_manager.file_manager.save_project_file(
+        name, 'images', filename, file.read()
+    )
 
     # SAVE IMAGE NAME INTO PROJECT
     project.image = filename
@@ -416,6 +483,20 @@ def upload_project_image(name):
     flash("Project image uploaded successfully!", "success")
 
     return redirect(url_for('project_detail', name=name))
+
+
+@app.route('/project/<name>/files/<path:filepath>')
+def serve_project_file(name, filepath):
+    """Serve a file from within a project's folder."""
+    if not state.init_app():
+        return jsonify({'error': 'App not initialized'}), 500
+    from src.models import validate_project_name
+    try:
+        validate_project_name(name)
+    except ValueError:
+        return jsonify({'error': 'Invalid project name'}), 400
+    project_dir = state.project_manager.file_manager._project_dir(name)
+    return send_from_directory(project_dir, filepath)
 
 
 @app.route('/project/<name>/delete', methods=['POST'])
@@ -741,8 +822,9 @@ def api_project_components(project_name):
         key = f"{bom_row.value}|{bom_row.footprint}"
         stock_info = stock_lookup.get(key, {'current_stock': 0, 'total_required': 0, 'internal_id': None})
        
-        # Calculate to_order for this specific component
-        to_order = max(0, bom_row.qty - stock_info.get('current_stock', 0))
+        # Calculate to_order using aggregated total_required (matches master inventory view)
+        total_req = stock_info.get('total_required', bom_row.qty)
+        to_order = max(0, total_req - stock_info.get('current_stock', 0))
        
         components.append({
             'id': key,
@@ -886,41 +968,21 @@ def upload_3d_bom(name):
             )
         )
 
-    upload_folder = os.path.join(
-        'static',
-        'uploads',
-        '3dprint'
-    )
-
-    os.makedirs(upload_folder, exist_ok=True)
-
     filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-        upload_folder,
-        filename
+    saved_path = state.project_manager.file_manager.save_project_file(
+        name, '3dprint', filename, file.read()
     )
 
-    file.save(filepath)
+    # SAVE RELATIVE PATH IN PROJECT (from project dir)
+    project.print3d_bom = f"3dprint/{filename}"
 
-    # SAVE PATH IN PROJECT
-    project.print3d_bom = filepath
-
-    # SAVE PROJECT PERMANENTLY
     state.project_manager.file_manager.save_project(project)
-
-    # UPDATE MEMORY CACHE
     state.project_manager.projects[name] = project
 
     flash('3D BOM uploaded successfully', 'success')
 
-    return redirect(
-        url_for(
-            'project_detail',
-            name=name,
-            tab='3dprint'
-        )
-    )
+    return redirect(url_for('project_detail', name=name, tab='3dprint'))
 
 @app.route('/project/<name>/upload_mechanical_bom', methods=['POST'])
 def upload_mechanical_bom(name):
@@ -943,41 +1005,20 @@ def upload_mechanical_bom(name):
             )
         )
 
-    upload_folder = os.path.join(
-        'static',
-        'uploads',
-        'mechanical'
-    )
-
-    os.makedirs(upload_folder, exist_ok=True)
-
     filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-        upload_folder,
-        filename
+    saved_path = state.project_manager.file_manager.save_project_file(
+        name, 'mechanical', filename, file.read()
     )
 
-    file.save(filepath)
+    project.mechanical_bom = f"mechanical/{filename}"
 
-    # SAVE PATH IN PROJECT
-    project.mechanical_bom = filepath
-
-    # SAVE PROJECT PERMANENTLY
     state.project_manager.file_manager.save_project(project)
-
-    # UPDATE MEMORY CACHE
     state.project_manager.projects[name] = project
 
     flash('Mechanical BOM uploaded successfully', 'success')
 
-    return redirect(
-        url_for(
-            'project_detail',
-            name=name,
-            tab='mechanical'
-        )
-    )
+    return redirect(url_for('project_detail', name=name, tab='mechanical'))
 
 @app.route('/project/<name>/upload_pcb_bom', methods=['POST'])
 def upload_pcb_bom(name):
@@ -1000,41 +1041,20 @@ def upload_pcb_bom(name):
             )
         )
 
-    upload_folder = os.path.join(
-        'static',
-        'uploads',
-        'pcb'
-    )
-
-    os.makedirs(upload_folder, exist_ok=True)
-
     filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-        upload_folder,
-        filename
+    saved_path = state.project_manager.file_manager.save_project_file(
+        name, 'pcb', filename, file.read()
     )
 
-    file.save(filepath)
+    project.pcb_bom = f"pcb/{filename}"
 
-    # SAVE PATH IN PROJECT
-    project.pcb_bom = filepath
-
-    # SAVE PROJECT PERMANENTLY
     state.project_manager.file_manager.save_project(project)
-
-    # UPDATE MEMORY CACHE
     state.project_manager.projects[name] = project
 
     flash('PCB BOM uploaded successfully', 'success')
 
-    return redirect(
-        url_for(
-            'project_detail',
-            name=name,
-            tab='pcb'
-        )
-    )
+    return redirect(url_for('project_detail', name=name, tab='pcb'))
 
 @app.route('/project/<name>/upload_3d_image', methods=['POST'])
 def upload_3d_image(name):
@@ -1058,38 +1078,20 @@ def upload_3d_image(name):
             )
         )
 
-    upload_folder = os.path.join(
-        'static',
-        'uploads',
-        '3d_models'
-    )
-
-    os.makedirs(upload_folder, exist_ok=True)
-
     filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-        upload_folder,
-        filename
+    saved_path = state.project_manager.file_manager.save_project_file(
+        name, '3d_models', filename, file.read()
     )
 
-    file.save(filepath)
-
-    project.model_3d_file = filepath.replace("\\", "/")
+    project.model_3d_file = f"3d_models/{filename}"
 
     state.project_manager.file_manager.save_project(project)
-
     state.project_manager.projects[name] = project
 
     flash('3D preview uploaded successfully', 'success')
 
-    return redirect(
-        url_for(
-            'project_detail',
-            name=name,
-            tab='3dprint'
-        )
-    )
+    return redirect(url_for('project_detail', name=name, tab='3dprint'))
 
 @app.route('/project/<name>/upload_gerber_zip', methods=['POST'])
 def upload_gerber_zip(name):
@@ -1113,66 +1115,48 @@ def upload_gerber_zip(name):
         )
 
     # ====================================
-    # CREATE FOLDERS
-    # ====================================
-
-    upload_folder = os.path.join(
-        'static',
-        'uploads',
-        'gerbers'
-    )
-
-    os.makedirs(upload_folder, exist_ok=True)
-
-    # ====================================
-    # SAVE ZIP
+    # SAVE ZIP TO PROJECT FOLDER
     # ====================================
 
     filename = secure_filename(file.filename)
+    zip_content = file.read()
 
-    zip_path = os.path.join(
-        upload_folder,
-        filename
+    # Save the zip file in project folder
+    state.project_manager.file_manager.save_project_file(
+        name, 'gerbers', filename, zip_content
     )
 
-    file.save(zip_path)
-
     # ====================================
-    # EXTRACT ZIP
+    # EXTRACT ZIP INTO PROJECT GERBERS FOLDER
     # ====================================
 
-    extract_folder = os.path.join(
-        upload_folder,
-        f"{name}_gerbers"
-    )
+    gerber_dir = state.project_manager.file_manager._project_dir(name) / 'gerbers' / 'extracted'
+    gerber_dir.mkdir(parents=True, exist_ok=True)
 
-    os.makedirs(extract_folder, exist_ok=True)
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
+        tmp.write(zip_content)
+        tmp_path = tmp.name
 
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_folder)
+    try:
+        with zipfile.ZipFile(tmp_path, 'r') as zip_ref:
+            zip_ref.extractall(str(gerber_dir))
+    finally:
+        os.unlink(tmp_path)
 
     # ====================================
     # SAVE TO PROJECT
     # ====================================
 
-    project.pcb_gerber_zip = zip_path
+    project.pcb_gerber_zip = f"gerbers/{filename}"
+    project.pcb_gerber_folder = f"gerbers/extracted"
 
-    project.pcb_gerber_folder = extract_folder
-
-    # SAVE PROJECT
     state.project_manager.file_manager.save_project(project)
-
     state.project_manager.projects[name] = project
 
-    flash('Gerber ZIP uploaded successfully', 'success')
+    flash('Gerber ZIP uploaded and extracted successfully!', 'success')
 
-    return redirect(
-        url_for(
-            'project_detail',
-            name=name,
-            tab='pcb'
-        )
-    )
+    return redirect(url_for('project_detail', name=name, tab='pcb'))
 
 @app.route(
     "/project/<name>/save_pcb_repo",

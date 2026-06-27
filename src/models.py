@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict
 from dataclasses import dataclass, field
+import dataclasses
 import re
 
 # Project names: alphanumeric, dash, underscore. 1-64 chars. No dots, slashes, or special chars.
@@ -120,7 +121,10 @@ class MasterItem:
     
     @classmethod
     def from_dict(cls, data):
-        return cls(**data)
+        # Filter to only known fields to survive version changes
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
 
 @dataclass
 class OrderLineItem:
@@ -221,6 +225,38 @@ class Order:
             tracking_info=data.get("tracking_info"),
             shipping_info=data.get("shipping_info")
         )
+
+@dataclass
+class Supplier:
+    """Supplier information for purchase orders."""
+    name: str
+    contact: str = ""
+    email: str = ""
+    website: str = ""
+    notes: str = ""
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "contact": self.contact,
+            "email": self.email,
+            "website": self.website,
+            "notes": self.notes,
+            "created_at": self.created_at
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            name=data["name"],
+            contact=data.get("contact", ""),
+            email=data.get("email", ""),
+            website=data.get("website", ""),
+            notes=data.get("notes", ""),
+            created_at=data.get("created_at", "")
+        )
+
 
 @dataclass
 class Config:

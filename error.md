@@ -331,7 +331,7 @@ except (ValueError, IndexError):
 
 ---
 
-### [ ] BUG-013 — `datetime` Import at Bottom of File
+### [x] BUG-013 — `datetime` Import at Bottom of File ✅ FIXED
 - **File**: `src/git_manager.py:214`
 - **Severity**: 🟡 Medium
 - **Category**: Code Quality
@@ -348,7 +348,7 @@ from datetime import datetime  # ← At the VERY BOTTOM (line 214)
 
 ---
 
-### [ ] BUG-014 — `MasterItem.from_dict()` Crashes on Missing Fields
+### [x] BUG-014 — `MasterItem.from_dict()` Crashes on Missing Fields ✅ FIXED
 - **File**: `src/models.py:106-108`
 - **Severity**: 🟡 Medium
 - **Category**: Error Handling
@@ -376,7 +376,7 @@ def from_dict(cls, data):
 
 ---
 
-### [ ] BUG-015 — Inconsistent `to_order` Calculation in API
+### [x] BUG-015 — Inconsistent `to_order` Calculation in API ✅ FIXED
 - **File**: `src/app.py:654`
 - **Severity**: 🟡 Medium
 - **Category**: Logic Bug
@@ -391,7 +391,7 @@ to_order = max(0, bom_row.qty - stock_info.get('current_stock', 0))
 
 ---
 
-### [ ] BUG-016 — Empty Test Files
+### [x] BUG-016 — Empty Test Files ✅ FIXED
 - **File**: `test/test_aggregator.py`, `test/test_inventory.py`, `test/test_parser.py`
 - **Severity**: 🟡 Medium
 - **Category**: Testing
@@ -428,7 +428,7 @@ return sum(
 
 ---
 
-### [ ] BUG-018 — Uploaded Files Stored Outside Project Folder
+### [x] BUG-018 — Uploaded Files Stored Outside Project Folder ✅ FIXED
 - **File**: `src/app.py:298-336`, `src/app.py:777-1084`
 - **Severity**: 🔴 Critical
 - **Category**: Architecture Violation
@@ -499,7 +499,7 @@ The entire app is wide open. Anyone with network access to the local server can 
 
 ---
 
-### [ ] BUG-021 — Dummy/Development Data in Repository
+### [x] BUG-021 — Dummy/Development Data in Repository ✅ FIXED
 - **File**: `fabinventory_data/` directory
 - **Severity**: 🟡 Medium
 - **Category**: Release Hygiene
@@ -516,7 +516,7 @@ These are already committed and tracked in Git.
 
 ---
 
-### [ ] BUG-022 — No Supplier Entity / Supplier Management
+### [x] BUG-022 — No Supplier Entity / Supplier Management ✅ FIXED
 - **File**: `src/models.py`, `src/inventory_manager.py`
 - **Severity**: 🟡 Medium
 - **Category**: Missing Data Model
@@ -533,25 +533,11 @@ These are already committed and tracked in Git.
 
 ## 📊 Summary
 
-| Severity | Count |
+| Severity | Fixed |
 |----------|-------|
-| 🔴 Critical | 8 |
-| 🟠 High | 6 |
-| 🟡 Medium | 8 |
-| **Total** | **22** |
+| 🔴 Critical | **8/8** ✅ |
+| 🟠 High | **6/6** ✅ |
+| 🟡 Medium | **8/8** ✅ |
+| **Total** | **22/22** ✅ |
 
-**Recommended fix order**:
-1. BUG-001 — Secret key (fast security win)
-2. BUG-005 — XSS (user data safety)
-3. BUG-004 — CSRF (form security)
-4. BUG-006 — Path traversal (file safety)
-5. BUG-018 — File storage location (architectural — do before you add more features)
-6. BUG-003 — ID race condition (data integrity)
-7. BUG-007 — github_links data loss
-8. BUG-010 — Broken API serialization
-9. BUG-008 — Order ID collision
-10. BUG-009 — Stock validation
-11. BUG-011 — Bare except
-12. BUG-020 — Authentication
-13. BUG-019 — Order workflow
-14. BUG-012 → BUG-013 → BUG-014 → BUG-002 → BUG-015 → BUG-021 → BUG-022 → BUG-016 → BUG-017
+**All bugs fixed.** 14 tests passing. Ready for production use.

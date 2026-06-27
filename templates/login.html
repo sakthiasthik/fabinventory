@@ -18,16 +18,26 @@
             background: white;
             border-radius: 12px;
             padding: 40px;
-            width: 380px;
+            width: 400px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        .login-card h2 {
-            margin-bottom: 8px;
+        .login-card h2 { margin-bottom: 4px; }
+        .login-card .subtitle { color: #6c757d; margin-bottom: 20px; }
+        .divider {
+            display: flex; align-items: center; margin: 18px 0; color: #999;
         }
-        .login-card .subtitle {
-            color: #6c757d;
-            margin-bottom: 24px;
+        .divider::before, .divider::after {
+            content: ''; flex: 1; border-bottom: 1px solid #ddd;
         }
+        .divider span { padding: 0 12px; font-size: 13px; }
+        .github-btn {
+            background: #24292e; color: white; border: none;
+            padding: 10px; border-radius: 6px; width: 100%;
+            font-size: 15px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none;
+        }
+        .github-btn:hover { background: #1b1f23; color: white; }
     </style>
 </head>
 <body>
@@ -46,12 +56,20 @@
         {% endif %}
     {% endwith %}
 
+    <!-- GitHub OAuth (if configured) -->
+    <a href="{{ url_for('login_github') }}" class="github-btn">
+        <i class="bi bi-github" style="font-size: 20px;"></i> Login with GitHub
+    </a>
+
+    <div class="divider"><span>or use password</span></div>
+
+    <!-- Password Login -->
     <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">Admin Password</label>
             <input type="password" class="form-control" id="password" name="password"
-                   placeholder="Enter admin password" required autofocus>
+                   placeholder="Enter password" required>
         </div>
         <button type="submit" class="btn btn-dark w-100">
             <i class="bi bi-box-arrow-in-right"></i> Sign In
