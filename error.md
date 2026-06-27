@@ -85,7 +85,7 @@ class FileManager:
 
 ---
 
-### [ ] BUG-004 — No CSRF Protection on Any Form
+### [x] BUG-004 — No CSRF Protection on Any Form ✅ FIXED
 - **File**: All POST routes in `src/app.py`
 - **Severity**: 🔴 Critical
 - **Category**: Security
@@ -112,7 +112,7 @@ Then add `{{ csrf_token() }}` to all `<form>` tags in templates. For AJAX calls,
 
 ---
 
-### [ ] BUG-005 — Stored XSS via innerHTML from BOM Data
+### [x] BUG-005 — Stored XSS via innerHTML from BOM Data ✅ FIXED
 - **File**: `templates/create_order.html:333-371`
 - **Severity**: 🔴 Critical
 - **Category**: Security (XSS)
