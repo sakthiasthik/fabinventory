@@ -27,7 +27,7 @@ app.secret_key = secret
 
 ---
 
-### [ ] BUG-002 — Dead/Unreachable Code (Export Function)
+### [x] BUG-002 — Dead/Unreachable Code (Export Function) ✅ FIXED
 - **File**: `src/app.py:366-413`
 - **Severity**: 🔴 Critical
 - **Category**: Logic Bug

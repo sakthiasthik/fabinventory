@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 
 # Load .env before anything else
 load_dotenv()
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, Response
 from werkzeug.utils import secure_filename
 import json
+import io
+import pandas as pd
 
 # Fix imports - use correct class names
 from src.file_manager import FileManager
@@ -374,7 +376,34 @@ def export_bom(name):
     if not state.init_app():
         return jsonify({'error': 'App not initialized'}), 500
 
-    return "Export not implemented yet"
+    project = state.project_manager.get_project(name)
+    if not project:
+        flash(f'Project "{name}" not found', 'error')
+        return redirect(url_for('projects'))
+
+    # Build CSV from project BOM
+    data = []
+    for row in project.bom:
+        data.append({
+            'SI.No': row.si_no,
+            'Reference': row.reference,
+            'Value': row.value,
+            'Footprint': row.footprint,
+            'Manufacturer_Part_Number': row.manufacturer_part_number,
+            'Manufacturer_Name': row.manufacturer_name,
+            'Qty': row.qty,
+            'DNP': 'X' if row.dnp else ''
+        })
+
+    df = pd.DataFrame(data)
+    output = io.StringIO()
+    df.to_csv(output, index=False)
+
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename={name}_bom.csv'}
+    )
 
 
 @app.route('/download-bom-template')
@@ -388,39 +417,6 @@ def download_bom_template():
         directory=template_path,
         path='bom_template.xlsx',
         as_attachment=True
-    )
-    
-    import io
-    import pandas as pd
-    from flask import Response
-    
-    project = state.project_manager.get_project(name)
-    if not project:
-        flash(f'Project "{name}" not found', 'error')
-        return redirect(url_for('projects'))
-    
-    # Create CSV
-    data = []
-    for row in project.bom:
-        data.append({
-            'SI.No': row.si_no,
-            'Reference': row.reference,
-            'Value': row.value,
-            'Footprint': row.footprint,
-            'Manufacturer_Part_Number': row.manufacturer_part_number,
-            'Manufacturer_Name': row.manufacturer_name,
-            'Qty': row.qty,
-            'DNP': 'X' if row.dnp else ''
-        })
-    
-    df = pd.DataFrame(data)
-    output = io.StringIO()
-    df.to_csv(output, index=False)
-    
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment; filename={name}_bom.csv'}
     )
 
 @app.route('/inventory')
