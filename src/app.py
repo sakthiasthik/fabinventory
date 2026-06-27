@@ -1,6 +1,10 @@
 """FabInventory Web Application"""
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env before anything else
+load_dotenv()
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
 import json
@@ -23,7 +27,14 @@ app = Flask(
 )
 
 
-app.secret_key = os.environ.get('SECRET_KEY', 'fabinventory-secret-key-change-this')
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is required.\n"
+        "Copy .env.example to .env and set a secure random key, or:\n"
+        "  export SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+    )
+app.secret_key = secret_key
 app.config['UPLOAD_FOLDER'] = Path('static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB limit
 template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
