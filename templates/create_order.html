@@ -16,12 +16,51 @@
         <div class="row">
             <div class="col-md-5">
                 <label for="projectSelect" class="form-label fw-bold">Choose Project:</label>
-                <select id="projectSelect" class="form-select" onchange="loadProjectComponents()">
-                    <option value="">-- Select a project --</option>
-                    {% for project in projects %}
-                    <option value="{{ project.name }}">{{ project.name }}</option>
-                    {% endfor %}
-                </select>
+                <div class="row">
+
+                    <div class="col-md-5">
+
+                        <select id="projectSelect"
+                                class="form-select">
+
+                            <option value="">
+                                -- Select a project --
+                            </option>
+
+                            {% for project in projects %}
+                            <option value="{{ project.name }}">
+                                {{ project.name }}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <input
+                            type="number"
+                            id="projectQty"
+                            class="form-control"
+                            min="1"
+                            value="1"
+                        >
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <button
+                            class="btn btn-primary w-100"
+                            onclick="addProjectToBuild()"
+                        >
+                            Add Project
+                        </button>
+
+                    </div>
+
+                </div>
             </div>
             <div class="col-md-7">
                 <label class="form-label fw-bold">Quick Actions:</label>
@@ -36,6 +75,27 @@
                         <i class="bi bi-plus-circle"></i> Add Custom Component
                     </button>
                 </div>
+                <div class="card mt-3">
+
+                    <div class="card-header">
+
+                        <h5>Selected Projects</h5>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="selectedProjectsList">
+
+                            <p class="text-muted mb-0">
+                                No projects selected
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
@@ -46,7 +106,8 @@
     <div class="card mb-4">
         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                <i class="bi bi-list-check"></i> Components for: <span id="selectedProjectName"></span>
+                <i class="bi bi-list-check"></i>
+                Merged Components
             </h5>
             <span class="badge bg-light text-dark" id="componentCount"></span>
         </div>
@@ -64,7 +125,8 @@
                             <th>Required Qty</th>
                             <th>In Stock</th>
                             <th>To Order</th>
-                            <th>Action</th>
+                            <th>Qty To Cart</th>
+                            
                         </tr>
                     </thead>
                     <tbody id="projectComponentsBody">
@@ -106,72 +168,7 @@
     </div>
 </div>
 
-{% if items_to_order %}
-<form method="POST" action="{{ url_for('create_order') }}">
-    <div class="card mb-3">
-        <div class="card-header">
-            <h5>Order Details</h5>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label for="supplier" class="form-label">Supplier *</label>
-                <input type="text" class="form-control" id="supplier" name="supplier" required>
-            </div>
-            <div class="mb-3">
-                <label for="notes" class="form-label">Notes</label>
-                <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-header">
-            <h5>Select Items to Order</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>ID</th>
-                            <th>Component</th>
-                            <th>Required</th>
-                            <th>Stock</th>
-                            <th>To Order</th>
-                            <th>Quantity to Order</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items_to_order %}
-                        <tr>
-                            <td>
-                                <input type="checkbox" class="item-checkbox" data-id="{{ item.internal_id }}" data-max="{{ item.to_order }}">
-                            </td>
-                            <td><code>{{ item.internal_id }}</code></td>
-                            <td>{{ item.value }} ({{ item.footprint }})</td>
-                            <td>{{ item.total_required }}</td>
-                            <td>{{ item.current_stock }}</td>
-                            <td class="fw-bold text-warning">{{ item.to_order }}</td>
-                            <td>
-                                <input type="number" class="form-control form-control-sm quantity-input" 
-                                       name="qty_{{ item.internal_id }}" 
-                                       id="qty_{{ item.internal_id }}"
-                                       min="0" value="0" disabled>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Create Order</button>
-        <a href="{{ url_for('orders') }}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+
 
 <!-- Add Custom Component Modal -->
 <div class="modal fade" id="addComponentModal" tabindex="-1">
@@ -224,36 +221,96 @@
 <script>
     // Store project components data
     let currentProjectComponents = [];
+    let selectedProjects = [];
     let selectedComponents = new Set();
     let additionalComponents = [];  // Store custom components
     let nextAdditionalId = 1;
 
     // Load project components via API
-    function loadProjectComponents() {
-        const projectName = document.getElementById('projectSelect').value;
-        if (!projectName) {
-            document.getElementById('projectComponentsPanel').style.display = 'none';
+    async function loadAllProjectComponents() {
+
+        if (selectedProjects.length === 0)
             return;
+
+        const merged = {};
+
+        for (const project of selectedProjects) {
+
+            const response = await fetch(
+
+                `/api/project/${project.name}/components`
+            );
+
+            const data = await response.json();
+
+            const components =
+
+                data.components || [];
+
+            for (const component of components) {
+
+                const key =
+
+                    `${component.value}_` +
+                    `${component.footprint}`;
+
+                const requiredQty =
+
+                    component.total_required *
+                    project.qty;
+
+                if (!merged[key]) {
+
+                    merged[key] = {
+
+                        ...component,
+
+                        total_required: 0,
+
+                        to_order: 0,
+
+                        project_references: []
+                    };
+                }
+
+                merged[key].total_required +=
+                    requiredQty;
+
+                merged[key].project_references.push({
+
+                    project: project.name,
+
+                    qty: project.qty,
+
+                    reference: component.reference || ""
+                });
+
+                // ======================================
+                // RECALCULATE TO_ORDER
+                // ======================================
+
+                merged[key].to_order = Math.max(
+
+                    0,
+
+                    merged[key].total_required -
+
+                    (merged[key].current_stock || 0)
+                );
+            }
         }
-        
-        document.getElementById('selectedProjectName').textContent = projectName;
-        document.getElementById('projectComponentsPanel').style.display = 'block';
-        
-        // Fetch project components from API
-        fetch(`/api/project/${encodeURIComponent(projectName)}/components`)
-            .then(response => response.json())
-            .then(data => {
-                currentProjectComponents = data.components;
-                displayProjectComponents(data.components);
-                document.getElementById('componentCount').textContent = `${data.components.length} components`;
-            })
-            .catch(error => {
-                console.error('Error loading components:', error);
-                document.getElementById('projectComponentsBody').innerHTML = `
-                    <tr><td colspan="8" class="text-center text-danger">Error loading components</td>
-                </tr>
-            `;
-        });
+
+        currentProjectComponents =
+
+            Object.values(merged);
+
+        document.getElementById(
+            "projectComponentsPanel"
+        ).style.display = "block";
+
+        displayProjectComponents(
+            currentProjectComponents
+        );
     }
 
     // Display project components in table
@@ -261,6 +318,12 @@
         const tbody = document.getElementById('projectComponentsBody');
         selectedComponents.clear();
         updateSelectedCount();
+
+        document.getElementById(
+            "componentCount"
+        ).textContent =
+
+            `${components.length} components`;
         
         if (!components || components.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No components found for this project</td></tr>';
@@ -280,20 +343,31 @@
                         data-manufacturer="${comp.manufacturer_name || ''}"
                         onchange="updateComponentSelection(this)">
                 </td>
-                <td><strong>${comp.value}</strong><br><small class="text-muted">${comp.reference || ''}</small></td>
+                <td>
+                    <strong>${comp.value}</strong>
+                </td>
                 <td>${comp.footprint}</td>
                 <td><code class="text-muted small">${comp.mpn || comp.manufacturer_part_number || '—'}</code></td>
-                <td class="text-center">${comp.qty}</td>
+                <td class="text-center">
+                    ${comp.total_required}
+                </td>
                 <td class="text-center">${comp.current_stock}</td>
                 <td class="text-center fw-bold ${comp.to_order > 0 ? 'text-warning' : 'text-success'}">
                     ${comp.to_order}
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary" onclick="orderSingleComponent('${comp.internal_id}', '${comp.value}', ${comp.to_order})">
-                        <i class="bi bi-cart"></i> Order
-                    </button>
+                    <input
+                        type="number"
+                        class="form-control form-control-sm qty-to-cart"
+                        style="width: 90px; margin: auto;"
+                        min="0"
+                        value="${comp.to_order}"
+                        id="cart_qty_${comp.internal_id}"
+                        oninput="handleQtyChange('${comp.internal_id}')"
+                    >
+
                 </td>
-            </table>
+            </tr>
         `).join('');
         
         const selectAllCheckbox = document.getElementById('selectAllComponents');
@@ -457,7 +531,15 @@
         // Calculate total quantity from project components
         let totalQty = 0;
         document.querySelectorAll('.component-checkbox:checked').forEach(cb => {
-            totalQty += parseInt(cb.getAttribute('data-qty')) || 0;
+            const id = cb.getAttribute('data-id');
+
+            totalQty += parseInt(
+
+                document.getElementById(
+                    `cart_qty_${id}`
+                ).value
+
+            ) || 0;
         });
         
         // Add quantity from additional components
@@ -468,21 +550,60 @@
         totalQtySpan.textContent = totalQty;
     }
 
+    function handleQtyChange(id) {
+
+        const qty = parseInt(
+
+            document.getElementById(
+                `cart_qty_${id}`
+            ).value
+        
+        ) || 0;
+
+        const checkbox = document.querySelector(
+
+            `.component-checkbox[data-id="${id}"]`
+        );
+
+        if (qty <= 0) {
+
+            checkbox.checked = false;
+
+            selectedComponents.delete(id);
+
+        } else {
+
+            checkbox.checked = true;
+
+            selectedComponents.add(id);
+        }
+
+        updateSelectedCount();
+    }
     // Order selected components (including additional)
     function orderSelectedComponents() {
         const selected = [];
         
         // Get selected project components
         document.querySelectorAll('.component-checkbox:checked').forEach(cb => {
+            const id = cb.getAttribute('data-id');
+            const qty = parseInt(
+                document.getElementById(
+                    `cart_qty_${id}`
+                ).value
+            ) || 0;
+
+            if (qty <= 0)
+                return;
+
             selected.push({
-                internal_id: cb.getAttribute('data-id'),
-                qty: parseInt(cb.getAttribute('data-qty')),
+                internal_id: id,
+                qty: qty,
                 type: 'project',
                 value: cb.getAttribute('data-value'),
                 footprint: cb.getAttribute('data-footprint')
             });
         });
-        
         // Add additional components
         additionalComponents.forEach(comp => {
             selected.push({
@@ -503,7 +624,10 @@
             return;
         }
         
-        const projectName = document.getElementById('projectSelect').value;
+        const projectName =
+            selectedProjects
+                .map(p => p.name)
+                .join('_');
         const supplier = prompt('Enter supplier name:', 'Mouser');
         if (!supplier) return;
         
@@ -549,44 +673,33 @@
         });
     }
 
-    // Order single component
-    function orderSingleComponent(componentId, componentName, maxQty) {
-        const qty = prompt(`Enter quantity to order for ${componentName} (max ${maxQty}):`, maxQty);
-        if (!qty) return;
-        
-        const projectName = document.getElementById('projectSelect').value;
-        const supplier = prompt('Enter supplier name:', 'Mouser');
-        if (!supplier) return;
-        
-        fetch('/api/create-order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                project_name: projectName,
-                supplier: supplier,
-                items: [{internal_id: componentId, qty: parseInt(qty)}],
-                notes: `Single item order for ${componentName}`
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(`Order ${data.order_id} created successfully!`);
-                location.reload();
-            } else {
-                alert('Failed to create order');
-            }
-        });
-    }
 
     // Order all components from project
     function orderAllFromProject() {
-        const selectAllCheckbox = document.getElementById('selectAllComponents');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.checked = true;
-            toggleAllComponents();
-            orderSelectedComponents();
-        }
+
+        document.querySelectorAll(
+            '.component-checkbox'
+        ).forEach(cb => {
+
+            const id = cb.getAttribute('data-id');
+
+            const qtyInput = document.getElementById(
+                `cart_qty_${id}`
+            );
+
+            const qty = parseInt(qtyInput.value) || 0;
+
+            if (qty > 0) {
+
+                cb.checked = true;
+
+                selectedComponents.add(id);
+            }
+        });
+
+        updateSelectedCount();
+
+        orderSelectedComponents();
     }
 
     // Export project components to CSV
@@ -596,10 +709,38 @@
             return;
         }
         
-        const projectName = document.getElementById('projectSelect').value;
+        const projectName =
+            selectedProjects
+                .map(p => p.name)
+                .join('_');
         let csv = 'Component,Footprint,MPN,Reference,Required Qty,In Stock,To Order\n';
         currentProjectComponents.forEach(comp => {
-            csv += `"${comp.value}","${comp.footprint}","${comp.mpn || ''}","${comp.reference || ''}",${comp.qty},${comp.current_stock},${comp.to_order}\n`;
+            const projectRefs =
+
+                (comp.project_references || [])
+
+                .map(ref =>
+
+                    `${ref.project} x${ref.qty} -> ${ref.reference}`
+                )
+
+                .join(" | ");
+
+            csv +=
+
+                `"${comp.value}",` +
+
+                `"${comp.footprint}",` +
+
+                `"${comp.mpn || ''}",` +
+
+                `"${projectRefs}",` +
+
+                `${comp.total_required},` +
+
+                `${comp.current_stock},` +
+
+                `${comp.to_order}\n`;
         });
         
         const blob = new Blob([csv], {type: 'text/csv'});
@@ -607,6 +748,133 @@
         a.download = `${projectName}_components.csv`;
         a.href = URL.createObjectURL(blob);
         a.click();
+    }
+
+    function addProjectToBuild() {
+
+        const projectName =
+            document.getElementById(
+                "projectSelect"
+            ).value;
+
+        const qty = parseInt(
+
+            document.getElementById(
+                "projectQty"
+            ).value
+        );
+
+        if (!projectName || qty <= 0)
+            return;
+
+        // ======================================
+        // CHECK IF ALREADY EXISTS
+        // ======================================
+
+        const existing = selectedProjects.find(
+
+            p => p.name === projectName
+        );
+
+        if (existing) {
+
+            existing.qty += qty;
+
+        } else {
+
+            selectedProjects.push({
+
+                name: projectName,
+
+                qty: qty
+            });
+        }
+
+        renderSelectedProjects();
+
+        loadAllProjectComponents();
+    }
+
+    function renderSelectedProjects() {
+
+        const container =
+
+            document.getElementById(
+                "selectedProjectsList"
+            );
+
+        if (selectedProjects.length === 0) {
+
+            currentProjectComponents = [];
+
+            document.getElementById(
+                "projectComponentsBody"
+            ).innerHTML = `
+                <tr>
+                    <td colspan="8"
+                        class="text-center text-muted">
+
+                        Select a project to view components
+
+                    </td>
+                </tr>
+            `;
+
+            container.innerHTML = `
+
+                <p class="text-muted mb-0">
+                    No projects selected
+                </p>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = selectedProjects.map(
+
+            (project, index) => `
+
+                <div class="d-flex
+                            justify-content-between
+                            align-items-center
+                            border-bottom
+                            py-2">
+
+                    <div>
+
+                        <strong>
+                            ${project.name}
+                        </strong>
+
+                        × ${project.qty}
+
+                    </div>
+
+                    <button
+                        class="btn btn-sm btn-danger"
+                        onclick="removeProject(${index})"
+                    >
+                        Remove
+                    </button>
+
+                </div>
+            `
+        ).join('');
+    }
+
+    function removeProject(index) {
+
+        selectedProjects.splice(index, 1);
+
+        if (selectedProjects.length === 0) {
+            document.getElementById(
+                "projectComponentsPanel"
+            ).style.display = "none";
+        }
+
+        renderSelectedProjects();
+
+        loadAllProjectComponents();
     }
 </script>
 
