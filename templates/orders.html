@@ -248,6 +248,19 @@ let selectedComponents = new Set();
 let additionalComponents = [];  // Store custom components
 let nextAdditionalId = 1;
 
+// Escape HTML to prevent XSS from BOM data
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Get CSRF token from cookie (set by Flask-WTF)
+function getCsrfToken() {
+    const match = document.cookie.match(/csrf_token=([^;]+)/);
+    return match ? match[1] : '';
+}
+
 // Load project components via API
 function loadProjectComponents() {
     const projectName = document.getElementById('projectSelect').value;
@@ -290,30 +303,30 @@ function displayProjectComponents(components) {
     tbody.innerHTML = components.map(comp => `
         <tr>
             <td class="text-center">
-                <input type="checkbox" class="component-checkbox" 
-                       data-id="${comp.internal_id}"
+                <input type="checkbox" class="component-checkbox"
+                       data-id="${escapeHtml(comp.internal_id)}"
                        data-type="project"
                        data-qty="${comp.to_order}"
-                       data-value="${comp.value}"
-                       data-footprint="${comp.footprint}"
-                       data-mpn="${comp.mpn || ''}"
-                       data-manufacturer="${comp.manufacturer_name || ''}"
+                       data-value="${escapeHtml(comp.value)}"
+                       data-footprint="${escapeHtml(comp.footprint)}"
+                       data-mpn="${escapeHtml(comp.mpn || '')}"
+                       data-manufacturer="${escapeHtml(comp.manufacturer_name || '')}"
                        onchange="updateComponentSelection(this)">
             </td>
-            <td><strong>${comp.value}</strong><br><small class="text-muted">${comp.reference || ''}</small></td>
-            <td>${comp.footprint}</td>
-            <td><code class="text-muted small">${comp.mpn || comp.manufacturer_part_number || '—'}</code></td>
+            <td><strong>${escapeHtml(comp.value)}</strong><br><small class="text-muted">${escapeHtml(comp.reference || '')}</small></td>
+            <td>${escapeHtml(comp.footprint)}</td>
+            <td><code class="text-muted small">${escapeHtml(comp.mpn || comp.manufacturer_part_number || '—')}</code></td>
             <td class="text-center">${comp.qty}</td>
             <td class="text-center">${comp.current_stock}</td>
             <td class="text-center fw-bold ${comp.to_order > 0 ? 'text-warning' : 'text-success'}">
                 ${comp.to_order}
             </td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary" onclick="orderSingleComponent('${comp.internal_id}', '${comp.value}', ${comp.to_order})">
+                <button class="btn btn-sm btn-outline-primary" onclick="orderSingleComponent('${escapeHtml(comp.internal_id)}', '${escapeHtml(comp.value)}', ${comp.to_order})">
                     <i class="bi bi-cart"></i> Order
                 </button>
             </td>
-        </table>
+        </tr>
     `).join('');
     
     const selectAllCheckbox = document.getElementById('selectAllComponents');
@@ -346,9 +359,9 @@ function displayAdditionalComponents() {
                 ${additionalComponents.map((comp, idx) => `
                     <tr data-additional-id="${comp.id}">
                         <td class="text-center">${idx + 1}</td>
-                        <td><strong>${comp.value}</strong><br><small class="text-muted">${comp.reference || ''}</small></td>
-                        <td>${comp.footprint || '—'}</td>
-                        <td><code class="text-muted small">${comp.mpn || '—'}</code></td>
+                        <td><strong>${escapeHtml(comp.value)}</strong><br><small class="text-muted">${escapeHtml(comp.reference || '')}</small></td>
+                        <td>${escapeHtml(comp.footprint || '—')}</td>
+                        <td><code class="text-muted small">${escapeHtml(comp.mpn || '—')}</code></td>
                         <td class="text-center fw-bold">${comp.qty}</td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-danger" onclick="removeAdditionalComponent(${comp.id})">
@@ -415,7 +428,7 @@ function addCustomComponent() {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
                 </div>
                 <div class="toast-body">
-                    Added "${value}" (Qty: ${quantity}) to order
+                    Added "${escapeHtml(value)}" (Qty: ${quantity}) to order
                 </div>
             </div>
         </div>
@@ -535,7 +548,10 @@ function orderSelectedComponents() {
     
     fetch('/api/create-order', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
         body: JSON.stringify({
             project_name: projectName,
             supplier: supplier,
@@ -580,7 +596,10 @@ function orderSingleComponent(componentId, componentName, maxQty) {
     
     fetch('/api/create-order', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
         body: JSON.stringify({
             project_name: projectName,
             supplier: supplier,
@@ -637,14 +656,14 @@ function viewOrderDetails(orderId) {
             document.getElementById('orderDetailsContent').innerHTML = `
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong>Order ID:</strong> <code>${order.order_id}</code><br>
-                        <strong>Supplier:</strong> ${order.supplier}<br>
-                        <strong>Status:</strong> <span class="badge bg-${order.status === 'pending' ? 'warning' : 'success'}">${order.status}</span>
+                        <strong>Order ID:</strong> <code>${escapeHtml(order.order_id)}</code><br>
+                        <strong>Supplier:</strong> ${escapeHtml(order.supplier)}<br>
+                        <strong>Status:</strong> <span class="badge bg-${order.status === 'pending' ? 'warning' : 'success'}">${escapeHtml(order.status)}</span>
                     </div>
                     <div class="col-md-6">
-                        <strong>Created:</strong> ${order.created_at ? order.created_at.slice(0,10) : '—'}<br>
-                        <strong>Received:</strong> ${order.received_at ? order.received_at.slice(0,10) : 'Not yet'}<br>
-                        <strong>Notes:</strong> ${order.notes || '—'}
+                        <strong>Created:</strong> ${order.created_at ? escapeHtml(order.created_at.slice(0,10)) : '—'}<br>
+                        <strong>Received:</strong> ${order.received_at ? escapeHtml(order.received_at.slice(0,10)) : 'Not yet'}<br>
+                        <strong>Notes:</strong> ${escapeHtml(order.notes || '—')}
                     </div>
                 </div>
                 <h6>Line Items</h6>
@@ -654,8 +673,8 @@ function viewOrderDetails(orderId) {
                         <tbody>
                             ${order.line_items.map(item => `
                                 <tr>
-                                    <td><code>${item.internal_id}</code></td>
-                                    <td>${item.value ? `${item.value} (${item.footprint || ''})` : 'Custom Component'}</td>
+                                    <td><code>${escapeHtml(item.internal_id)}</code></td>
+                                    <td>${escapeHtml(item.manufacturer_part_number || 'Custom Component')}</td>
                                     <td>${item.qty_ordered}</td>
                                 </tr>
                             `).join('')}
