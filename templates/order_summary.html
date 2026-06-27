@@ -174,7 +174,7 @@ function showSupplierOrders(supplier) {
         .then(orders => {
             let html = `<h6>Orders from ${supplier}</h6><ul>`;
             orders.forEach(order => {
-                html += `<li>${order.order_id} - ${order.total_items} items - Created: ${order.created_at[:10]}</li>`;
+                html += `<li>${order.order_id} - ${order.total_items} items - Created: ${order.created_at.substring(0, 10)}</li>`;
             });
             html += '</ul>';
             alert(html); // Simple alert, can be enhanced with modal
