@@ -22,13 +22,59 @@ class BomRow:
     def is_active(self):
         return not self.dnp and self.qty > 0
 
+
 @dataclass
 class Project:
     name: str
+
     description: str = ""
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    created_at: str = field(
+        default_factory=lambda: datetime.now().isoformat()
+    )
+
+    updated_at: str = field(
+        default_factory=lambda: datetime.now().isoformat()
+    )
+
+    # ====================================
+    # ELECTRICAL BOM
+    # ====================================
+
     bom: List[BomRow] = field(default_factory=list)
+
+    # ====================================
+    # PROJECT IMAGE
+    # ====================================
+
+    image: str = ""
+
+    
+    model_3d_file: str = ""
+
+    # ====================================
+    # MECHANICAL BOM
+    # ====================================
+
+    mechanical_bom: Optional[str] = None
+
+    # ====================================
+    # PCB BOM
+    # ====================================
+
+    pcb_bom: Optional[str] = None
+
+    pcb_gerber_zip: Optional[str] = None
+
+    pcb_gerber_folder: Optional[str] = None
+
+    pcb_repo_link: str = ""
+
+    # ====================================
+    # 3D PRINT BOM
+    # ====================================
+
+    print3d_bom: Optional[str] = None
 
 @dataclass
 class MasterItem:
