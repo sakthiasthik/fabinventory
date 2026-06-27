@@ -437,30 +437,6 @@
 
                 <div class="d-flex flex-column gap-2">
 
-                    <!-- PCB BOM FORM -->
-
-                    <form method="POST"
-                        action="{{ url_for('upload_pcb_bom', name=project.name, tab='pcb') }}"
-                        enctype="multipart/form-data"
-                        class="d-flex gap-2 align-items-center">
-
-                        <input type="file"
-                            name="pcb_file"
-                            class="form-control"
-                            accept=".xlsx,.xls,.csv"
-                            style="max-width: 420px;"
-                            required>
-
-                        <button type="submit"
-                                class="btn btn-primary"
-                                style="white-space: nowrap;">
-
-                            Upload PCB BOM
-
-                        </button>
-
-                    </form>
-
                     <!-- GERBER ZIP FORM -->
 
                     <form method="POST"
@@ -485,27 +461,6 @@
 
                     </form>
 
-                    <form method="POST"
-                        action="{{ url_for('save_pcb_repo', name=project.name) }}"
-                        class="d-flex gap-2 align-items-center mt-2">
-
-                        <input type="url"
-                            name="pcb_repo_link"
-                            class="form-control"
-                            placeholder="https://github.com/user/repo"
-                            value="{{ project.pcb_repo_link or '' }}"
-                            required>
-
-                        <button type="submit"
-                                class="btn btn-outline-dark"
-                                style="white-space: nowrap;">
-
-                            Save Repo Link
-
-                        </button>
-
-                    </form>
-
                     {% if project.pcb_gerber_zip %}
 
                     <div class="alert alert-success py-2 mb-0">
@@ -517,120 +472,95 @@
                     </div>
 
                     {% endif %}
+                    
+                    <form method="POST"
+                        action="{{ url_for('save_pcb_repo', name=project.name) }}"
+                        class="mt-2">
 
-                    {% if project.pcb_repo_link %}
+                        <div class="row g-2">
 
-                    <div class="alert alert-info mt-2">
+                            <div class="col-md-4">
 
-                        <i class="bi bi-github"></i>
+                                <input type="text"
+                                    name="pcb_repo_name"
+                                    class="form-control"
+                                    placeholder="Repository Name"
+                                    required>
 
-                        PCB Repository:
+                            </div>
 
-                        <a href="{{ project.pcb_repo_link }}"
-                        target="_blank">
+                            <div class="col-md-6">
 
-                        Open Repository
+                                <input type="url"
+                                    name="pcb_repo_link"
+                                    class="form-control"
+                                    placeholder="https://github.com/user/repo"
+                                    required>
 
-                        </a>
+                            </div>
 
-                    </div>
+                            <div class="col-md-2">
 
-                    {% endif %}
+                                <button type="submit"
+                                        class="btn btn-outline-dark w-100">
+
+                                    Save Repo
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
 
                 </div>
             </div>
+            <div class="card-body">
 
-            <div class="card-body p-0">
+                {% if project.github_links %}
 
-                <div class="table-responsive">
+                    <div class="list-group">
 
-                    <table class="table table-striped table-hover mb-0">
+                        {% for repo in project.github_links | default([]) %}
 
-                        <thead class="table-dark">
+                            <a href="{{ repo.url }}"
+                            target="_blank"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
 
-                            <tr>
+                                <div>
 
-                                <th>SI.NO</th>
+                                    <strong>
+                                        {{ repo.name }}
+                                    </strong>
 
-                                <th>Board Name</th>
+                                    <br>
 
-                                <th>Layer</th>
+                                    <small class="text-muted">
+                                        {{ repo.url }}
+                                    </small>
 
-                                <th>Material</th>
+                                </div>
 
-                                <th>Quantity</th>
+                                <span class="btn btn-sm btn-outline-primary">
+                                    Open Repo
+                                </span>
 
-                                <th>Manufacturer</th>
+                            </a>
 
-                                <th>File Link</th>
+                        {% endfor %}
 
-                            </tr>
+                    </div>
 
-                        </thead>
+                {% else %}
 
-                        <tbody>
+                    <p class="text-muted mb-0">
 
-                        {% if pcb_rows %}
+                        No repositories linked
 
-                            {% for row in pcb_rows %}
+                    </p>
 
-                            <tr>
-
-                                <td>{{ row.si_no }}</td>
-
-                                <td>{{ row.board_name }}</td>
-
-                                <td>{{ row.layer }}</td>
-
-                                <td>{{ row.material }}</td>
-
-                                <td>{{ row.quantity }}</td>
-
-                                <td>{{ row.manufacturer }}</td>
-
-                                <td>
-
-                                    {% if row.file_link %}
-
-                                        <a href="{{ row.file_link }}"
-                                        target="_blank">
-
-                                            Open File
-
-                                        </a>
-
-                                    {% else %}
-
-                                        -
-
-                                    {% endif %}
-
-                                </td>
-
-                            </tr>
-
-                            {% endfor %}
-
-                        {% else %}
-
-                            <tr>
-
-                                <td colspan="7"
-                                    class="text-center text-muted">
-
-                                    No PCB BOM uploaded
-
-                                </td>
-
-                            </tr>
-
-                        {% endif %}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
+                {% endif %}
 
             </div>
 
