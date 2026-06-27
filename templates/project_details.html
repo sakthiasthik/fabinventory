@@ -6,8 +6,7 @@
 <div class="d-flex align-items-center gap-3">
 
     {% if project.image %}
-        <img src="{{ url_for('static',
-        filename='uploads/projects/' ~ project.image) }}"
+        <img src="{{ url_for('serve_project_file', name=project.name, filepath='images/' ~ project.image) }}"
              class="project-thumbnail">
     {% endif %}
 
