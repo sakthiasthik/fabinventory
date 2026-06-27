@@ -20,6 +20,7 @@ from src.aggregator import Aggregator
 from src.bom_parser import BOMParser
 from src.models import Config
 import zipfile
+from flask_wtf.csrf import CSRFProtect
 
 # Create Flask app
 app = Flask(
@@ -38,6 +39,9 @@ if not secret_key:
     )
 app.secret_key = secret_key
 app.config['UPLOAD_FOLDER'] = Path('static/uploads')
+
+# Enable CSRF protection for all POST routes
+csrf = CSRFProtect(app)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB limit
 template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
 app.template_folder = template_dir
