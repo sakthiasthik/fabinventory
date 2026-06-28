@@ -55,8 +55,9 @@
     <h2>Enter Details</h2>
 
     <form action="/user-details" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <input 
+        <input
             type="text" 
             name="company" 
             placeholder="Company Name"
