@@ -72,6 +72,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('update_stock') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Update Stock</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
