@@ -6,8 +6,7 @@
 <div class="d-flex align-items-center gap-3">
 
     {% if project.image %}
-        <img src="{{ url_for('static',
-        filename='uploads/projects/' ~ project.image) }}"
+        <img src="{{ url_for('serve_project_file', name=project.name, filepath='images/' ~ project.image) }}"
              class="project-thumbnail">
     {% endif %}
 
@@ -129,6 +128,7 @@
                             action="{{ url_for('upload_bom', name=project.name) }}"
                             enctype="multipart/form-data"
                             class="d-flex align-items-end gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                             <div>
 
@@ -185,6 +185,7 @@
                             action="{{ url_for('upload_project_image', name=project.name) }}"
                             enctype="multipart/form-data"
                             class="d-flex align-items-end gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                             <div>
 
@@ -310,6 +311,7 @@
                     enctype="multipart/form-data"
                     class="d-flex gap-2 align-items-center"
                     style="width: auto;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <input type="file"
                         name="mechanical_file"
@@ -443,6 +445,7 @@
                         action="{{ url_for('upload_gerber_zip', name=project.name) }}"
                         enctype="multipart/form-data"
                         class="d-flex gap-2 align-items-center">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <input type="file"
                             name="gerber_zip"
@@ -476,6 +479,7 @@
                     <form method="POST"
                         action="{{ url_for('save_pcb_repo', name=project.name) }}"
                         class="mt-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <div class="row g-2">
 
@@ -589,6 +593,7 @@
                     enctype="multipart/form-data"
                     class="d-flex gap-2 align-items-center"
                     style="width: auto;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <input type="file"
                         name="print3d_file"
@@ -635,6 +640,7 @@
                             action="{{ url_for('upload_3d_image', name=project.name) }}"
                             enctype="multipart/form-data"
                             class="mb-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                             <label class="form-label fw-semibold">
 
@@ -848,6 +854,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('delete_project', name=project.name) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Delete Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -2,25 +2,46 @@
 
 import json
 import os
+import threading
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import shutil
+from src.models import validate_project_name
 
 
 class FileManager:  # Make sure this is exactly "FileManager" (capital F, capital M)
     """Handles all file system operations"""
-    
+
     def __init__(self, repo_path: str = "./fabinventory_data"):
         self.repo_path = Path(repo_path)
         self.projects_dir = self.repo_path / "projects"
         self.master_dir = self.repo_path / "master"
         self.orders_dir = self.repo_path / "orders"
         self.config_file = self.repo_path / "config.json"
-        
+        self._id_lock = threading.Lock()
+
         # Ensure directory structure exists
         self._init_structure()
-    
+
+    def _project_dir(self, project_name: str) -> Path:
+        """Get project directory with path-traversal protection."""
+        validate_project_name(project_name)
+        return self.projects_dir / project_name
+
+    def project_subdir(self, project_name: str, subdir: str) -> Path:
+        """Get (and create) a subdirectory within a project folder."""
+        d = self._project_dir(project_name) / subdir
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def save_project_file(self, project_name: str, subdir: str, filename: str, content: bytes) -> Path:
+        """Save an uploaded file into the project's folder. Returns the saved path."""
+        dest_dir = self.project_subdir(project_name, subdir)
+        dest_path = dest_dir / filename
+        dest_path.write_bytes(content)
+        return dest_path
+
     def _init_structure(self):
         """Create necessary directories if they don't exist"""
         self.projects_dir.mkdir(parents=True, exist_ok=True)
@@ -53,7 +74,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
     def save_project(self, project) -> bool:
         """Save project to disk"""
         try:
-            project_dir = self.projects_dir / project.name
+            project_dir = self._project_dir(project.name)
             project_dir.mkdir(exist_ok=True)
             
             # Save BOM data
@@ -83,21 +104,14 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 "created_at": project.created_at,
                 "updated_at": datetime.now().isoformat(),
                 "image": project.image,
-                # ====================================
-                # EXTRA BOM FILES
-                # ====================================
-
                 "mechanical_bom": project.mechanical_bom,
-
                 "pcb_bom": project.pcb_bom,
-
                 "print3d_bom": project.print3d_bom,
-
                 "model_3d_file": project.model_3d_file,
-
                 "pcb_gerber_zip": project.pcb_gerber_zip,
                 "pcb_gerber_folder": project.pcb_gerber_folder,
-                "pcb_repo_link": project.pcb_repo_link
+                "pcb_repo_link": project.pcb_repo_link,
+                "github_links": project.github_links
             }
             self._save_json(meta_file, meta_data)
             
@@ -109,7 +123,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
     def load_project(self, project_name: str):
         """Load project from disk"""
         try:
-            project_dir = self.projects_dir / project_name
+            project_dir = self._project_dir(project_name)
             if not project_dir.exists():
                 return None
             
@@ -141,7 +155,9 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 print3d_bom=meta_data.get("print3d_bom"),
                 model_3d_file=meta_data.get("model_3d_file", ""),
                 pcb_gerber_zip=meta_data.get("pcb_gerber_zip"),
-                pcb_gerber_folder=meta_data.get("pcb_gerber_folder")
+                pcb_gerber_folder=meta_data.get("pcb_gerber_folder"),
+                pcb_repo_link=meta_data.get("pcb_repo_link", ""),
+                github_links=meta_data.get("github_links", [])
             )
             
             return project
@@ -161,7 +177,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
     def delete_project(self, project_name: str) -> bool:
         """Delete a project"""
         try:
-            project_dir = self.projects_dir / project_name
+            project_dir = self._project_dir(project_name)
             if project_dir.exists():
                 shutil.rmtree(project_dir)
                 return True
@@ -191,11 +207,12 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         return [MasterItem.from_dict(item) for item in data]
     
     def get_next_id(self) -> int:
-        """Get and increment next available ID counter"""
-        next_id_file = self.master_dir / "next_id.txt"
-        current_id = int(next_id_file.read_text().strip())
-        next_id_file.write_text(str(current_id + 1))
-        return current_id
+        """Get and increment next available ID counter (thread-safe)."""
+        with self._id_lock:
+            next_id_file = self.master_dir / "next_id.txt"
+            current_id = int(next_id_file.read_text().strip())
+            next_id_file.write_text(str(current_id + 1))
+            return current_id
     
     # Order operations
     def save_order(self, order) -> bool:
