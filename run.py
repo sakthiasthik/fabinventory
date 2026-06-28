@@ -16,6 +16,7 @@ required_packages = {
     "openpyxl": "openpyxl",
     "git": "gitpython",
     "dotenv": "python-dotenv",
+    "requests": "requests",
     "flask": "flask",
     "flask_wtf": "flask-wtf",
     "wtforms": "wtforms",
