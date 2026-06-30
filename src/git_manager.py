@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from typing import Optional, Tuple, Dict, List
+from datetime import datetime
 
 # Try to import GitPython, handle if not installed
 try:
@@ -208,7 +209,3 @@ class GitManager:
         except Exception as e:
             print(f"Error cloning repository: {e}")
             return False
-
-
-# Import datetime for commit history
-from datetime import datetime

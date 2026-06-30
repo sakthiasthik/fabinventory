@@ -24,7 +24,7 @@ class InventoryManager:
                 try:
                     id_num = int(item.internal_id.split('-')[-1])
                     max_id = max(max_id, id_num)
-                except:
+                except (ValueError, IndexError, AttributeError):
                     pass
             self.aggregator.set_next_id(max_id + 1)
     
@@ -45,13 +45,28 @@ class InventoryManager:
     
     def get_inventory(self) -> List[MasterItem]:
         return self.inventory
-    
+
+    def find_item(self, internal_id: str) -> Optional[MasterItem]:
+        """Find an inventory item by its internal ID."""
+        for item in self.inventory:
+            if item.internal_id == internal_id:
+                return item
+        return None
+
     def get_items_to_order(self) -> List[MasterItem]:
         return [item for item in self.inventory if item.to_order > 0]
     
     def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "") -> Optional[Order]:
         existing_orders = self.file_manager.list_orders()
-        order_num = len(existing_orders) + 1
+        # Find the next available sequence number (avoid collisions from deletions)
+        max_num = 0
+        for o in existing_orders:
+            try:
+                num = int(o.order_id.split('-')[-1])
+                max_num = max(max_num, num)
+            except (ValueError, IndexError):
+                pass
+        order_num = max_num + 1
         order_id = f"PO-{datetime.now().strftime('%Y%m')}-{order_num:03d}"
         
         line_items = []
@@ -77,19 +92,20 @@ class InventoryManager:
     
     def receive_order(self, order_id: str) -> bool:
         order = self.file_manager.load_order(order_id)
-        if not order or order.status != "pending":
+        if not order:
             return False
-        
+
+        # Only allow receiving orders that are shipped (or ordered as fallback for legacy)
+        if not order.transition_to(order.STATUS_RECEIVED):
+            return False
+
         for line_item in order.line_items:
             for inventory_item in self.inventory:
                 if inventory_item.internal_id == line_item.internal_id:
                     inventory_item.current_stock += line_item.qty_ordered
                     inventory_item.last_updated = datetime.now().isoformat()
                     break
-        
-        order.status = "received"
-        order.received_at = datetime.now().isoformat()
-        
+
         self.file_manager.save_master_inventory(self.inventory)
         self.file_manager.save_order(order)
         return True

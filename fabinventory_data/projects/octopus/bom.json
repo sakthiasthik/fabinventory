@@ -10,7 +10,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 22,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 2,
@@ -23,7 +24,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 4,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 3,
@@ -36,7 +38,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 4,
@@ -49,7 +52,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 5,
@@ -62,7 +66,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 6,
@@ -75,7 +80,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 3,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 7,
@@ -88,7 +94,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 4,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 8,
@@ -101,7 +108,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 3,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 9,
@@ -114,7 +122,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 10,
@@ -127,7 +136,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 11,
@@ -140,7 +150,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 15,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 12,
@@ -153,7 +164,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 13,
@@ -166,7 +178,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 3,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 14,
@@ -179,7 +192,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 11,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 15,
@@ -192,7 +206,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 15,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 16,
@@ -205,7 +220,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 17,
@@ -218,7 +234,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 8,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 18,
@@ -231,7 +248,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 8,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 19,
@@ -244,7 +262,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 20,
@@ -257,7 +276,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 21,
@@ -270,7 +290,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 4,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   },
   {
     "si_no": 22,
@@ -283,7 +304,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 23,
@@ -296,7 +318,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 24,
@@ -309,7 +332,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 3,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 25,
@@ -322,7 +346,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 26,
@@ -335,7 +360,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   },
   {
     "si_no": 27,
@@ -348,7 +374,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": true,
+    "dnp_raw": "DNP"
   },
   {
     "si_no": 28,
@@ -361,7 +388,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 29,
@@ -374,7 +402,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 14,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 30,
@@ -387,7 +416,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 31,
@@ -400,7 +430,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 32,
@@ -413,7 +444,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 18,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 33,
@@ -426,7 +458,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": true,
+    "dnp_raw": "DNP"
   },
   {
     "si_no": 34,
@@ -439,7 +472,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 12,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 35,
@@ -452,7 +486,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 36,
@@ -465,7 +500,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 21,
-    "dnp": false
+    "dnp": true,
+    "dnp_raw": "DNP"
   },
   {
     "si_no": 37,
@@ -478,7 +514,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 6,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 38,
@@ -491,7 +528,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 14,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 39,
@@ -504,7 +542,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 40,
@@ -517,7 +556,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 8,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   },
   {
     "si_no": 41,
@@ -530,7 +570,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 8,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   },
   {
     "si_no": 42,
@@ -543,7 +584,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 43,
@@ -556,7 +598,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 7,
-    "dnp": false
+    "dnp": true,
+    "dnp_raw": "DNP"
   },
   {
     "si_no": 44,
@@ -569,7 +612,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 45,
@@ -582,7 +626,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 46,
@@ -595,7 +640,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": true,
+    "dnp_raw": "DNP"
   },
   {
     "si_no": 47,
@@ -608,7 +654,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 2,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 48,
@@ -621,7 +668,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 49,
@@ -634,7 +682,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 10,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 50,
@@ -647,7 +696,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": "P"
   },
   {
     "si_no": 51,
@@ -660,7 +710,8 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 0,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   },
   {
     "si_no": 52,
@@ -673,6 +724,7 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 0,
-    "dnp": false
+    "dnp": false,
+    "dnp_raw": ""
   }
 ]
