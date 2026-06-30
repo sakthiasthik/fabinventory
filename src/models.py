@@ -29,6 +29,7 @@ class BomRow:
     lcsc_sku: Optional[str] = None
     qty: int = 0
     dnp: bool = False
+    dnp_raw: str = ""
     
     def get_aggregation_key(self):
         return f"{self.value}|{self.footprint}"
@@ -79,6 +80,8 @@ class Project:
     pcb_bom: Optional[str] = None
 
     pcb_gerber_zip: Optional[str] = None
+
+    pcb_image: Optional[str] = None
 
     pcb_gerber_folder: Optional[str] = None
 
