@@ -1,0 +1,15 @@
+{
+  "name": "Turtle",
+  "description": "",
+  "created_at": "2026-06-30T14:49:03.552662",
+  "updated_at": "2026-06-30T14:49:04.221238",
+  "image": "",
+  "mechanical_bom": null,
+  "pcb_bom": null,
+  "print3d_bom": null,
+  "model_3d_file": "",
+  "pcb_gerber_zip": null,
+  "pcb_gerber_folder": null,
+  "pcb_repo_link": "",
+  "github_links": []
+}

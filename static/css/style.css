@@ -200,7 +200,7 @@ body {
 .bom-table-wrapper td:nth-child(2),
 .bom-table-wrapper th:nth-child(2) {
 
-    width: 170px;
+    width: 140px;
 
     white-space: normal !important;
 }
@@ -209,7 +209,7 @@ body {
 .bom-table-wrapper td:nth-child(3),
 .bom-table-wrapper th:nth-child(3) {
 
-    width: 240px;
+    width: 170px;
 
     white-space: normal !important;
 
@@ -220,7 +220,7 @@ body {
 .bom-table-wrapper td:nth-child(4),
 .bom-table-wrapper th:nth-child(4) {
 
-    width: 250px;
+    width: 170px;
 
     white-space: normal !important;
 
@@ -231,7 +231,7 @@ body {
 .bom-table-wrapper td:nth-child(5),
 .bom-table-wrapper th:nth-child(5) {
 
-    width: 170px;
+    width: 150px;
 
     white-space: normal;
 
@@ -353,4 +353,53 @@ body {
     justify-content: center;
 
     color: #6c757d;
+}
+
+/* ====================================
+   PCB IMAGE
+==================================== */
+
+.pcb-image-wrapper {
+
+    border: 1px solid #dee2e6;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background: #f8f9fa;
+
+    padding: 12px;
+}
+
+.pcb-preview-image {
+
+    width: 100%;
+
+    height: 300px;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+}
+
+.pcb-image-placeholder {
+
+    height: 300px;
+
+    border: 2px dashed #ced4da;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #f8f9fa;
+
+    color: #6c757d;
+
+    font-size: 1rem;
 }

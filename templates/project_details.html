@@ -215,7 +215,7 @@
                         <!-- Export Image -->
                         {% if project.image %}
                         <a href="{{ url_for('static',
-                            filename='uploads/projects/' ~ project.image) }}"
+                            filepath='uploads/projects/' ~ project.image) }}"
                         download
                         class="btn btn-outline-secondary mb-1">
 
@@ -262,7 +262,7 @@
                         </thead>
                         <tbody>
                             {% for row in project.bom %}
-                            <tr class="{% if row.dnp %}table-danger{% endif %}">
+                            <tr>
                                 <td class="ps-3">{{ row.si_no }}</td>
                                 <td>{{ row.reference }}</td>
                                 <td><strong>{{ row.value }}</strong></td>
@@ -271,9 +271,7 @@
                                 <td>{{ row.manufacturer_name or '—' }}</td>
                                 <td class="text-center">{{ row.qty }}</td>
                                 <td class="text-center">
-                                    {% if row.dnp %}
-                                    <span class="badge bg-danger">DNP</span>
-                                    {% endif %}
+                                    {{ row.dnp_raw if row.dnp_raw else '—' }}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -522,6 +520,128 @@
             </div>
             <div class="card-body">
 
+                <div class="row g-4">
+
+                    <div class="col-lg-5">
+
+                        <h5 class="mb-3">
+                            PCB Preview
+                        </h5>
+
+                        {% if project.pcb_image %}
+
+                            <div class="pcb-image-wrapper">
+
+                                <img
+                                    src="{{ url_for(
+                                        'serve_project_file',
+                                        name=project.name,
+                                        filepath=project.pcb_image
+                                    ) }}"
+                                    class="pcb-preview-image"
+                                >
+
+                            </div>
+
+                            <form method="POST"
+                                action="{{ url_for('remove_pcb_image', name=project.name) }}"
+                                class="mt-3">
+
+                                <input type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}">
+
+                                <button class="btn btn-outline-danger">
+
+                                    <i class="bi bi-trash"></i>
+
+                                    Remove Image
+
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <div class="pcb-image-placeholder">
+
+                                No PCB Image Uploaded
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                <div class="col-lg-7">
+
+                <form method="POST"
+                    action="{{ url_for('upload_pcb_image', name=project.name) }}"
+                    enctype="multipart/form-data"
+                    class="mb-4">
+
+                    <input type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}">
+
+                    <div class="input-group">
+
+                        <input type="file"
+                            name="pcb_image"
+                            class="form-control"
+                            accept=".png,.jpg,.jpeg"
+                            required>
+
+                        <button class="btn btn-outline-primary">
+
+                            Upload PCB Image
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+                {% if project.pcb_gerber_zip %}
+
+                <div class="card mb-4 border-success">
+
+                    <div class="card-body d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h6 class="mb-1 text-success">
+
+                                <i class="bi bi-file-earmark-zip"></i>
+
+                                Uploaded Gerber ZIP
+
+                            </h6>
+
+                            <small class="text-muted">
+
+                                {{ project.pcb_gerber_zip.split('/')[-1] }}
+
+                            </small>
+
+                        </div>
+
+                        <a href="{{ url_for('download_gerber', name=project.name) }}"
+                            class="btn btn-outline-success"
+                            download="{{ project.pcb_gerber_zip.split('/')[-1] }}">
+
+                            <i class="bi bi-download"></i>
+
+                            Download ZIP
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
                 {% if project.github_links %}
 
                     <div class="list-group">
@@ -566,11 +686,13 @@
 
                 {% endif %}
 
-            </div>
+                </div> <!-- END RIGHT COLUMN -->
 
-        </div>
+            </div> <!-- END ROW -->
 
-    </div>
+        </div> <!-- END CARD BODY -->
+
+    </div> <!-- END CARD -->
 
     <!-- 3D PRINT -->
     <div class="tab-pane fade {% if request.args.get('tab') == '3dprint' %}show active{% endif %}"

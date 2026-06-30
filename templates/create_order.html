@@ -45,6 +45,7 @@
                             class="form-control"
                             min="1"
                             value="1"
+                            style="width: 70px; min-width: 70px; font-size: 1.1rem;"
                         >
 
                     </div>
@@ -359,7 +360,9 @@
                 <td>
                     <strong>${escapeHtml(comp.value)}</strong>
                 </td>
-                <td>${escapeHtml(comp.footprint)}</td>
+                <td class="footprint-cell">
+                    ${escapeHtml(comp.footprint)}
+                </td>
                 <td><code class="text-muted small">${escapeHtml(comp.mpn || comp.manufacturer_part_number || '—')}</code></td>
                 <td class="text-center">
                     ${comp.total_required}
@@ -729,7 +732,7 @@
             selectedProjects
                 .map(p => p.name)
                 .join('_');
-        let csv = 'Component,Footprint,MPN,Reference,Required Qty,In Stock,To Order\n';
+        let csv = 'Component,Footprint,MPN,Reference,DNP,Required Qty,In Stock,To Order\n';
         currentProjectComponents.forEach(comp => {
             const projectRefs =
 
@@ -740,7 +743,7 @@
                     `${ref.project} x${ref.qty} -> ${ref.reference}`
                 )
 
-                .join(" | ");
+                .join("\n");
 
             csv +=
 
@@ -751,6 +754,8 @@
                 `"${comp.mpn || ''}",` +
 
                 `"${projectRefs}",` +
+
+                `"${comp.dnp_raw || ''}",` +
 
                 `${comp.total_required},` +
 
@@ -929,6 +934,19 @@
 
 #additionalComponentsList table {
     font-size: 0.9rem;
+}
+
+.footprint-cell {
+
+    max-width: 180px;
+
+    white-space: normal !important;
+
+    word-break: break-word;
+
+    overflow-wrap: break-word;
+
+    line-height: 1.3;
 }
 
 </style>
