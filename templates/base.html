@@ -65,6 +65,7 @@
                             </div>
                             <hr class="my-2">
                             <form method="POST" action="{{ url_for('git_settings') }}" class="mb-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-2">
                                     <input type="text" class="form-control form-control-sm" name="message"
                                            placeholder="Commit message…">

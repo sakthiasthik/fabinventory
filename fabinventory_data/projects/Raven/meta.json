@@ -1,8 +1,8 @@
 {
   "name": "Raven",
   "description": "",
-  "created_at": "2026-06-26T12:54:51.522621",
-  "updated_at": "2026-06-26T16:51:53.447696",
+  "created_at": "2026-06-30T14:22:51.436609",
+  "updated_at": "2026-06-30T14:26:09.659568",
   "image": "",
   "mechanical_bom": null,
   "pcb_bom": null,
@@ -10,5 +10,6 @@
   "model_3d_file": "",
   "pcb_gerber_zip": null,
   "pcb_gerber_folder": null,
-  "pcb_repo_link": ""
+  "pcb_repo_link": "",
+  "github_links": []
 }

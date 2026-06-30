@@ -257,7 +257,7 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 4,
-    "dnp": false
+    "dnp": true
   },
   {
     "si_no": 21,
@@ -426,7 +426,7 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 1,
-    "dnp": false
+    "dnp": true
   },
   {
     "si_no": 34,
@@ -465,7 +465,7 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 20,
-    "dnp": false
+    "dnp": true
   },
   {
     "si_no": 37,
@@ -569,7 +569,7 @@
     "manufacturer_name_lcsc": "",
     "lcsc_sku": "",
     "qty": 7,
-    "dnp": false
+    "dnp": true
   },
   {
     "si_no": 45,
