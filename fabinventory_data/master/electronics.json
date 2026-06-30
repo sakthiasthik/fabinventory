@@ -6,14 +6,14 @@
     "total_required": 55,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL10B104KA8NNWC"
     ],
-    "last_updated": "2026-06-30T22:37:09.792907"
+    "last_updated": "2026-06-30T23:22:59.655764"
   },
   {
     "internal_id": "SA-ELE-00196",
@@ -22,12 +22,12 @@
     "total_required": 4,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.792977"
+    "last_updated": "2026-06-30T23:22:59.655786"
   },
   {
     "internal_id": "SA-ELE-00197",
@@ -36,14 +36,14 @@
     "total_required": 12,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL31A226KAHNNNE"
     ],
-    "last_updated": "2026-06-30T22:37:09.792927"
+    "last_updated": "2026-06-30T23:22:59.655789"
   },
   {
     "internal_id": "SA-ELE-00198",
@@ -52,14 +52,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CC0603KRX7R8BB101"
     ],
-    "last_updated": "2026-06-30T22:37:09.792937"
+    "last_updated": "2026-06-30T23:22:59.655791"
   },
   {
     "internal_id": "SA-ELE-00199",
@@ -68,14 +68,14 @@
     "total_required": 6,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL21A475KAQNNNE"
     ],
-    "last_updated": "2026-06-30T22:37:09.792943"
+    "last_updated": "2026-06-30T23:22:59.655793"
   },
   {
     "internal_id": "SA-ELE-00200",
@@ -84,14 +84,14 @@
     "total_required": 7,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL10A475KP8NNNC"
     ],
-    "last_updated": "2026-06-30T22:37:09.792956"
+    "last_updated": "2026-06-30T23:22:59.655796"
   },
   {
     "internal_id": "SA-ELE-00201",
@@ -100,14 +100,14 @@
     "total_required": 12,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CC0603JRNPO8BN470"
     ],
-    "last_updated": "2026-06-30T22:37:09.792961"
+    "last_updated": "2026-06-30T23:22:59.655798"
   },
   {
     "internal_id": "SA-ELE-00202",
@@ -116,14 +116,14 @@
     "total_required": 7,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CC0603KRX7R8BB472"
     ],
-    "last_updated": "2026-06-30T22:37:09.792968"
+    "last_updated": "2026-06-30T23:22:59.655800"
   },
   {
     "internal_id": "SA-ELE-00203",
@@ -132,14 +132,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL10A105KA8NFNC"
     ],
-    "last_updated": "2026-06-30T22:37:09.792973"
+    "last_updated": "2026-06-30T23:22:59.655802"
   },
   {
     "internal_id": "SA-ELE-00204",
@@ -148,14 +148,14 @@
     "total_required": 20,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "M7"
     ],
-    "last_updated": "2026-06-30T22:37:09.792982"
+    "last_updated": "2026-06-30T23:22:59.655805"
   },
   {
     "internal_id": "SA-ELE-00205",
@@ -164,14 +164,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "150120RS75000"
     ],
-    "last_updated": "2026-06-30T22:37:09.792987"
+    "last_updated": "2026-06-30T23:22:59.655807"
   },
   {
     "internal_id": "SA-ELE-00206",
@@ -180,14 +180,14 @@
     "total_required": 7,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "PESD2IVN48T-QR"
     ],
-    "last_updated": "2026-06-30T22:37:09.792992"
+    "last_updated": "2026-06-30T23:22:59.655809"
   },
   {
     "internal_id": "SA-ELE-00207",
@@ -196,14 +196,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "SS520-HF"
     ],
-    "last_updated": "2026-06-30T22:37:09.793006"
+    "last_updated": "2026-06-30T23:22:59.655812"
   },
   {
     "internal_id": "SA-ELE-00208",
@@ -212,14 +212,14 @@
     "total_required": 18,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "BAT54SLT1G"
     ],
-    "last_updated": "2026-06-30T22:37:09.793010"
+    "last_updated": "2026-06-30T23:22:59.655829"
   },
   {
     "internal_id": "SA-ELE-00209",
@@ -228,14 +228,14 @@
     "total_required": 34,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "TZMC3V3-GS08"
     ],
-    "last_updated": "2026-06-30T22:37:09.793014"
+    "last_updated": "2026-06-30T23:22:59.655831"
   },
   {
     "internal_id": "SA-ELE-00210",
@@ -244,14 +244,14 @@
     "total_required": 34,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "150080VS75000"
     ],
-    "last_updated": "2026-06-30T22:37:09.793001"
+    "last_updated": "2026-06-30T23:22:59.655833"
   },
   {
     "internal_id": "SA-ELE-00211",
@@ -263,7 +263,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793170"
+    "last_updated": "2026-06-30T23:22:59.655837"
   },
   {
     "internal_id": "SA-ELE-00212",
@@ -272,14 +272,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "BLM18RK601SN1D"
     ],
-    "last_updated": "2026-06-30T22:37:09.793019"
+    "last_updated": "2026-06-30T23:22:59.655840"
   },
   {
     "internal_id": "SA-ELE-00213",
@@ -288,14 +288,14 @@
     "total_required": 6,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "B82787C0513H002"
     ],
-    "last_updated": "2026-06-30T22:37:09.793024"
+    "last_updated": "2026-06-30T23:22:59.655842"
   },
   {
     "internal_id": "SA-ELE-00214",
@@ -309,7 +309,7 @@
     "associated_mpns": [
       "43045-1012"
     ],
-    "last_updated": "2026-06-30T22:37:09.793178"
+    "last_updated": "2026-06-30T23:22:59.655845"
   },
   {
     "internal_id": "SA-ELE-00215",
@@ -321,7 +321,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793182"
+    "last_updated": "2026-06-30T23:22:59.655847"
   },
   {
     "internal_id": "SA-ELE-00216",
@@ -330,12 +330,12 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793054"
+    "last_updated": "2026-06-30T23:22:59.655849"
   },
   {
     "internal_id": "SA-ELE-00217",
@@ -349,7 +349,7 @@
     "associated_mpns": [
       "21PC.84060.3A200"
     ],
-    "last_updated": "2026-06-30T22:37:09.793188"
+    "last_updated": "2026-06-30T23:22:59.655852"
   },
   {
     "internal_id": "SA-ELE-00218",
@@ -361,7 +361,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793192"
+    "last_updated": "2026-06-30T23:22:59.655854"
   },
   {
     "internal_id": "SA-ELE-00219",
@@ -373,7 +373,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793196"
+    "last_updated": "2026-06-30T23:22:59.655857"
   },
   {
     "internal_id": "SA-ELE-00220",
@@ -382,14 +382,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "ASPI-0630LR-6R8M-T15"
     ],
-    "last_updated": "2026-06-30T22:37:09.793059"
+    "last_updated": "2026-06-30T23:22:59.655859"
   },
   {
     "internal_id": "SA-ELE-00221",
@@ -398,14 +398,14 @@
     "total_required": 33,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "SI2302CDS-T1-GE3"
     ],
-    "last_updated": "2026-06-30T22:37:09.793064"
+    "last_updated": "2026-06-30T23:22:59.655861"
   },
   {
     "internal_id": "SA-ELE-00222",
@@ -419,7 +419,7 @@
     "associated_mpns": [
       "NHDTC114ETR"
     ],
-    "last_updated": "2026-06-30T22:37:09.793205"
+    "last_updated": "2026-06-30T23:22:59.655863"
   },
   {
     "internal_id": "SA-ELE-00223",
@@ -428,14 +428,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-07100KL"
     ],
-    "last_updated": "2026-06-30T22:37:09.793068"
+    "last_updated": "2026-06-30T23:22:59.655866"
   },
   {
     "internal_id": "SA-ELE-00224",
@@ -444,14 +444,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-1075KL"
     ],
-    "last_updated": "2026-06-30T22:37:09.793072"
+    "last_updated": "2026-06-30T23:22:59.655868"
   },
   {
     "internal_id": "SA-ELE-00225",
@@ -460,14 +460,14 @@
     "total_required": 56,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-0710KL"
     ],
-    "last_updated": "2026-06-30T22:37:09.793077"
+    "last_updated": "2026-06-30T23:22:59.655872"
   },
   {
     "internal_id": "SA-ELE-00226",
@@ -476,14 +476,14 @@
     "total_required": 35,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-071KL"
     ],
-    "last_updated": "2026-06-30T22:37:09.793081"
+    "last_updated": "2026-06-30T23:22:59.655875"
   },
   {
     "internal_id": "SA-ELE-00227",
@@ -492,14 +492,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CQ03WAF0000T5E"
     ],
-    "last_updated": "2026-06-30T22:37:09.793086"
+    "last_updated": "2026-06-30T23:22:59.655877"
   },
   {
     "internal_id": "SA-ELE-00228",
@@ -508,14 +508,14 @@
     "total_required": 14,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-0760R4L"
     ],
-    "last_updated": "2026-06-30T22:37:09.793090"
+    "last_updated": "2026-06-30T23:22:59.655880"
   },
   {
     "internal_id": "SA-ELE-00229",
@@ -524,14 +524,14 @@
     "total_required": 6,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-075K1L"
     ],
-    "last_updated": "2026-06-30T22:37:09.793102"
+    "last_updated": "2026-06-30T23:22:59.655882"
   },
   {
     "internal_id": "SA-ELE-00230",
@@ -540,12 +540,12 @@
     "total_required": 21,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793107"
+    "last_updated": "2026-06-30T23:22:59.655885"
   },
   {
     "internal_id": "SA-ELE-00231",
@@ -554,12 +554,12 @@
     "total_required": 32,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793111"
+    "last_updated": "2026-06-30T23:22:59.655887"
   },
   {
     "internal_id": "SA-ELE-00232",
@@ -568,14 +568,14 @@
     "total_required": 33,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "RC0603FR-074K7L"
     ],
-    "last_updated": "2026-06-30T22:37:09.793097"
+    "last_updated": "2026-06-30T23:22:59.655890"
   },
   {
     "internal_id": "SA-ELE-00233",
@@ -589,7 +589,7 @@
     "associated_mpns": [
       "SKRKAGE020"
     ],
-    "last_updated": "2026-06-30T22:37:09.793220"
+    "last_updated": "2026-06-30T23:22:59.655892"
   },
   {
     "internal_id": "SA-ELE-00234",
@@ -601,7 +601,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793225"
+    "last_updated": "2026-06-30T23:22:59.655895"
   },
   {
     "internal_id": "SA-ELE-00235",
@@ -610,14 +610,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "Silergy"
     ],
-    "last_updated": "2026-06-30T22:37:09.793120"
+    "last_updated": "2026-06-30T23:22:59.655898"
   },
   {
     "internal_id": "SA-ELE-00236",
@@ -626,14 +626,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "TLV75733PDBVR"
     ],
-    "last_updated": "2026-06-30T22:37:09.793124"
+    "last_updated": "2026-06-30T23:22:59.655901"
   },
   {
     "internal_id": "SA-ELE-00237",
@@ -642,14 +642,14 @@
     "total_required": 6,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "TCAN1051HGVDRQ1"
     ],
-    "last_updated": "2026-06-30T22:37:09.793129"
+    "last_updated": "2026-06-30T23:22:59.655903"
   },
   {
     "internal_id": "SA-ELE-00238",
@@ -658,14 +658,14 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
       "Raven",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "STM32G0B1CBT6"
     ],
-    "last_updated": "2026-06-30T22:37:09.793145"
+    "last_updated": "2026-06-30T23:22:59.655906"
   },
   {
     "internal_id": "SA-ELE-00239",
@@ -677,7 +677,7 @@
       "Turtle"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793237"
+    "last_updated": "2026-06-30T23:22:59.655916"
   },
   {
     "internal_id": "SA-ELE-00240",
@@ -686,13 +686,13 @@
     "total_required": 4,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL21A106KOQNNNG"
     ],
-    "last_updated": "2026-06-30T22:37:09.792948"
+    "last_updated": "2026-06-30T23:22:59.655920"
   },
   {
     "internal_id": "SA-ELE-00241",
@@ -706,7 +706,7 @@
     "associated_mpns": [
       "SS16-E3/61T"
     ],
-    "last_updated": "2026-06-30T22:37:09.793255"
+    "last_updated": "2026-06-30T23:22:59.655928"
   },
   {
     "internal_id": "SA-ELE-00242",
@@ -715,11 +715,11 @@
     "total_required": 8,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793032"
+    "last_updated": "2026-06-30T23:22:59.655933"
   },
   {
     "internal_id": "SA-ELE-00243",
@@ -728,11 +728,11 @@
     "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793036"
+    "last_updated": "2026-06-30T23:22:59.655935"
   },
   {
     "internal_id": "SA-ELE-00244",
@@ -741,13 +741,13 @@
     "total_required": 2,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "51810.0601.120307"
     ],
-    "last_updated": "2026-06-30T22:37:09.793041"
+    "last_updated": "2026-06-30T23:22:59.655938"
   },
   {
     "internal_id": "SA-ELE-00245",
@@ -756,13 +756,13 @@
     "total_required": 7,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "51810.0601.120507"
     ],
-    "last_updated": "2026-06-30T22:37:09.793045"
+    "last_updated": "2026-06-30T23:22:59.655941"
   },
   {
     "internal_id": "SA-ELE-00246",
@@ -774,7 +774,7 @@
       "Turtle"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793268"
+    "last_updated": "2026-06-30T23:22:59.655944"
   },
   {
     "internal_id": "SA-ELE-00247",
@@ -783,13 +783,13 @@
     "total_required": 2,
     "current_stock": 0,
     "used_in_projects": [
-      "octopus",
-      "Turtle"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "SKRKAGE020"
     ],
-    "last_updated": "2026-06-30T22:37:09.793116"
+    "last_updated": "2026-06-30T23:22:59.655955"
   },
   {
     "internal_id": "SA-ELE-00248",
@@ -803,7 +803,7 @@
     "associated_mpns": [
       "150080RS75000"
     ],
-    "last_updated": "2026-06-30T22:37:09.792997"
+    "last_updated": "2026-06-30T23:22:59.655968"
   },
   {
     "internal_id": "SA-ELE-00249",
@@ -817,7 +817,7 @@
     "associated_mpns": [
       "43045-0800"
     ],
-    "last_updated": "2026-06-30T22:37:09.793050"
+    "last_updated": "2026-06-30T23:22:59.655979"
   },
   {
     "internal_id": "SA-ELE-00250",
@@ -829,7 +829,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-06-30T22:37:09.793133"
+    "last_updated": "2026-06-30T23:22:59.655989"
   },
   {
     "internal_id": "SA-ELE-00251",
@@ -843,6 +843,6 @@
     "associated_mpns": [
       "140817140010"
     ],
-    "last_updated": "2026-06-30T22:37:09.793139"
+    "last_updated": "2026-06-30T23:22:59.655992"
   }
 ]
