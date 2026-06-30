@@ -52,7 +52,13 @@ class BOMParser:
 
             "qty": ["qty", "quantity"],
 
-            "dnp": ["dnp", "do not populate", "p"]
+            "dnp": [
+                "dnp",
+                "do not populate",
+                "populate",
+                "placement",
+                "fitted"
+            ]
         },
 
         # ====================================
@@ -311,8 +317,20 @@ class BOMParser:
                     col = mapped_columns.get(field)
                     return row[col] if col and pd.notna(row[col]) else default
 
-                dnp_value = get("dnp", False)
-                is_dnp = str(dnp_value).lower() in ['yes', 'true', 'x', '1']
+                raw_dnp_value = str(
+                    get("dnp", "")
+                ).strip()
+
+                normalized_dnp = raw_dnp_value.upper()
+
+                # DNP values
+                is_dnp = normalized_dnp in [
+                    '1',
+                    'YES',
+                    'TRUE',
+                    'X',
+                    'DNP'
+                ]
 
                 if bom_type == "electrical":
 
@@ -354,7 +372,8 @@ class BOMParser:
 
                         qty=qty,
 
-                        dnp=is_dnp
+                        dnp=is_dnp,
+                        dnp_raw=raw_dnp_value
                     )
 
                 elif bom_type == "3dprint":

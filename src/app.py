@@ -1,7 +1,9 @@
 """FabInventory Web Application"""
 import os
+from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+from flask import send_from_directory
 
 # Load .env before anything else
 load_dotenv()
@@ -485,20 +487,6 @@ def upload_project_image(name):
     return redirect(url_for('project_detail', name=name))
 
 
-@app.route('/project/<name>/files/<path:filepath>')
-def serve_project_file(name, filepath):
-    """Serve a file from within a project's folder."""
-    if not state.init_app():
-        return jsonify({'error': 'App not initialized'}), 500
-    from src.models import validate_project_name
-    try:
-        validate_project_name(name)
-    except ValueError:
-        return jsonify({'error': 'Invalid project name'}), 400
-    project_dir = state.project_manager.file_manager._project_dir(name)
-    return send_from_directory(project_dir, filepath)
-
-
 @app.route('/project/<name>/delete', methods=['POST'])
 def delete_project(name):
     """Delete a project"""
@@ -822,21 +810,37 @@ def api_project_components(project_name):
         key = f"{bom_row.value}|{bom_row.footprint}"
         stock_info = stock_lookup.get(key, {'current_stock': 0, 'total_required': 0, 'internal_id': None})
        
-        # Calculate to_order using aggregated total_required (matches master inventory view)
-        total_req = stock_info.get('total_required', bom_row.qty)
-        to_order = max(0, total_req - stock_info.get('current_stock', 0))
-       
+        # Use ONLY project BOM quantity
+        project_qty = bom_row.qty
+
+        to_order = max(
+            0,
+            project_qty - stock_info.get('current_stock', 0)
+        )
+
         components.append({
             'id': key,
-            'internal_id': stock_info.get('internal_id', f"TEMP-{len(components)+1}"),
+            'internal_id': stock_info.get(
+                'internal_id',
+                f"TEMP-{len(components)+1}"
+            ),
             'value': bom_row.value,
             'footprint': bom_row.footprint,
             'mpn': bom_row.manufacturer_part_number,
             'manufacturer_part_number': bom_row.manufacturer_part_number,
             'manufacturer_name': bom_row.manufacturer_name,
             'qty': bom_row.qty,
-            'total_required': stock_info.get('total_required', bom_row.qty),
-            'current_stock': stock_info.get('current_stock', 0),
+            'dnp': bom_row.dnp,
+            'dnp_raw': bom_row.dnp_raw,
+
+            # IMPORTANT FIX
+            'total_required': project_qty,
+
+            'current_stock': stock_info.get(
+                'current_stock',
+                0
+            ),
+
             'to_order': to_order,
             'reference': bom_row.reference
         })
@@ -1093,70 +1097,80 @@ def upload_3d_image(name):
 
     return redirect(url_for('project_detail', name=name, tab='3dprint'))
 
-@app.route('/project/<name>/upload_gerber_zip', methods=['POST'])
+@app.route("/project/<name>/upload_gerber_zip", methods=["POST"])
 def upload_gerber_zip(name):
 
     project = state.project_manager.get_project(name)
 
     if not project:
-        flash('Project not found', 'danger')
-        return redirect(url_for('projects'))
+        flash("Project not found", "danger")
+        return redirect(url_for("dashboard"))
 
-    file = request.files.get('gerber_zip')
+    if "gerber_zip" not in request.files:
+        flash("No file uploaded", "danger")
+        return redirect(url_for("project_detail", name=name, tab="pcb"))
 
-    if not file or file.filename == '':
-        flash('No ZIP file selected', 'warning')
-        return redirect(
-            url_for(
-                'project_detail',
-                name=name,
-                tab='pcb'
-            )
-        )
+    file = request.files["gerber_zip"]
 
-    # ====================================
-    # SAVE ZIP TO PROJECT FOLDER
-    # ====================================
+    if file.filename == "":
+        flash("No file selected", "danger")
+        return redirect(url_for("project_detail", name=name, tab="pcb"))
 
     filename = secure_filename(file.filename)
-    zip_content = file.read()
 
-    # Save the zip file in project folder
+    # SAVE INSIDE PROJECT FOLDER
     state.project_manager.file_manager.save_project_file(
-        name, 'gerbers', filename, zip_content
+        name,
+        "gerbers",
+        filename,
+        file.read()
     )
 
-    # ====================================
-    # EXTRACT ZIP INTO PROJECT GERBERS FOLDER
-    # ====================================
-
-    gerber_dir = state.project_manager.file_manager._project_dir(name) / 'gerbers' / 'extracted'
-    gerber_dir.mkdir(parents=True, exist_ok=True)
-
-    import tempfile
-    with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
-        tmp.write(zip_content)
-        tmp_path = tmp.name
-
-    try:
-        with zipfile.ZipFile(tmp_path, 'r') as zip_ref:
-            zip_ref.extractall(str(gerber_dir))
-    finally:
-        os.unlink(tmp_path)
-
-    # ====================================
-    # SAVE TO PROJECT
-    # ====================================
-
+    # SAVE RELATIVE PATH
     project.pcb_gerber_zip = f"gerbers/{filename}"
-    project.pcb_gerber_folder = f"gerbers/extracted"
+
+    project.updated_at = datetime.now().isoformat()
 
     state.project_manager.file_manager.save_project(project)
-    state.project_manager.projects[name] = project
 
-    flash('Gerber ZIP uploaded and extracted successfully!', 'success')
+    flash("Gerber ZIP uploaded successfully", "success")
 
-    return redirect(url_for('project_detail', name=name, tab='pcb'))
+    return redirect(url_for("project_detail", name=name, tab="pcb"))
+
+@app.route('/project/<name>/download_gerber')
+def download_gerber(name):
+
+    import os
+    from flask import send_from_directory
+
+    project = state.file_manager.load_project(name)
+
+    if not project or not project.pcb_gerber_zip:
+        abort(404)
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    project_dir = os.path.join(
+        base_dir,
+        "fabinventory_data",
+        "projects",
+        name
+    )
+
+    gerber_relative_path = project.pcb_gerber_zip
+
+    gerber_folder = os.path.dirname(
+        os.path.join(project_dir, gerber_relative_path)
+    )
+
+    gerber_filename = os.path.basename(gerber_relative_path)
+
+    return send_from_directory(
+        directory=gerber_folder,
+        path=gerber_filename,
+        as_attachment=True,
+        download_name=gerber_filename
+    )
 
 @app.route(
     "/project/<name>/save_pcb_repo",
@@ -1215,6 +1229,184 @@ def save_pcb_repo(name):
             tab="pcb"
         )
     )
+
+@app.route(
+    '/api/inventory/add',
+    methods=['POST']
+)
+def add_inventory_component():
+
+    if not state.init_app():
+        return jsonify({
+            'error': 'App not initialized'
+        }), 500
+
+    data = request.json
+
+    from src.models import MasterItem
+
+    inventory = state.inventory_manager.inventory
+
+    internal_id = f"SA-ELE-{len(inventory)+1:05d}"
+
+    item = MasterItem(
+
+        internal_id=internal_id,
+
+        value=data.get(
+            'value',
+            ''
+        ),
+
+        footprint=data.get(
+            'footprint',
+            ''
+        ),
+
+        total_required=0,
+
+        current_stock=int(
+            data.get(
+                'current_stock',
+                0
+            )
+        ),
+
+        used_in_projects=[],
+
+        associated_mpns=[
+            data.get('mpn', '')
+        ] if data.get('mpn') else []
+    )
+
+    # ADD ITEM
+    inventory.append(item)
+
+    # SAVE USING EXISTING INVENTORY MANAGER FLOW
+    state.inventory_manager.inventory = inventory
+
+    # OPTIONAL GIT COMMIT
+    if state.git_manager:
+        state.git_manager.commit(
+            f"Added inventory component {item.value}"
+        )
+
+    return jsonify({
+        'success': True
+    })
+
+@app.route("/project/<name>/upload_pcb_image", methods=["POST"])
+def upload_pcb_image(name):
+
+    project = state.project_manager.get_project(name)
+
+    if not project:
+        flash("Project not found", "danger")
+        return redirect(url_for("dashboard"))
+
+    if "pcb_image" not in request.files:
+        flash("No file uploaded", "danger")
+        return redirect(url_for("project_detail", name=name, tab="pcb"))
+
+    file = request.files["pcb_image"]
+
+    if file.filename == "":
+        flash("No file selected", "danger")
+        return redirect(url_for("project_detail", name=name, tab="pcb"))
+
+    filename = secure_filename(file.filename)
+
+    # SAVE INSIDE PROJECT FOLDER
+    state.project_manager.file_manager.save_project_file(
+        name,
+        "pcb_images",
+        filename,
+        file.read()
+    )
+
+    # SAVE RELATIVE PATH
+    project.pcb_image = f"pcb_images/{filename}"
+
+    project.updated_at = datetime.now().isoformat()
+
+    state.project_manager.file_manager.save_project(project)
+
+    flash("PCB image uploaded successfully", "success")
+
+    return redirect(url_for("project_detail", name=name, tab="pcb"))
+
+@app.route("/project/<name>/pcb_image/<filename>")
+def serve_pcb_image(name, filename):
+
+    project_dir = state.project_manager.file_manager._project_dir(name)
+
+    image_dir = os.path.join(
+        project_dir,
+        "pcb_images"
+    )
+
+    return send_from_directory(
+        image_dir,
+        filename
+    )
+
+@app.route(
+    '/project/<name>/remove_pcb_image',
+    methods=['POST']
+)
+def remove_pcb_image(name):
+
+    project = state.project_manager.get_project(name)
+
+    if not project:
+        flash("Project not found", "danger")
+        return redirect(url_for('projects'))
+
+    if project.pcb_image:
+
+        project_dir = state.project_manager.file_manager._project_dir(name)
+
+        image_path = os.path.join(
+            project_dir,
+            project.pcb_image
+        )
+
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    project.pcb_image = None
+
+    state.file_manager.save_project(project)
+
+    flash("PCB image removed", "success")
+
+    return redirect(
+        url_for(
+            'project_detail',
+            name=name,
+            tab='pcb'
+        )
+    )
+
+@app.route('/project/<name>/files/<path:filepath>')
+def serve_project_file(name, filepath):
+
+    from flask import send_from_directory
+    import os
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    project_dir = os.path.join(
+        base_dir,
+        "fabinventory_data",
+        "projects",
+        name
+    )
+
+    print("PROJECT DIR:", project_dir)
+    print("FILEPATH:", filepath)
+
+    return send_from_directory(project_dir, filepath)
 
 def main():
     """Run the Flask application"""

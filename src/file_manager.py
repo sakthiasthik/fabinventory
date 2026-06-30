@@ -92,7 +92,8 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                     'manufacturer_name_lcsc': row.manufacturer_name_lcsc,
                     'lcsc_sku': row.lcsc_sku,
                     'qty': row.qty,
-                    'dnp': row.dnp
+                    'dnp': row.dnp,
+                    'dnp_raw': row.dnp_raw
                 })
             self._save_json(bom_file, bom_data)
             
@@ -108,6 +109,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 "pcb_bom": project.pcb_bom,
                 "print3d_bom": project.print3d_bom,
                 "model_3d_file": project.model_3d_file,
+                "pcb_image": project.pcb_image,
                 "pcb_gerber_zip": project.pcb_gerber_zip,
                 "pcb_gerber_folder": project.pcb_gerber_folder,
                 "pcb_repo_link": project.pcb_repo_link,
@@ -151,7 +153,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 image=meta_data.get("image", ""),
                 bom=bom_rows,
                 mechanical_bom=meta_data.get("mechanical_bom"),
-                pcb_bom=meta_data.get("pcb_bom"),
+                pcb_image=meta_data.get("pcb_image", ""),
                 print3d_bom=meta_data.get("print3d_bom"),
                 model_3d_file=meta_data.get("model_3d_file", ""),
                 pcb_gerber_zip=meta_data.get("pcb_gerber_zip"),
