@@ -2,7 +2,7 @@
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from src.models import Project, BomRow
+from src.models import Project, BomRow, validate_project_name
 from src.file_manager import FileManager
 from src.bom_parser import BOMParser
 
@@ -25,9 +25,10 @@ class ProjectManager:
     
     def create_project(self, name: str, description: str = "") -> Optional[Project]:
         """Create a new project"""
+        validate_project_name(name)
         if name in self.projects:
             raise ValueError(f"Project '{name}' already exists")
-        
+
         project = Project(name=name, description=description)
         
         if self.file_manager.save_project(project):
@@ -80,7 +81,8 @@ class ProjectManager:
                 "created_at": project.created_at,
                 "updated_at": project.updated_at,
                 "component_count": len(project.bom),
-                "total_quantity": sum(row.qty for row in project.bom if not row.dnp)
+                "total_quantity": sum(row.qty for row in project.bom if not row.dnp),
+                "image": project.image
             })
         return projects_info
     

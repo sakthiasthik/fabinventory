@@ -9,7 +9,7 @@
 
     <div class="d-flex gap-2">
         <!-- Download BOM Template -->
-        <a href="{{ url_for('download_bom_template') }}" class="btn btn-outline-success">
+        <a href="{{ url_for('main.download_bom_template') }}" class="btn btn-outline-success">
             <i class="bi bi-download"></i> BOM Template
         </a>
 
@@ -26,22 +26,82 @@
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ project.name }}</h5>
-                <p class="card-text text-muted">{{ project.description or 'No description' }}</p>
-                <div class="row mb-2">
-                    <div class="col-6">
-                        <small class="text-muted">Components:</small>
-                        <br><strong>{{ project.component_count }}</strong>
+
+                <div class="row">
+
+                    <!-- IMAGE -->
+                    <div class="col-md-4">
+
+                        {% if project.image %}
+
+                            <img src="{{ url_for('project.serve_project_file', name=project.name, filepath='images/' + project.image) }}"
+                                class="project-image">
+
+                        {% else %}
+
+                            <div class="project-placeholder">
+                                No Image
+                            </div>
+
+                        {% endif %}
+
                     </div>
-                    <div class="col-6">
-                        <small class="text-muted">Total Qty:</small>
-                        <br><strong>{{ project.total_quantity }}</strong>
+
+
+                    <!-- DETAILS -->
+                    <div class="col-md-8">
+
+                        <h5 class="card-title">{{ project.name }}</h5>
+
+                        <p class="card-text text-muted">
+                            {{ project.description or 'No description' }}
+                        </p>
+
+                        <div class="row mb-2">
+
+                            <div class="col-6">
+
+                                <small class="text-muted">Components:</small>
+                                <br>
+                                <strong>{{ project.component_count }}</strong>
+
+                            </div>
+
+                            <div class="col-6">
+
+                                <small class="text-muted">Total Qty:</small>
+                                <br>
+                                <strong>{{ project.total_quantity }}</strong>
+
+                            </div>
+
+                        </div>
+
+                        <div class="btn-group" role="group">
+
+                            <a href="{{ url_for('project.project_detail', name=project.name) }}"
+                            class="btn btn-sm btn-outline-primary">
+
+                            View
+
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteProjectModal"
+                                    data-project="{{ project.name }}">
+
+                                    Delete
+
+                            </button>
+
+                        </div>
+
                     </div>
+
                 </div>
-                <div class="btn-group" role="group">
-                    <a href="{{ url_for('project_detail', name=project.name) }}" class="btn btn-sm btn-outline-primary">View</a>
-                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteProjectModal" data-project="{{ project.name }}">Delete</button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -57,7 +117,8 @@
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -76,6 +137,16 @@
                         <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
                         <div class="form-text">Optional: Upload BOM now or later</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Project Image</label>
+                        <input type="file"
+                            name="project_image"
+                            class="form-control"
+                            accept="image/*">
+                        <div class="form-text">
+                            Optional: Upload project image
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -91,6 +162,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" id="deleteProjectForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Delete Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

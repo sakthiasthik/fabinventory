@@ -260,3 +260,6 @@ sessions/
 # -----------------------
 dist/
 build/
+
+# FabInventory user data (auto-generated on first run)
+fabinventory_data/
