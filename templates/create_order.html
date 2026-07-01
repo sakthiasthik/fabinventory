@@ -28,7 +28,11 @@
                             </option>
 
                             {% for project in projects %}
-                            <option value="{{ project.name }}">
+                            <option value="{{ project.name }}"
+                                    data-elec="{{ project.elec_count }}"
+                                    data-mech="{{ project.mech_count }}"
+                                    data-pcb="{{ project.pcb_count }}"
+                                    data-3d="{{ project.print3d_count }}">
                                 {{ project.name }}
                             </option>
                             {% endfor %}
@@ -773,46 +777,34 @@
 
     function addProjectToBuild() {
 
-        const projectName =
-            document.getElementById(
-                "projectSelect"
-            ).value;
+        const sel = document.getElementById("projectSelect");
+        const projectName = sel.value;
+        const qty = parseInt(document.getElementById("projectQty").value);
 
-        const qty = parseInt(
+        if (!projectName || qty <= 0) return;
 
-            document.getElementById(
-                "projectQty"
-            ).value
-        );
+        // Get counts from the selected option's data attributes
+        const selectedOption = sel.options[sel.selectedIndex];
+        const counts = {
+            elec: parseInt(selectedOption.dataset.elec || 0),
+            mech: parseInt(selectedOption.dataset.mech || 0),
+            pcb:  parseInt(selectedOption.dataset.pcb  || 0),
+            prn3d: parseInt(selectedOption.dataset['3d'] || 0),
+        };
 
-        if (!projectName || qty <= 0)
-            return;
-
-        // ======================================
-        // CHECK IF ALREADY EXISTS
-        // ======================================
-
-        const existing = selectedProjects.find(
-
-            p => p.name === projectName
-        );
+        const existing = selectedProjects.find(p => p.name === projectName);
 
         if (existing) {
-
             existing.qty += qty;
-
         } else {
-
             selectedProjects.push({
-
                 name: projectName,
-
-                qty: qty
+                qty: qty,
+                counts: counts,
             });
         }
 
         renderSelectedProjects();
-
         loadAllProjectComponents();
     }
 
@@ -853,8 +845,15 @@
 
         container.innerHTML = selectedProjects.map(
 
-            (project, index) => `
+            (project, index) => {
+                const c = project.counts || {};
+                const parts = [];
+                if (c.elec)  parts.push(`Elec: ${c.elec}`);
+                if (c.mech)  parts.push(`Mech: ${c.mech}`);
+                if (c.pcb)   parts.push(`PCB: ${c.pcb}`);
+                if (c.prn3d) parts.push(`3D: ${c.prn3d}`);
 
+                return `
                 <div class="d-flex
                             justify-content-between
                             align-items-center
@@ -862,13 +861,9 @@
                             py-2">
 
                     <div>
-
-                        <strong>
-                            ${escapeHtml(project.name)}
-                        </strong>
-
-                        × ${project.qty}
-
+                        <strong>${escapeHtml(project.name)}</strong>
+                        <small class="text-muted ms-2">(${parts.join(', ') || 'No components'})</small>
+                        <span class="badge bg-primary ms-2">× ${project.qty}</span>
                     </div>
 
                     <button
@@ -879,7 +874,8 @@
                     </button>
 
                 </div>
-            `
+                `;
+            }
         ).join('');
     }
 

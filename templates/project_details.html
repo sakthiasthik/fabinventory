@@ -1079,7 +1079,7 @@ window.addEventListener('load', function () {
 
     loader.load(
 
-        "{{ '/' + project.model_3d_file.replace('\\', '/') }}",
+        "{{ url_for('project.serve_project_file', name=project.name, filepath=project.model_3d_file) }}",
 
         function (geometry) {
 
