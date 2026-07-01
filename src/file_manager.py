@@ -13,12 +13,12 @@ from src.models import validate_project_name
 class FileManager:  # Make sure this is exactly "FileManager" (capital F, capital M)
     """Handles all file system operations"""
 
-    def __init__(self, repo_path: str = "./fabinventory_data"):
-        self.repo_path = Path(repo_path)
-        self.projects_dir = self.repo_path / "projects"
-        self.master_dir = self.repo_path / "master"
-        self.orders_dir = self.repo_path / "orders"
-        self.config_file = self.repo_path / "config.json"
+    def __init__(self, data_path: str = "./fabinventory_data"):
+        self.data_path = Path(data_path)
+        self.projects_dir = self.data_path / "projects"
+        self.master_dir = self.data_path / "master"
+        self.orders_dir = self.data_path / "orders"
+        self.config_file = self.data_path / "config.json"
         self._id_lock = threading.Lock()
 
         # Ensure directory structure exists
@@ -48,11 +48,12 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         self.master_dir.mkdir(parents=True, exist_ok=True)
         self.orders_dir.mkdir(parents=True, exist_ok=True)
         
-        # Initialize master inventory file if not exists
-        master_file = self.master_dir / "electronics.json"
-        if not master_file.exists():
-            self._save_json(master_file, [])
-        
+        # Initialize master inventory files if not exists
+        for filename in ("electronics.json", "mechanical.json", "pcb.json", "print3d.json"):
+            master_file = self.master_dir / filename
+            if not master_file.exists():
+                self._save_json(master_file, [])
+
         # Initialize next_id counter
         next_id_file = self.master_dir / "next_id.txt"
         if not next_id_file.exists():
@@ -215,7 +216,61 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
             current_id = int(next_id_file.read_text().strip())
             next_id_file.write_text(str(current_id + 1))
             return current_id
-    
+
+    # ── Mechanical master inventory ──────────────────────────────
+
+    def save_mechanical_inventory(self, items) -> bool:
+        try:
+            master_file = self.master_dir / "mechanical.json"
+            data = [item.to_dict() for item in items]
+            self._save_json(master_file, data)
+            return True
+        except Exception as e:
+            print(f"Error saving mechanical inventory: {e}")
+            return False
+
+    def load_mechanical_inventory(self):
+        master_file = self.master_dir / "mechanical.json"
+        data = self._load_json(master_file) or []
+        from src.models import MasterItemMech
+        return [MasterItemMech.from_dict(item) for item in data]
+
+    # ── PCB master inventory ────────────────────────────────────
+
+    def save_pcb_inventory(self, items) -> bool:
+        try:
+            master_file = self.master_dir / "pcb.json"
+            data = [item.to_dict() for item in items]
+            self._save_json(master_file, data)
+            return True
+        except Exception as e:
+            print(f"Error saving PCB inventory: {e}")
+            return False
+
+    def load_pcb_inventory(self):
+        master_file = self.master_dir / "pcb.json"
+        data = self._load_json(master_file) or []
+        from src.models import MasterItemPcb
+        return [MasterItemPcb.from_dict(item) for item in data]
+
+    # ── 3D Print master inventory ────────────────────────────────
+
+    def save_print3d_inventory(self, items) -> bool:
+        try:
+            master_file = self.master_dir / "print3d.json"
+            data = [item.to_dict() for item in items]
+            self._save_json(master_file, data)
+            return True
+        except Exception as e:
+            print(f"Error saving 3D print inventory: {e}")
+            return False
+
+    def load_print3d_inventory(self):
+        master_file = self.master_dir / "print3d.json"
+        data = self._load_json(master_file) or []
+        from src.models import MasterItemPrn3D
+        return [MasterItemPrn3D.from_dict(item) for item in data]
+
     # Order operations
     def save_order(self, order) -> bool:
         """Save purchase order to disk"""
