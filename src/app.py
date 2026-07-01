@@ -107,18 +107,15 @@ class AppState:
             
             self.git_manager = GitManager(self.repo_path)
             self.aggregator = Aggregator(self.config.company_prefix)
-            
-            # Get next ID from file manager
-            next_id = self.file_manager.get_next_id()
-            self.aggregator.set_next_id(next_id)
-            
+
             self.project_manager = ProjectManager(self.file_manager)
             self.inventory_manager = InventoryManager(self.file_manager, self.aggregator)
-            
-            # Load inventory
+
+            # Load/refresh all inventories
             projects = list(self.project_manager.projects.values())
             self.inventory_manager.update_inventory(projects)
-            
+            self.inventory_manager.update_non_elec_inventory(projects)
+
             self.initialized = True
         return True
 
@@ -389,9 +386,10 @@ def create_project():
                     if filepath.exists():
                         filepath.unlink()
 
-            # Step 3: Refresh inventory
+            # Step 3: Refresh all inventories
             projects = list(state.project_manager.projects.values())
             state.inventory_manager.update_inventory(projects)
+            state.inventory_manager.update_non_elec_inventory(projects)
 
             # Step 4: Git commit
             if state.git_manager:
@@ -432,10 +430,11 @@ def upload_bom(name):
             # Parse and update BOM
             updated = state.project_manager.update_project_bom(name, str(filepath))
             if updated:
-                # Refresh inventory
+                # Refresh all inventories
                 projects = list(state.project_manager.projects.values())
                 state.inventory_manager.update_inventory(projects)
-                
+                state.inventory_manager.update_non_elec_inventory(projects)
+
                 # Commit to Git
                 if state.git_manager:
                     state.git_manager.commit(f"Updated BOM for project '{name}'")
@@ -494,9 +493,10 @@ def delete_project(name):
         return jsonify({'error': 'App not initialized'}), 500
     
     if state.project_manager.delete_project(name):
-        # Refresh inventory
+        # Refresh all inventories
         projects = list(state.project_manager.projects.values())
         state.inventory_manager.update_inventory(projects)
+        state.inventory_manager.update_non_elec_inventory(projects)
         
         # Commit to Git
         if state.git_manager:
@@ -559,38 +559,55 @@ def download_bom_template():
 
 @app.route('/inventory')
 def inventory():
-    """View master inventory"""
+    """View master inventory (tabbed: electrical|mechanical|pcb|3dprint)"""
     if not state.init_app():
         return redirect(url_for('setup'))
-    
-    inventory = state.inventory_manager.get_inventory()
-    return render_template('inventory.html', inventory=inventory)
+
+    tab = request.args.get('tab', 'electrical')
+
+    if tab == 'mechanical':
+        items = state.inventory_manager.mech_inventory
+    elif tab == 'pcb':
+        items = state.inventory_manager.pcb_inventory
+    elif tab == '3dprint':
+        items = state.inventory_manager.print3d_inventory
+    else:
+        items = state.inventory_manager.inventory
+
+    return render_template('inventory.html', inventory=items, active_tab=tab)
 
 @app.route('/inventory/update-stock', methods=['POST'])
 def update_stock():
-    """Update stock for an item"""
+    """Update stock for an item (any category)"""
     if not state.init_app():
         return jsonify({'error': 'App not initialized'}), 500
 
     internal_id = request.form.get('internal_id', '').strip()
+    category = request.form.get('category', 'electrical').strip()
 
-    # Validate stock value
     try:
         new_stock = int(request.form.get('stock', 0))
         if new_stock < 0:
             flash('Stock cannot be negative', 'error')
-            return redirect(url_for('inventory'))
+            return redirect(url_for('inventory', tab=category))
     except (ValueError, TypeError):
         flash('Invalid stock value', 'error')
-        return redirect(url_for('inventory'))
+        return redirect(url_for('inventory', tab=category))
 
-    # Verify the item exists before updating
-    item = state.inventory_manager.find_item(internal_id)
-    if not item:
-        flash(f'Item "{internal_id}" not found in inventory', 'error')
-        return redirect(url_for('inventory'))
+    if category == 'mechanical':
+        updated = state.inventory_manager.update_mechanical_stock(internal_id, new_stock)
+    elif category == 'pcb':
+        updated = state.inventory_manager.update_pcb_stock(internal_id, new_stock)
+    elif category == '3dprint':
+        updated = state.inventory_manager.update_print3d_stock(internal_id, new_stock)
+    else:
+        # Verify item exists for electrical
+        item = state.inventory_manager.find_item(internal_id)
+        if not item:
+            flash(f'Item "{internal_id}" not found in inventory', 'error')
+            return redirect(url_for('inventory', tab=category))
+        updated = state.inventory_manager.update_stock(internal_id, new_stock)
 
-    updated = state.inventory_manager.update_stock(internal_id, new_stock)
     if updated:
         if state.git_manager:
             state.git_manager.commit(f"Updated stock for {internal_id} to {new_stock}")
@@ -598,7 +615,132 @@ def update_stock():
     else:
         flash(f'Failed to update stock for {internal_id}', 'error')
 
+    return redirect(url_for('inventory', tab=category))
+
+
+@app.route('/inventory/import-stock', methods=['POST'])
+def import_stock():
+    """Bulk-import stock levels from Excel/CSV file."""
+    if not state.init_app():
+        return jsonify({'error': 'App not initialized'}), 500
+
+    if 'stock_file' not in request.files:
+        flash('No file uploaded', 'error')
+        return redirect(url_for('inventory'))
+
+    file = request.files['stock_file']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(url_for('inventory'))
+
+    import pandas as pd
+    import io
+
+    filename = secure_filename(file.filename)
+    try:
+        if filename.lower().endswith('.csv'):
+            df = pd.read_csv(io.StringIO(file.read().decode('utf-8')))
+        else:
+            df = pd.read_excel(file, engine='openpyxl')
+    except Exception as e:
+        flash(f'Failed to read file: {e}', 'error')
+        return redirect(url_for('inventory'))
+
+    # Normalize column names
+    df.columns = [str(c).strip().lower() for c in df.columns]
+
+    updated_count = 0
+    errors = []
+    inv = state.inventory_manager
+
+    for idx, row in df.iterrows():
+        category = str(row.get('category', 'electrical')).strip().lower()
+
+        try:
+            stock = int(row.get('stock', 0))
+        except (ValueError, TypeError):
+            errors.append(f"Row {idx + 2}: invalid stock value")
+            continue
+
+        if category in ('electrical', 'ele'):
+            value = str(row.get('value', '')).strip()
+            footprint = str(row.get('footprint', '')).strip()
+            if not value or not footprint:
+                errors.append(f"Row {idx + 2}: missing value or footprint")
+                continue
+            matched = False
+            for item in inv.inventory:
+                if item.value == value and item.footprint == footprint:
+                    item.current_stock = stock
+                    item.last_updated = datetime.now().isoformat()
+                    updated_count += 1
+                    matched = True
+                    break
+            if not matched:
+                errors.append(f"Row {idx + 2}: no match for {value}|{footprint}")
+
+        elif category in ('mechanical', 'mec'):
+            part_name = str(row.get('part_name', '')).strip()
+            value = str(row.get('value', '')).strip()
+            key = f"{part_name}|{value}"
+            matched = False
+            for item in inv.mech_inventory:
+                if item.get_aggregation_key() == key:
+                    item.current_stock = stock
+                    item.last_updated = datetime.now().isoformat()
+                    updated_count += 1
+                    matched = True
+                    break
+            if not matched:
+                errors.append(f"Row {idx + 2}: no match for mechanical {key}")
+
+        elif category == 'pcb':
+            board_name = str(row.get('board_name', '')).strip()
+            matched = False
+            for item in inv.pcb_inventory:
+                if item.board_name == board_name:
+                    item.current_stock = stock
+                    item.last_updated = datetime.now().isoformat()
+                    updated_count += 1
+                    matched = True
+                    break
+            if not matched:
+                errors.append(f"Row {idx + 2}: no match for PCB '{board_name}'")
+
+        elif category in ('3dprint', 'print3d', '3d'):
+            part_name = str(row.get('part_name', '')).strip()
+            matched = False
+            for item in inv.print3d_inventory:
+                if item.part_name == part_name:
+                    item.current_stock = stock
+                    item.last_updated = datetime.now().isoformat()
+                    updated_count += 1
+                    matched = True
+                    break
+            if not matched:
+                errors.append(f"Row {idx + 2}: no match for 3D print '{part_name}'")
+
+        else:
+            errors.append(f"Row {idx + 2}: unknown category '{category}'")
+
+    # Persist all changes
+    inv.file_manager.save_master_inventory(inv.inventory)
+    inv.file_manager.save_mechanical_inventory(inv.mech_inventory)
+    inv.file_manager.save_pcb_inventory(inv.pcb_inventory)
+    inv.file_manager.save_print3d_inventory(inv.print3d_inventory)
+
+    if state.git_manager:
+        state.git_manager.commit(f"Bulk stock import: {updated_count} items updated")
+
+    flash(f'Import complete. Updated {updated_count} items.', 'success')
+    if errors:
+        for err in errors[:10]:
+            flash(err, 'warning')
+        if len(errors) > 10:
+            flash(f'... and {len(errors) - 10} more warnings.', 'warning')
+
     return redirect(url_for('inventory'))
+
 
 @app.route('/orders')
 def orders():
@@ -984,6 +1126,12 @@ def upload_3d_bom(name):
     state.project_manager.file_manager.save_project(project)
     state.project_manager.projects[name] = project
 
+    # Refresh non-elec inventory
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_non_elec_inventory(projects)
+    if state.git_manager:
+        state.git_manager.commit(f"Updated 3D print BOM for '{name}'")
+
     flash('3D BOM uploaded successfully', 'success')
 
     return redirect(url_for('project_detail', name=name, tab='3dprint'))
@@ -1020,6 +1168,12 @@ def upload_mechanical_bom(name):
     state.project_manager.file_manager.save_project(project)
     state.project_manager.projects[name] = project
 
+    # Refresh non-elec inventory
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_non_elec_inventory(projects)
+    if state.git_manager:
+        state.git_manager.commit(f"Updated mechanical BOM for '{name}'")
+
     flash('Mechanical BOM uploaded successfully', 'success')
 
     return redirect(url_for('project_detail', name=name, tab='mechanical'))
@@ -1055,6 +1209,12 @@ def upload_pcb_bom(name):
 
     state.project_manager.file_manager.save_project(project)
     state.project_manager.projects[name] = project
+
+    # Refresh non-elec inventory
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_non_elec_inventory(projects)
+    if state.git_manager:
+        state.git_manager.commit(f"Updated PCB BOM for '{name}'")
 
     flash('PCB BOM uploaded successfully', 'success')
 
@@ -1230,70 +1390,37 @@ def save_pcb_repo(name):
         )
     )
 
-@app.route(
-    '/api/inventory/add',
-    methods=['POST']
-)
+@app.route('/api/inventory/add', methods=['POST'])
 def add_inventory_component():
-
     if not state.init_app():
-        return jsonify({
-            'error': 'App not initialized'
-        }), 500
+        return jsonify({'error': 'App not initialized'}), 500
 
     data = request.json
-
     from src.models import MasterItem
 
-    inventory = state.inventory_manager.inventory
-
-    internal_id = f"SA-ELE-{len(inventory)+1:05d}"
+    prefix = state.config.company_prefix.upper()
+    next_id = state.file_manager.get_next_id()
+    internal_id = f"{prefix}-ELE-{next_id:05d}"
 
     item = MasterItem(
-
         internal_id=internal_id,
-
-        value=data.get(
-            'value',
-            ''
-        ),
-
-        footprint=data.get(
-            'footprint',
-            ''
-        ),
-
+        value=data.get('value', ''),
+        footprint=data.get('footprint', ''),
         total_required=0,
-
-        current_stock=int(
-            data.get(
-                'current_stock',
-                0
-            )
-        ),
-
+        current_stock=int(data.get('current_stock', 0)),
         used_in_projects=[],
-
-        associated_mpns=[
-            data.get('mpn', '')
-        ] if data.get('mpn') else []
+        associated_mpns=[data.get('mpn', '')] if data.get('mpn') else [],
     )
 
-    # ADD ITEM
-    inventory.append(item)
+    state.inventory_manager.inventory.append(item)
+    state.inventory_manager.file_manager.save_master_inventory(
+        state.inventory_manager.inventory
+    )
 
-    # SAVE USING EXISTING INVENTORY MANAGER FLOW
-    state.inventory_manager.inventory = inventory
-
-    # OPTIONAL GIT COMMIT
     if state.git_manager:
-        state.git_manager.commit(
-            f"Added inventory component {item.value}"
-        )
+        state.git_manager.commit(f"Added inventory component {item.value}")
 
-    return jsonify({
-        'success': True
-    })
+    return jsonify({'success': True})
 
 @app.route("/project/<name>/upload_pcb_image", methods=["POST"])
 def upload_pcb_image(name):
