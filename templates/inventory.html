@@ -11,25 +11,25 @@
 <ul class="nav nav-tabs mb-4" id="inventoryTabs">
     <li class="nav-item">
         <a class="nav-link {% if active_tab == 'electrical' %}active{% endif %}"
-           href="{{ url_for('inventory', tab='electrical') }}">
+           href="{{ url_for('inventory.inventory', tab='electrical') }}">
             Electrical
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link {% if active_tab == 'mechanical' %}active{% endif %}"
-           href="{{ url_for('inventory', tab='mechanical') }}">
+           href="{{ url_for('inventory.inventory', tab='mechanical') }}">
             Mechanical
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link {% if active_tab == 'pcb' %}active{% endif %}"
-           href="{{ url_for('inventory', tab='pcb') }}">
+           href="{{ url_for('inventory.inventory', tab='pcb') }}">
             PCB
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link {% if active_tab == '3dprint' %}active{% endif %}"
-           href="{{ url_for('inventory', tab='3dprint') }}">
+           href="{{ url_for('inventory.inventory', tab='3dprint') }}">
             3D Print
         </a>
     </li>
@@ -145,7 +145,7 @@
 <div class="modal fade" id="editStockModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('update_stock') }}">
+            <form method="POST" action="{{ url_for('inventory.update_stock') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="category" value="{{ active_tab }}">
                 <div class="modal-header">
@@ -181,7 +181,7 @@
 <div class="modal fade" id="importStockModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('import_stock') }}"
+            <form method="POST" action="{{ url_for('inventory.import_stock') }}"
                   enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
