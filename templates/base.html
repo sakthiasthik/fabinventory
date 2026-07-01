@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
                 <i class="bi bi-box-seam"></i> FabInventory
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -20,22 +20,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('projects') }}">
+                        <a class="nav-link" href="{{ url_for('main.projects') }}">
                             <i class="bi bi-folder"></i> Projects
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('inventory') }}">
+                        <a class="nav-link" href="{{ url_for('inventory.inventory') }}">
                             <i class="bi bi-clipboard-data"></i> Inventory
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('orders') }}">
+                        <a class="nav-link" href="{{ url_for('orders.orders') }}">
                             <i class="bi bi-cart"></i> Orders
                         </a>
                     </li>
@@ -77,7 +77,7 @@
                                 {% endif %}
                             </div>
                             <hr class="my-2">
-                            <form method="POST" action="{{ url_for('git_settings') }}" class="mb-0">
+                            <form method="POST" action="{{ url_for('git.git_settings') }}" class="mb-0">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-2">
                                     <input type="text" class="form-control form-control-sm" name="message"
@@ -109,7 +109,7 @@
                                 </div>
                             </form>
                             <div class="mt-2 text-end">
-                                <a href="{{ url_for('git_settings') }}" class="text-muted" style="font-size:0.75rem;">
+                                <a href="{{ url_for('git.git_settings') }}" class="text-muted" style="font-size:0.75rem;">
                                     Full git settings →
                                 </a>
                             </div>

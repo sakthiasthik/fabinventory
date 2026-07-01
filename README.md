@@ -123,14 +123,21 @@ fabinventory/
 ├── setup.py                  # pip-installable package
 ├── .env.example              # Environment template
 ├── src/
-│   ├── app.py                # Flask application & routes
+│   ├── app.py                # Flask setup, auth, state, blueprint registration
 │   ├── models.py             # Data models (dataclasses)
 │   ├── file_manager.py       # JSON file read/write
 │   ├── project_manager.py    # Project CRUD
 │   ├── inventory_manager.py  # Inventory & order logic
 │   ├── aggregator.py         # BOM → master inventory aggregation
 │   ├── bom_parser.py         # CSV/XLSX BOM parser
-│   └── git_manager.py        # Git commit/push/pull
+│   ├── git_manager.py        # Git commit/push/pull
+│   └── routes/               # Flask Blueprints (route organisation)
+│       ├── main.py           # Auth + core pages (/login, /setup, /dashboard...)
+│       ├── projects.py       # Project routes (/project/*)
+│       ├── inventory.py      # Inventory routes (/inventory/*)
+│       ├── orders.py         # Order routes (/order/*)
+│       ├── api.py            # REST API endpoints (/api/*)
+│       └── git_routes.py     # Git settings (/git-settings)
 ├── templates/                # Jinja2 HTML templates
 ├── static/                   # CSS, JS, BOM template
 ├── fabinventory_data/        # Your data (auto-created)
@@ -140,6 +147,19 @@ fabinventory/
 │   └── orders/               # Purchase orders
 └── test/                     # Pytest test suite
 ```
+
+### Blueprint architecture
+
+Routes are split by domain so each file is small and easy to find:
+
+| Blueprint | File | URL prefix | What lives there |
+|---|---|---|---|
+| `main` | `routes/main.py` | _(none)_ | Login, logout, setup, dashboard, project listing |
+| `project` | `routes/projects.py` | `/project` | Project detail, BOM uploads, images, Gerber, delete |
+| `inventory` | `routes/inventory.py` | `/inventory` | Master inventory view, stock update, import |
+| `orders` | `routes/orders.py` | _(none)_ | Order list, create, receive, summary |
+| `api` | `routes/api.py` | `/api` | JSON REST endpoints |
+| `git` | `routes/git_routes.py` | _(none)_ | Git settings, commit, push, pull |
 
 ---
 
