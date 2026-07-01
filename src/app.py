@@ -86,7 +86,7 @@ app.config['UPLOAD_FOLDER'].mkdir(parents=True, exist_ok=True)
 # Global application state
 class AppState:
     def __init__(self):
-        self.repo_path = os.environ.get('REPO_PATH', './fabinventory_data')
+        self.data_path = os.environ.get('DATA_PATH', './fabinventory_data')
         self.file_manager = None
         self.git_manager = None
         self.project_manager = None
@@ -98,14 +98,17 @@ class AppState:
     def init_app(self):
         """Initialize all managers"""
         if not self.initialized:
-            self.file_manager = FileManager(self.repo_path)
+            self.file_manager = FileManager(self.data_path)
             self.config = self.file_manager.load_config()
-            
+
             # If no config, we need to set up first
             if not self.config:
                 return False
-            
-            self.git_manager = GitManager(self.repo_path)
+
+            # Git targets the project root (single-repo architecture).
+            # Gracefully skips if no .git exists (e.g. pip install).
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.git_manager = GitManager(project_root)
             self.aggregator = Aggregator(self.config.company_prefix)
 
             self.project_manager = ProjectManager(self.file_manager)
@@ -238,15 +241,15 @@ def setup():
     """Initial setup - configure company prefix"""
     if request.method == 'POST':
         company_prefix = request.form.get('company_prefix', '').upper()
-        repo_path = request.form.get('repo_path', './fabinventory_data')
-        
+        data_path = request.form.get('data_path', './fabinventory_data')
+
         if len(company_prefix) != 2:
             flash('Company prefix must be exactly 2 letters', 'error')
             return render_template('setup.html')
-        
+
         # Save config
-        config = Config(company_prefix=company_prefix, repo_path=repo_path)
-        file_manager = FileManager(repo_path)
+        config = Config(company_prefix=company_prefix, data_path=data_path)
+        file_manager = FileManager(data_path)
         file_manager.save_config(config)
         
         flash('Setup complete! You can now start using FabInventory.', 'success')
@@ -889,7 +892,7 @@ def git_settings():
    
     # Get current status
     status = state.git_manager.get_status()
-    status['repo_path'] = state.repo_path
+    status['repo_path'] = str(state.git_manager.repo_path)
     commits = state.git_manager.get_commit_history(max_count=20)
     remotes = [remote.name for remote in state.git_manager.repo.remotes] if state.git_manager.repo else []
    

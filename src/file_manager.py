@@ -13,12 +13,12 @@ from src.models import validate_project_name
 class FileManager:  # Make sure this is exactly "FileManager" (capital F, capital M)
     """Handles all file system operations"""
 
-    def __init__(self, repo_path: str = "./fabinventory_data"):
-        self.repo_path = Path(repo_path)
-        self.projects_dir = self.repo_path / "projects"
-        self.master_dir = self.repo_path / "master"
-        self.orders_dir = self.repo_path / "orders"
-        self.config_file = self.repo_path / "config.json"
+    def __init__(self, data_path: str = "./fabinventory_data"):
+        self.data_path = Path(data_path)
+        self.projects_dir = self.data_path / "projects"
+        self.master_dir = self.data_path / "master"
+        self.orders_dir = self.data_path / "orders"
+        self.config_file = self.data_path / "config.json"
         self._id_lock = threading.Lock()
 
         # Ensure directory structure exists
