@@ -69,14 +69,14 @@ class GitManager:
             print(f"Git commit error: {e}")
             return False
 
-    def push(self, remote_name: str = "origin", branch: str = "main") -> bool:
-        """Push to a configured remote."""
+    def push(self, remote_name: str = "origin") -> bool:
+        """Push current branch to a configured remote."""
         if not self.is_active():
             return False
         try:
             if remote_name not in [r.name for r in self.repo.remotes]:
-                print(f"Git: remote '{remote_name}' not configured.")
                 return False
+            branch = self.get_current_branch()
             remote = self.repo.remote(remote_name)
             push_info = remote.push(refspec=f"{branch}:{branch}")
             for info in push_info:
@@ -88,11 +88,14 @@ class GitManager:
             print(f"Git push error: {e}")
             return False
 
-    def pull(self, remote_name: str = "origin", branch: str = "main") -> bool:
-        """Pull from a configured remote."""
+    def pull(self, remote_name: str = "origin") -> bool:
+        """Pull current branch from a configured remote."""
         if not self.is_active():
             return False
         try:
+            if remote_name not in [r.name for r in self.repo.remotes]:
+                return False
+            branch = self.get_current_branch()
             remote = self.repo.remote(remote_name)
             pull_info = remote.pull(refspec=f"{branch}:{branch}")
             for info in pull_info:
@@ -115,6 +118,38 @@ class GitManager:
             return True
         except Exception as e:
             print(f"Git remote setup error: {e}")
+            return False
+
+    def get_remote_urls(self) -> Dict[str, str]:
+        """Return {remote_name: url} for all configured remotes."""
+        if not self.is_active():
+            return {}
+        return {r.name: list(r.urls)[0] for r in self.repo.remotes if r.urls}
+
+    def get_current_branch(self) -> str:
+        """Return the active branch name, or 'main' if detached."""
+        if not self.is_active():
+            return "main"
+        try:
+            if self.repo.active_branch:
+                return self.repo.active_branch.name
+            return "main"
+        except Exception:
+            return "main"
+
+    def set_user(self, name: str, email: str) -> bool:
+        """Set git user.name and user.email in the repo config."""
+        if not self.is_active():
+            return False
+        try:
+            with self.repo.config_writer() as cw:
+                cw.set_value("user", "name", name)
+                cw.set_value("user", "email", email)
+            self.user_name = name
+            self.user_email = email
+            return True
+        except Exception as e:
+            print(f"Git user config error: {e}")
             return False
 
     def get_status(self) -> dict:
