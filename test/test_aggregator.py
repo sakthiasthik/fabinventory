@@ -58,12 +58,18 @@ def test_aggregate_skips_dnp():
 
 def test_aggregate_id_generation():
     agg = Aggregator("SA")
-    agg.set_next_id(1)
+    counter = [1]
+
+    def next_id():
+        c = counter[0]
+        counter[0] += 1
+        return c
+
     project = Project(name="Test", bom=[
         BomRow(si_no=1, reference="R1", value="10k", footprint="0603",
                manufacturer_part_number="M1", manufacturer_name="Yageo", qty=5),
     ])
-    result = agg.aggregate([project])
+    result = agg.aggregate([project], next_id_fn=next_id)
     assert result[0].internal_id == "SA-ELE-00001"
 
 
