@@ -47,50 +47,31 @@ def project_detail(name):
     mechanical_rows = []
     pcb_rows = []
 
-    if hasattr(project, 'print3d_bom') and project.print3d_bom:
+    data_root = Path(state.data_path) / "projects" / name
 
-        try:
+    if project.print3d_bom:
+        full_path = data_root / project.print3d_bom
+        if full_path.exists():
+            try:
+                print3d_rows = BOMParser.parse_file(str(full_path), bom_type="3dprint")
+            except Exception as e:
+                print("3D BOM ERROR:", e)
 
-            print3d_rows = BOMParser.parse_file(
-                project.print3d_bom,
-                bom_type="3dprint"
-            )
+    if project.mechanical_bom:
+        full_path = data_root / project.mechanical_bom
+        if full_path.exists():
+            try:
+                mechanical_rows = BOMParser.parse_file(str(full_path), bom_type="mechanical")
+            except Exception as e:
+                print("MECHANICAL BOM ERROR:", e)
 
-            print("3D ROWS:", print3d_rows)
-
-        except Exception as e:
-
-            print("3D BOM ERROR:", e)
-
-    if hasattr(project, 'mechanical_bom') and project.mechanical_bom:
-
-        try:
-
-            mechanical_rows = BOMParser.parse_file(
-                project.mechanical_bom,
-                bom_type="mechanical"
-            )
-
-            print("MECHANICAL ROWS:", mechanical_rows)
-
-        except Exception as e:
-
-            print("MECHANICAL BOM ERROR:", e)
-
-    if hasattr(project, 'pcb_bom') and project.pcb_bom:
-
-        try:
-
-            pcb_rows = BOMParser.parse_file(
-                project.pcb_bom,
-                bom_type="pcb"
-            )
-
-            print("PCB ROWS:", pcb_rows)
-
-        except Exception as e:
-
-            print("PCB BOM ERROR:", e)
+    if project.pcb_bom:
+        full_path = data_root / project.pcb_bom
+        if full_path.exists():
+            try:
+                pcb_rows = BOMParser.parse_file(str(full_path), bom_type="pcb")
+            except Exception as e:
+                print("PCB BOM ERROR:", e)
 
     # ── Gerber file listing ────────────────────────────────────
     gerber_files = []
