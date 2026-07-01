@@ -261,8 +261,115 @@ class Supplier:
         )
 
 
+# ================================================================
+# NON-ELECTRICAL MASTER INVENTORY ITEMS
+# ================================================================
+
+@dataclass
+class MasterItemMech:
+    internal_id: str
+    part_name: str
+    value: str
+    total_required: int = 0
+    current_stock: int = 0
+    used_in_projects: List[str] = field(default_factory=list)
+    last_updated: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    @property
+    def to_order(self):
+        return max(0, self.total_required - self.current_stock)
+
+    def get_aggregation_key(self):
+        return f"{self.part_name}|{self.value}"
+
+    def to_dict(self):
+        return {
+            "internal_id": self.internal_id,
+            "part_name": self.part_name,
+            "value": self.value,
+            "total_required": self.total_required,
+            "current_stock": self.current_stock,
+            "used_in_projects": self.used_in_projects,
+            "last_updated": self.last_updated,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
+
+
+@dataclass
+class MasterItemPcb:
+    internal_id: str
+    board_name: str
+    total_required: int = 0
+    current_stock: int = 0
+    used_in_projects: List[str] = field(default_factory=list)
+    last_updated: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    @property
+    def to_order(self):
+        return max(0, self.total_required - self.current_stock)
+
+    def get_aggregation_key(self):
+        return self.board_name
+
+    def to_dict(self):
+        return {
+            "internal_id": self.internal_id,
+            "board_name": self.board_name,
+            "total_required": self.total_required,
+            "current_stock": self.current_stock,
+            "used_in_projects": self.used_in_projects,
+            "last_updated": self.last_updated,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
+
+
+@dataclass
+class MasterItemPrn3D:
+    internal_id: str
+    part_name: str
+    material: str = ""
+    total_required: int = 0
+    current_stock: int = 0
+    used_in_projects: List[str] = field(default_factory=list)
+    last_updated: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    @property
+    def to_order(self):
+        return max(0, self.total_required - self.current_stock)
+
+    def get_aggregation_key(self):
+        return self.part_name
+
+    def to_dict(self):
+        return {
+            "internal_id": self.internal_id,
+            "part_name": self.part_name,
+            "material": self.material,
+            "total_required": self.total_required,
+            "current_stock": self.current_stock,
+            "used_in_projects": self.used_in_projects,
+            "last_updated": self.last_updated,
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
+
+
 @dataclass
 class Config:
     company_prefix: str
-    repo_path: str = "./fabinventory_data"
+    data_path: str = "./fabinventory_data"
     last_sync: Optional[str] = None
