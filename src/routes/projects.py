@@ -571,6 +571,12 @@ def upload_gerber_zip(name):
     project.updated_at = datetime.now().isoformat()
     state.project_manager.file_manager.save_project(project)
 
+    # Refresh PCB inventory so this board appears in Inventory → PCB tab
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_non_elec_inventory(projects)
+    if state.git_manager:
+        state.git_manager.commit(f"Updated Gerber files for '{name}'")
+
     return redirect(url_for("project.project_detail", name=name, tab="pcb"))
 
 

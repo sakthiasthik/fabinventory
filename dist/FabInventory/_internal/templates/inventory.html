@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Master Inventory</h1>
+
+<!-- ========================================
+     CATEGORY TABS
+======================================== -->
+<ul class="nav nav-tabs mb-4" id="inventoryTabs">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'electrical' %}active{% endif %}"
+           href="{{ url_for('inventory.inventory', tab='electrical') }}">
+            Electrical
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'mechanical' %}active{% endif %}"
+           href="{{ url_for('inventory.inventory', tab='mechanical') }}">
+            Mechanical
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'pcb' %}active{% endif %}"
+           href="{{ url_for('inventory.inventory', tab='pcb') }}">
+            PCB
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == '3dprint' %}active{% endif %}"
+           href="{{ url_for('inventory.inventory', tab='3dprint') }}">
+            3D Print
+        </a>
+    </li>
+</ul>
+
+<!-- ========================================
+     TOOLBAR
+======================================== -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex gap-2 align-items-center">
+        {% if active_tab == 'electrical' %}
+        <button class="btn btn-primary" onclick="showAddInventoryModal()">
+            <i class="bi bi-plus-circle"></i> Add Component
+        </button>
+        {% endif %}
+        <button class="btn btn-outline-primary" onclick="showImportStockModal()">
+            <i class="bi bi-upload"></i> Import Stock
+        </button>
+    </div>
+    <input type="text" id="inventorySearch" class="form-control w-auto"
+           placeholder="Search…" style="min-width:220px;">
+</div>
+
+<!-- ========================================
+     INVENTORY TABLE
+======================================== -->
+{% if inventory %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="inventoryTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                {% if active_tab == 'electrical' %}
+                <th>Value</th>
+                <th>Footprint</th>
+                <th>MPNs</th>
+                {% elif active_tab == 'mechanical' %}
+                <th>Part Name</th>
+                <th>Value</th>
+                {% elif active_tab == 'pcb' %}
+                <th>Board Name</th>
+                {% elif active_tab == '3dprint' %}
+                <th>Part Name</th>
+                <th>Material</th>
+                {% endif %}
+                <th>Required</th>
+                <th>Stock</th>
+                <th>To Order</th>
+                <th>Projects</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td><code>{{ item.internal_id }}</code></td>
+
+                {% if active_tab == 'electrical' %}
+                <td><strong>{{ item.value }}</strong></td>
+                <td>{{ item.footprint }}</td>
+                <td>
+                    {% if item.associated_mpns %}
+                    <div class="mpn-list">
+                        {% for mpn in item.associated_mpns %}
+                            {% if mpn %}<code class="text-muted me-1" style="font-size:0.8em;">{{ mpn }}</code>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                {% elif active_tab == 'mechanical' %}
+                <td><strong>{{ item.part_name }}</strong></td>
+                <td>{{ item.value }}</td>
+                {% elif active_tab == 'pcb' %}
+                <td><strong>{{ item.board_name }}</strong></td>
+                {% elif active_tab == '3dprint' %}
+                <td><strong>{{ item.part_name }}</strong></td>
+                <td>{{ item.material }}</td>
+                {% endif %}
+
+                <td>{{ item.total_required }}</td>
+                <td>
+                    <span class="stock-value">{{ item.current_stock }}</span>
+                    <button class="btn btn-sm btn-outline-primary edit-stock"
+                            data-id="{{ item.internal_id }}"
+                            data-stock="{{ item.current_stock }}"
+                            data-name="{% if active_tab == 'electrical' %}{{ item.value }} — {{ item.footprint }}{% elif active_tab == 'mechanical' %}{{ item.part_name }} — {{ item.value }}{% elif active_tab == 'pcb' %}{{ item.board_name }}{% elif active_tab == '3dprint' %}{{ item.part_name }}{% endif %}"
+                            data-required="{{ item.total_required }}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </td>
+                <td class="{% if item.to_order > 0 %}text-warning fw-bold{% endif %}">
+                    {{ item.to_order }}
+                </td>
+                <td><small class="text-muted">{{ item.used_in_projects|join(', ') }}</small></td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No components in this category. Upload BOMs to projects to build inventory.
+</div>
+{% endif %}
+
+
+<!-- ========================================
+     EDIT STOCK MODAL
+======================================== -->
+<div class="modal fade" id="editStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('inventory.update_stock') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="category" value="{{ active_tab }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <div class="fw-bold" id="modalComponentName"></div>
+                        <div class="mt-1">
+                            <small class="text-muted">Required across all projects:</small>
+                            <strong id="modalComponentRequired" class="ms-1"></strong>
+                        </div>
+                    </div>
+                    <input type="hidden" name="internal_id" id="editStockId">
+                    <div class="mb-3">
+                        <label for="stock" class="form-label">Current Stock</label>
+                        <input type="number" class="form-control" id="stock" name="stock" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================
+     IMPORT STOCK MODAL
+======================================== -->
+<div class="modal fade" id="importStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('inventory.import_stock') }}"
+                  enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Stock Levels</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Upload a CSV or Excel file with stock levels.</p>
+                    <div class="mb-3">
+                        <label class="form-label">File (CSV or Excel)</label>
+                        <input type="file" name="stock_file" class="form-control"
+                               accept=".csv,.xlsx,.xls" required>
+                    </div>
+                    <div class="alert alert-info small mb-0">
+                        <strong>Expected columns:</strong><br>
+                        <code>category</code> —
+                        <code>electrical</code>,
+                        <code>mechanical</code>,
+                        <code>pcb</code>, or
+                        <code>3dprint</code><br>
+                        <em>Electronics:</em> <code>value</code>, <code>footprint</code>, <code>stock</code><br>
+                        <em>Mechanical:</em> <code>part_name</code>, <code>value</code>, <code>stock</code><br>
+                        <em>PCB:</em> <code>board_name</code>, <code>stock</code><br>
+                        <em>3D Print:</em> <code>part_name</code>, <code>stock</code>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================
+     ADD COMPONENT MODAL (electrical only)
+======================================== -->
+{% if active_tab == 'electrical' %}
+<div class="modal fade" id="addInventoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Inventory Component</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Component Value</label>
+                    <input type="text" id="newValue" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Footprint</label>
+                    <input type="text" id="newFootprint" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">MPN</label>
+                    <input type="text" id="newMPN" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Stock</label>
+                    <input type="number" id="newStock" class="form-control" min="0" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addInventoryComponent()">
+                    Add Component
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// ── Stock edit ──────────────────────────────────────────────
+document.querySelectorAll('.edit-stock').forEach(button => {
+    button.addEventListener('click', function() {
+        document.getElementById('editStockId').value = this.dataset.id;
+        document.getElementById('stock').value = this.dataset.stock;
+        document.getElementById('modalComponentName').textContent = this.dataset.name;
+        document.getElementById('modalComponentRequired').textContent = this.dataset.required;
+        new bootstrap.Modal(document.getElementById('editStockModal')).show();
+    });
+});
+
+// ── Search ──────────────────────────────────────────────────
+document.getElementById('inventorySearch').addEventListener('keyup', function() {
+    const term = this.value.toLowerCase();
+    document.querySelectorAll('#inventoryTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+
+// ── Add component (electrical only) ─────────────────────────
+function showAddInventoryModal() {
+    new bootstrap.Modal(document.getElementById('addInventoryModal')).show();
+}
+
+async function addInventoryComponent() {
+    const payload = {
+        value: document.getElementById('newValue').value,
+        footprint: document.getElementById('newFootprint').value,
+        mpn: document.getElementById('newMPN').value,
+        current_stock: parseInt(document.getElementById('newStock').value) || 0
+    };
+
+    const response = await fetch('/api/inventory/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        location.reload();
+    } else {
+        alert(data.error || 'Failed to add component');
+    }
+}
+
+// ── Import stock modal ──────────────────────────────────────
+function showImportStockModal() {
+    new bootstrap.Modal(document.getElementById('importStockModal')).show();
+}
+</script>
+{% endblock %}

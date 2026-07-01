@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-3 align-items-center">
+    <div class="col">
+        <h1 class="mb-0">Dashboard</h1>
+    </div>
+    <div class="col-auto">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+            <i class="bi bi-plus-circle"></i> New Project
+        </button>
+    </div>
+</div>
+
+<!-- Items to Order — hero section -->
+{% if items_to_order %}
+<div class="card border-warning mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center bg-warning bg-opacity-10">
+        <h5 class="mb-0 text-warning-emphasis">
+            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+            {{ inventory_summary.total_to_order }} component{{ 's' if inventory_summary.total_to_order != 1 }} need ordering
+        </h5>
+        <a href="{{ url_for('orders.create_order') }}" class="btn btn-warning btn-sm">
+            <i class="bi bi-cart-plus"></i> Create Order
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Component</th>
+                        <th class="text-center">Required</th>
+                        <th class="text-center">In Stock</th>
+                        <th class="text-center">To Order</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_to_order %}
+                    <tr>
+                        <td class="ps-3"><code>{{ item.internal_id }}</code></td>
+                        <td>
+                            <strong>{{ item.value }}</strong>
+                            <small class="text-muted ms-1">{{ item.footprint }}</small>
+                        </td>
+                        <td class="text-center">{{ item.total_required }}</td>
+                        <td class="text-center">{{ item.current_stock }}</td>
+                        <td class="text-center fw-bold text-warning">{{ item.to_order }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if inventory_summary.total_to_order > 10 %}
+        <div class="px-3 py-2 text-muted" style="font-size:0.85rem;">
+            Showing 10 of {{ inventory_summary.total_to_order }} items.
+            <a href="{{ url_for('inventory.inventory') }}">View all in Inventory →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-check-circle-fill fs-5"></i>
+    <span>All components have sufficient stock. Nothing to order.</span>
+</div>
+{% endif %}
+
+<!-- Stats row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <a href="{{ url_for('main.projects') }}" style="text-decoration: none;">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Projects</h5>
+                    <h2 class="card-text">{{ projects|length }}</h2>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Components</h5>
+                    <h2 class="card-text">{{ inventory_summary.total_components }}</h2>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">To Order</h5>
+                    <h2 class="card-text">{{ inventory_summary.total_to_order }}</h2>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('orders.orders') }}" style="text-decoration: none;">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Orders</h5>
+                    <h2 class="card-text">{{ order_summary.pending_orders }}</h2>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Projects -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Projects</h5>
+        <a href="{{ url_for('main.projects') }}" class="btn btn-sm btn-outline-secondary">View all</a>
+    </div>
+    <div class="card-body p-0">
+        {% if projects %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Name</th>
+                        <th>Components</th>
+                        <th>Total Qty</th>
+                        <th>Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects[:5] %}
+                    <tr>
+                        <td class="ps-3"><strong>{{ project.name }}</strong></td>
+                        <td>{{ project.component_count }}</td>
+                        <td>{{ project.total_quantity }}</td>
+                        <td>{{ project.updated_at[:10] }}</td>
+                        <td>
+                            <a href="{{ url_for('project.project_detail', name=project.name) }}" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-muted">
+            No projects yet.
+            <button class="btn btn-link p-0 ms-1" data-bs-toggle="modal" data-bs-target="#createProjectModal">Create your first project</button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Project Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload BOM <span class="text-muted">(optional)</span></label>
+                        <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
+                        <div class="form-text">You can also upload a BOM later from the project page.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

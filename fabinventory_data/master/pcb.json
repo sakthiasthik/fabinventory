@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "internal_id": "SA-PCB-00067",
+    "board_name": "octopus",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T17:03:11.929335"
+  }
+]
