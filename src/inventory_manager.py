@@ -2,38 +2,46 @@
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from src.models import MasterItem, Order, OrderLineItem
+from src.models import MasterItem, MasterItemMech, MasterItemPcb, MasterItemPrn3D, Order, OrderLineItem
 from src.file_manager import FileManager
 from src.aggregator import Aggregator
 
 
 class InventoryManager:
     """Manages inventory and purchase orders"""
-    
+
     def __init__(self, file_manager: FileManager, aggregator: Aggregator):
         self.file_manager = file_manager
         self.aggregator = aggregator
+
+        # Electronics
         self.inventory: List[MasterItem] = []
+
+        # Non-electrical
+        self.mech_inventory: List[MasterItemMech] = []
+        self.pcb_inventory: List[MasterItemPcb] = []
+        self.print3d_inventory: List[MasterItemPrn3D] = []
+
         self._load_inventory()
-    
+
+    # ── Load & initialise ───────────────────────────────────────
+
     def _load_inventory(self):
         self.inventory = self.file_manager.load_master_inventory()
-        if self.inventory:
-            max_id = 0
-            for item in self.inventory:
-                try:
-                    id_num = int(item.internal_id.split('-')[-1])
-                    max_id = max(max_id, id_num)
-                except (ValueError, IndexError, AttributeError):
-                    pass
-            self.aggregator.set_next_id(max_id + 1)
-    
+        self.mech_inventory = self.file_manager.load_mechanical_inventory()
+        self.pcb_inventory = self.file_manager.load_pcb_inventory()
+        self.print3d_inventory = self.file_manager.load_print3d_inventory()
+
+    # ── Electrical ──────────────────────────────────────────────
+
     def update_inventory(self, projects) -> List[MasterItem]:
         existing_items = self.inventory if self.inventory else None
-        self.inventory = self.aggregator.aggregate(projects, existing_items)
+        self.inventory = self.aggregator.aggregate(
+            projects, existing_items, self.file_manager.get_next_id
+        )
         self.file_manager.save_master_inventory(self.inventory)
         return self.inventory
-    
+
     def update_stock(self, internal_id: str, new_stock: int) -> Optional[MasterItem]:
         for item in self.inventory:
             if item.internal_id == internal_id:
@@ -42,23 +50,141 @@ class InventoryManager:
                 self.file_manager.save_master_inventory(self.inventory)
                 return item
         return None
-    
+
     def get_inventory(self) -> List[MasterItem]:
         return self.inventory
 
+    def get_items_to_order(self) -> List[MasterItem]:
+        return [item for item in self.inventory if item.to_order > 0]
+
+    # ── Non‑electrical update helpers ───────────────────────────
+
+    def update_non_elec_inventory(self, projects):
+        self._update_mechanical(projects)
+        self._update_pcb(projects)
+        self._update_print3d(projects)
+
+    # ── Mechanical ──────────────────────────────────────────────
+
+    def _update_mechanical(self, projects):
+        from src.bom_parser import BOMParser
+
+        all_rows = []
+        for project in projects:
+            if not project.mechanical_bom:
+                continue
+            project_dir = self.file_manager._project_dir(project.name)
+            full_path = project_dir / project.mechanical_bom
+            if not full_path.exists():
+                continue
+            try:
+                rows = BOMParser.parse_file(str(full_path), bom_type="mechanical")
+                for row in rows:
+                    all_rows.append((project.name, row))
+            except Exception as e:
+                print(f"Error parsing mechanical BOM for {project.name}: {e}")
+
+        self.mech_inventory = self.aggregator.aggregate_mechanical(
+            all_rows, self.mech_inventory, self.file_manager.get_next_id
+        )
+        self.file_manager.save_mechanical_inventory(self.mech_inventory)
+
+    def update_mechanical_stock(
+        self, internal_id: str, new_stock: int
+    ) -> Optional[MasterItemMech]:
+        for item in self.mech_inventory:
+            if item.internal_id == internal_id:
+                item.current_stock = new_stock
+                item.last_updated = datetime.now().isoformat()
+                self.file_manager.save_mechanical_inventory(self.mech_inventory)
+                return item
+        return None
+
+    # ── PCB ─────────────────────────────────────────────────────
+
+    def _update_pcb(self, projects):
+        from src.bom_parser import BOMParser
+
+        all_rows = []
+        for project in projects:
+            if not project.pcb_bom:
+                continue
+            project_dir = self.file_manager._project_dir(project.name)
+            full_path = project_dir / project.pcb_bom
+            if not full_path.exists():
+                continue
+            try:
+                rows = BOMParser.parse_file(str(full_path), bom_type="pcb")
+                for row in rows:
+                    all_rows.append((project.name, row))
+            except Exception as e:
+                print(f"Error parsing PCB BOM for {project.name}: {e}")
+
+        self.pcb_inventory = self.aggregator.aggregate_pcb(
+            all_rows, self.pcb_inventory, self.file_manager.get_next_id
+        )
+        self.file_manager.save_pcb_inventory(self.pcb_inventory)
+
+    def update_pcb_stock(
+        self, internal_id: str, new_stock: int
+    ) -> Optional[MasterItemPcb]:
+        for item in self.pcb_inventory:
+            if item.internal_id == internal_id:
+                item.current_stock = new_stock
+                item.last_updated = datetime.now().isoformat()
+                self.file_manager.save_pcb_inventory(self.pcb_inventory)
+                return item
+        return None
+
+    # ── 3D Print ────────────────────────────────────────────────
+
+    def _update_print3d(self, projects):
+        from src.bom_parser import BOMParser
+
+        all_rows = []
+        for project in projects:
+            if not project.print3d_bom:
+                continue
+            project_dir = self.file_manager._project_dir(project.name)
+            full_path = project_dir / project.print3d_bom
+            if not full_path.exists():
+                continue
+            try:
+                rows = BOMParser.parse_file(str(full_path), bom_type="3dprint")
+                for row in rows:
+                    all_rows.append((project.name, row))
+            except Exception as e:
+                print(f"Error parsing 3D print BOM for {project.name}: {e}")
+
+        self.print3d_inventory = self.aggregator.aggregate_print3d(
+            all_rows, self.print3d_inventory, self.file_manager.get_next_id
+        )
+        self.file_manager.save_print3d_inventory(self.print3d_inventory)
+
+    def update_print3d_stock(
+        self, internal_id: str, new_stock: int
+    ) -> Optional[MasterItemPrn3D]:
+        for item in self.print3d_inventory:
+            if item.internal_id == internal_id:
+                item.current_stock = new_stock
+                item.last_updated = datetime.now().isoformat()
+                self.file_manager.save_print3d_inventory(self.print3d_inventory)
+                return item
+        return None
+
+    # ── Common ──────────────────────────────────────────────────
+
     def find_item(self, internal_id: str) -> Optional[MasterItem]:
-        """Find an inventory item by its internal ID."""
+        """Find an electronics inventory item by its internal ID."""
         for item in self.inventory:
             if item.internal_id == internal_id:
                 return item
         return None
 
-    def get_items_to_order(self) -> List[MasterItem]:
-        return [item for item in self.inventory if item.to_order > 0]
-    
+    # ── Orders ──────────────────────────────────────────────────
+
     def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "") -> Optional[Order]:
         existing_orders = self.file_manager.list_orders()
-        # Find the next available sequence number (avoid collisions from deletions)
         max_num = 0
         for o in existing_orders:
             try:
@@ -68,7 +194,7 @@ class InventoryManager:
                 pass
         order_num = max_num + 1
         order_id = f"PO-{datetime.now().strftime('%Y%m')}-{order_num:03d}"
-        
+
         line_items = []
         for item_data in items:
             line_item = OrderLineItem(
@@ -78,24 +204,23 @@ class InventoryManager:
                 manufacturer_part_number=item_data.get('mpn')
             )
             line_items.append(line_item)
-        
+
         order = Order(
             order_id=order_id,
             supplier=supplier,
             line_items=line_items,
             notes=notes
         )
-        
+
         if self.file_manager.save_order(order):
             return order
         return None
-    
+
     def receive_order(self, order_id: str) -> bool:
         order = self.file_manager.load_order(order_id)
         if not order:
             return False
 
-        # Only allow receiving orders that are shipped (or ordered as fallback for legacy)
         if not order.transition_to(order.STATUS_RECEIVED):
             return False
 
@@ -109,16 +234,16 @@ class InventoryManager:
         self.file_manager.save_master_inventory(self.inventory)
         self.file_manager.save_order(order)
         return True
-    
+
     def get_order_summary(self) -> Dict[str, Any]:
         orders = self.file_manager.list_orders()
-        
+
         pending_orders = [o for o in orders if o.status == "pending"]
         received_orders = [o for o in orders if o.status == "received"]
-        
+
         total_pending_items = sum(o.total_items for o in pending_orders)
         total_received_items = sum(o.total_items for o in received_orders)
-        
+
         supplier_summary = {}
         for order in pending_orders:
             if order.supplier not in supplier_summary:
@@ -131,7 +256,7 @@ class InventoryManager:
             supplier_summary[order.supplier]['total_items'] += order.total_items
             if order.estimated_cost:
                 supplier_summary[order.supplier]['estimated_cost'] += order.estimated_cost
-        
+
         return {
             'total_orders': len(orders),
             'pending_orders': len(pending_orders),
@@ -142,16 +267,16 @@ class InventoryManager:
             'pending_orders_list': pending_orders,
             'received_orders_list': received_orders
         }
-    
+
     def get_inventory_summary(self) -> Dict[str, Any]:
         items_to_order = self.get_items_to_order()
-        
+
         footprint_counts = {}
         for item in self.inventory:
             if item.footprint not in footprint_counts:
                 footprint_counts[item.footprint] = 0
             footprint_counts[item.footprint] += 1
-        
+
         return {
             'total_components': len(self.inventory),
             'total_required': sum(item.total_required for item in self.inventory),
