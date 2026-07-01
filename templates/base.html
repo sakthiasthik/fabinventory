@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
                 <i class="bi bi-box-seam"></i> FabInventory
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -20,22 +20,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('projects') }}">
+                        <a class="nav-link" href="{{ url_for('main.projects') }}">
                             <i class="bi bi-folder"></i> Projects
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('inventory') }}">
+                        <a class="nav-link" href="{{ url_for('inventory.inventory') }}">
                             <i class="bi bi-clipboard-data"></i> Inventory
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('orders') }}">
+                        <a class="nav-link" href="{{ url_for('orders.orders') }}">
                             <i class="bi bi-cart"></i> Orders
                         </a>
                     </li>
@@ -45,18 +45,31 @@
                 {% if git_status %}
                 <div class="d-flex align-items-center">
                     <div class="dropdown">
-                        <button class="btn btn-sm {% if git_status.is_dirty %}btn-warning{% else %}btn-outline-success{% endif %} dropdown-toggle sync-status-btn"
+                        {% set ahead = git_status.commits_ahead|default(-1) %}
+                        {% if git_status.is_dirty %}
+                            {% set btn_class = 'btn-warning' %}
+                            {% set status_text = 'Uncommitted changes' %}
+                            {% set icon = 'bi-exclamation-circle-fill' %}
+                        {% elif ahead > 0 %}
+                            {% set btn_class = 'btn-outline-warning' %}
+                            {% set status_text = ahead|string + ' commit' + ('s' if ahead != 1 else '') + ' to push' %}
+                            {% set icon = 'bi-cloud-upload-fill' %}
+                        {% else %}
+                            {% set btn_class = 'btn-outline-success' %}
+                            {% set status_text = 'Synced' %}
+                            {% set icon = 'bi-check-circle-fill' %}
+                        {% endif %}
+                        <button class="btn btn-sm {{ btn_class }} dropdown-toggle sync-status-btn"
                                 type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {% if git_status.is_dirty %}
-                                <i class="bi bi-exclamation-circle-fill"></i> Unsynced changes
-                            {% else %}
-                                <i class="bi bi-check-circle-fill"></i> Synced
-                            {% endif %}
+                            <i class="bi {{ icon }}"></i> {{ status_text }}
                         </button>
                         <div class="dropdown-menu dropdown-menu-end p-3 sync-dropdown" style="min-width: 280px;">
                             <div class="mb-2">
                                 <small class="text-muted">Branch:</small>
                                 <span class="badge bg-secondary ms-1">{{ git_status.current_branch or 'main' }}</span>
+                                {% if ahead > 0 %}
+                                <span class="badge bg-warning text-dark ms-1">{{ ahead }} pending push</span>
+                                {% endif %}
                                 {% if git_status.has_remotes %}
                                 <span class="badge bg-success ms-1"><i class="bi bi-cloud"></i> Remote set</span>
                                 {% else %}
@@ -64,7 +77,7 @@
                                 {% endif %}
                             </div>
                             <hr class="my-2">
-                            <form method="POST" action="{{ url_for('git_settings') }}" class="mb-0">
+                            <form method="POST" action="{{ url_for('git.git_settings') }}" class="mb-0">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-2">
                                     <input type="text" class="form-control form-control-sm" name="message"
@@ -75,11 +88,19 @@
                                             class="btn btn-sm btn-primary flex-fill">
                                         <i class="bi bi-check-circle"></i> Commit
                                     </button>
+                                    {% if ahead > 0 %}
+                                    <button type="submit" name="action" value="push"
+                                            class="btn btn-sm btn-warning flex-fill"
+                                            {% if not git_status.has_remotes %}disabled{% endif %}>
+                                        <i class="bi bi-cloud-upload"></i> Push {{ ahead }}
+                                    </button>
+                                    {% else %}
                                     <button type="submit" name="action" value="push"
                                             class="btn btn-sm btn-success flex-fill"
                                             {% if not git_status.has_remotes %}disabled{% endif %}>
                                         <i class="bi bi-cloud-upload"></i> Push
                                     </button>
+                                    {% endif %}
                                     <button type="submit" name="action" value="pull"
                                             class="btn btn-sm btn-info flex-fill"
                                             {% if not git_status.has_remotes %}disabled{% endif %}>
@@ -88,7 +109,7 @@
                                 </div>
                             </form>
                             <div class="mt-2 text-end">
-                                <a href="{{ url_for('git_settings') }}" class="text-muted" style="font-size:0.75rem;">
+                                <a href="{{ url_for('git.git_settings') }}" class="text-muted" style="font-size:0.75rem;">
                                     Full git settings →
                                 </a>
                             </div>
