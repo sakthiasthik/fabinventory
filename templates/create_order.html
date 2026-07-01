@@ -5,6 +5,32 @@
 {% block content %}
 <h1 class="mb-4">Create Purchase Order</h1>
 
+<!-- All Items to Order (across inventory) -->
+{% set total_to_order = (items_to_order|length) + (mech_items|length) + (pcb_items|length) + (prn_items|length) %}
+{% if total_to_order > 0 %}
+<div class="card mb-3 border-warning">
+    <div class="card-header bg-warning bg-opacity-10">
+        <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Items Needing Order — {{ total_to_order }} across all categories</h6>
+    </div>
+    <div class="card-body py-2">
+        <div class="row g-2">
+            {% if items_to_order %}
+            <div class="col-md-6 col-lg-3"><span class="badge bg-primary">Elec</span> {{ items_to_order|length }} components</div>
+            {% endif %}
+            {% if mech_items %}
+            <div class="col-md-6 col-lg-3"><span class="badge bg-secondary">Mech</span> {{ mech_items|length }} parts</div>
+            {% endif %}
+            {% if pcb_items %}
+            <div class="col-md-6 col-lg-3"><span class="badge bg-success">PCB</span> {{ pcb_items|length }} boards</div>
+            {% endif %}
+            {% if prn_items %}
+            <div class="col-md-6 col-lg-3"><span class="badge bg-info text-dark">3D</span> {{ prn_items|length }} prints</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Project Selection Card -->
 <div class="card mb-4">
     <div class="card-header bg-info text-white">
@@ -124,14 +150,13 @@
                             <th style="width: 40px;">
                                 <input type="checkbox" id="selectAllComponents" onchange="toggleAllComponents()">
                             </th>
+                            <th>Category</th>
                             <th>Component</th>
-                            <th>Footprint</th>
-                            <th>MPN</th>
-                            <th>Required Qty</th>
-                            <th>In Stock</th>
+                            <th>Details</th>
+                            <th>Required</th>
+                            <th>Stock</th>
                             <th>To Order</th>
-                            <th>Qty To Cart</th>
-                            
+                            <th>Qty</th>
                         </tr>
                     </thead>
                     <tbody id="projectComponentsBody">
@@ -267,32 +292,23 @@
 
             for (const component of components) {
 
-                const key =
+                // Use component id as merge key (works across all categories)
+                const key = component.id || component.internal_id || `${component.value}_${component.footprint}`;
 
-                    `${component.value}_` +
-                    `${component.footprint}`;
-
-                const requiredQty =
-
-                    component.total_required *
-                    project.qty;
+                const qty = component.qty || 0;
+                const requiredQty = qty * project.qty;
 
                 if (!merged[key]) {
-
                     merged[key] = {
-
                         ...component,
-
                         total_required: 0,
-
                         to_order: 0,
-
-                        project_references: []
+                        project_references: [],
                     };
                 }
 
-                merged[key].total_required +=
-                    requiredQty;
+                merged[key].total_required += requiredQty;
+                merged[key].qty = (merged[key].qty || 0) + qty;
 
                 merged[key].project_references.push({
 
@@ -348,30 +364,40 @@
             return;
         }
         
-        tbody.innerHTML = components.map(comp => `
+        const catBadge = {
+            electrical: '<span class="badge bg-primary">Elec</span>',
+            mechanical: '<span class="badge bg-secondary">Mech</span>',
+            pcb: '<span class="badge bg-success">PCB</span>',
+            '3dprint': '<span class="badge bg-info text-dark">3D</span>',
+        };
+
+        tbody.innerHTML = components.map(comp => {
+            const cat = comp.category || 'electrical';
+            const detail = cat === 'electrical' ? escapeHtml(comp.footprint || '')
+                         : cat === 'mechanical' ? escapeHtml(comp.value || '')
+                         : cat === 'pcb' ? escapeHtml(comp.board_name || '')
+                         : escapeHtml(comp.material || '');
+            return `
             <tr>
                 <td class="text-center">
                     <input type="checkbox" class="component-checkbox"
-                        data-id="${escapeHtml(comp.internal_id)}"
+                        data-id="${escapeHtml(comp.internal_id || comp.id)}"
                         data-type="project"
                         data-qty="${comp.to_order}"
-                        data-value="${escapeHtml(comp.value)}"
-                        data-footprint="${escapeHtml(comp.footprint)}"
+                        data-value="${escapeHtml(comp.value || comp.part_name || comp.board_name || '')}"
+                        data-footprint="${escapeHtml(comp.footprint || '')}"
                         data-mpn="${escapeHtml(comp.mpn || '')}"
-                        data-manufacturer="${escapeHtml(comp.manufacturer_name || '')}"
+                        data-manufacturer=""
+                        data-category="${escapeHtml(comp.category || 'electrical')}"
                         onchange="updateComponentSelection(this)">
                 </td>
+                <td>${catBadge[cat] || cat}</td>
                 <td>
-                    <strong>${escapeHtml(comp.value)}</strong>
+                    <strong>${escapeHtml(comp.label || comp.value || comp.part_name || comp.board_name || '—')}</strong>
                 </td>
-                <td class="footprint-cell">
-                    ${escapeHtml(comp.footprint)}
-                </td>
-                <td><code class="text-muted small">${escapeHtml(comp.mpn || comp.manufacturer_part_number || '—')}</code></td>
-                <td class="text-center">
-                    ${comp.total_required}
-                </td>
-                <td class="text-center">${comp.current_stock}</td>
+                <td><small class="text-muted">${detail}</small></td>
+                <td class="text-center">${comp.qty || 0}</td>
+                <td class="text-center">${comp.current_stock || 0}</td>
                 <td class="text-center fw-bold ${comp.to_order > 0 ? 'text-warning' : 'text-success'}">
                     ${comp.to_order}
                 </td>
@@ -379,17 +405,17 @@
                     <input
                         type="number"
                         class="form-control form-control-sm qty-to-cart"
-                        style="width: 90px; margin: auto;"
+                        style="width: 80px; margin: auto;"
                         min="0"
                         value="${comp.to_order}"
-                        id="cart_qty_${escapeHtml(comp.internal_id)}"
-                        oninput="handleQtyChange('${escapeHtml(comp.internal_id)}')"
+                        id="cart_qty_${escapeHtml(comp.internal_id || comp.id)}"
+                        oninput="handleQtyChange('${escapeHtml(comp.internal_id || comp.id)}')"
                     >
-
                 </td>
             </tr>
-        `).join('');
-        
+            `;
+        }).join('');
+
         const selectAllCheckbox = document.getElementById('selectAllComponents');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
     }
