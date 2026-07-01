@@ -117,13 +117,13 @@
                     <div class="mb-3">
                         <label class="form-label">Remote URL</label>
                         <input type="text" class="form-control" name="remote_url"
-                               placeholder="https://github.com/you/fabinventory.git"
+                               placeholder="git@github.com:you/repo.git  or  https://github.com/you/repo.git"
                                {% if not git_active %}disabled{% endif %}>
                         <div class="form-text mt-1">
-                            Works with <strong>GitHub, GitLab, Bitbucket</strong> — paste any Git remote URL.
-                            {% if current_branch != 'main' %}
-                            <br>Your branch is <code>{{ current_branch }}</code> — push/pull will use it automatically.
-                            {% endif %}
+                            Accepts any Git remote URL — <strong>SSH</strong> or <strong>HTTPS</strong>.<br>
+                            GitHub: <code>git@github.com:user/repo.git</code><br>
+                            GitLab: <code>git@gitlab.com:user/repo.git</code><br>
+                            Bitbucket: <code>git@bitbucket.org:user/repo.git</code>
                         </div>
                     </div>
                     <button type="submit" name="action" value="setup_remote"
