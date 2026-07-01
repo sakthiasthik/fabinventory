@@ -15,6 +15,21 @@
 </div>
 {% endif %}
 
+{% if commits_ahead is defined and commits_ahead > 0 %}
+<div class="alert alert-warning d-flex align-items-center">
+    <i class="bi bi-cloud-upload-fill me-2" style="font-size:1.5rem;"></i>
+    <div>
+        <strong>{{ commits_ahead }} commit{{ 's' if commits_ahead != 1 else '' }} pending push.</strong>
+        Your data is saved locally but not yet on the remote.
+        {% if remote_urls %}
+        <a href="#" onclick="document.querySelector('button[value=push]').click(); return false;" class="alert-link">Push now →</a>
+        {% else %}
+        Configure a remote URL below to push.
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
 
     <!-- STATUS -->

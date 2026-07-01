@@ -94,6 +94,30 @@ class GitManager:
         """True when Git is available AND a repo was found."""
         return GIT_AVAILABLE and self.repo is not None
 
+    def commits_ahead(self, remote_name: str = "origin") -> int:
+        """Number of local commits that haven't been pushed yet.  -1 if unknown."""
+        if not self.is_active():
+            return -1
+        try:
+            if remote_name not in [r.name for r in self.repo.remotes]:
+                return -1
+            branch = self.get_current_branch()
+            remote_ref = f"{remote_name}/{branch}"
+            if remote_ref not in [ref.name for ref in self.repo.refs]:
+                return 0  # remote branch doesn't exist yet
+            local_commit = self.repo.commit(branch)
+            remote_commit = self.repo.commit(remote_ref)
+            count = 0
+            for c in self.repo.iter_commits(f"{remote_ref}..{branch}"):
+                count += 1
+            return count
+        except Exception:
+            return -1
+
+    def is_ahead(self, remote_name: str = "origin") -> bool:
+        """True when there are local commits not yet pushed to remote."""
+        return self.commits_ahead(remote_name) > 0
+
     # ── public API ──────────────────────────────────────────────
 
     def commit(self, message: str, author=None) -> bool:
