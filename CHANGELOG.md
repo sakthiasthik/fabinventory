@@ -1,95 +1,39 @@
 # Changelog
 
-All notable changes to FabInventory will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/).
-
----
-
-## [Unreleased]
+## [0.1.0] — Beta — 2026-07-01
 
 ### Added
-
-* Bootstrap-based project details page
-* Electrical BOM upload and export
-* Mechanical BOM upload support
-* PCB BOM upload support
-* 3D Print BOM upload support
-* Project image upload and persistence
-* 3D STL model upload and interactive viewer using Three.js
-* Gerber ZIP upload and automatic extraction
-* PCB repository link support (GitHub/GitLab)
-* Dashboard statistics cards
-* BOM search functionality
-* CSV export support
-* Dependency auto-installer in `run.py`
-* Project category tabs:
-
-  * Electrical
-  * Mechanical
-  * PCB
-  * 3D Print
-* Print Information card for 3D projects
-* 3D preview upload section
-* Gerber ZIP upload success notifications
-* PCB repository link persistence in metadata
-* Support for:
-
-  * `.stl`
-  * `.obj`
-  * `.zip`
-  * `.csv`
-  * `.xlsx`
-  * `.xls`
+- Flask Blueprint architecture (routes split by domain)
+- Master inventory tabs: Electrical · Mechanical · PCB · 3D Print
+- Excel/CSV bulk stock import
+- Gerber ZIP upload with automatic extraction and file listing
+- Gerber X2 validation on upload
+- Unpushed-commit tracking in navbar widget
+- Git user identity management in UI
+- Auto-created `.env` on first run (no manual setup)
+- Single-repo Git architecture (no nested `.git` in data folder)
+- PCB image upload and preview
+- GitHub/GitLab/Bitbucket remote URL support
+- 3D model (STL) viewer via Three.js
+- Commit author reads real Git identity from config
+- Download BOM template (XLSX)
 
 ### Changed
-
-* Improved BOM table responsiveness
-* Reduced horizontal scrolling in BOM table
-* Improved wrapping for long component names
-* Reorganized project details page into modular tabs
-* Moved upload actions inside category tabs
-* Improved table readability and spacing
-* Improved upload form consistency across all tabs
-* Standardized Mechanical and PCB upload layouts
-* Updated Mechanical BOM schema:
-
-  * Added `Mechanical Part Description`
-  * Added `Value`
-* Updated PCB BOM workflow to support both Gerber ZIPs and repository links
-* Improved STL viewer camera positioning and scaling logic
-* Improved file path handling using normalized forward slashes
+- Electronics inventory sorted by footprint, then value
+- GitManager targets project root, never auto-creates repos
+- `REPO_PATH` renamed to `DATA_PATH`
+- Push/pull auto-detect current branch
+- Improved error messages in Git settings
 
 ### Fixed
+- `add_inventory_component()` now generates proper unique IDs and saves to disk
+- Removed wasted `get_next_id()` call on app init
+- Gerber download path (broken by Blueprint refactor)
+- Project image serving path (broken by Blueprint refactor)
+- BOM template download path (broken by Blueprint refactor)
+- Circular import in Blueprint registration
 
-* BOM table text overlap issues
-* Header truncation issues
-* Manufacturer column visibility problems
-* Duplicate dependency installation logs
-* Project image persistence after restart
-* Table alignment inconsistencies
-* Windows path separator issues in saved metadata
-* STL model not rendering after reload
-* Three.js viewer initialization issues
-* Gerber ZIP upload persistence issues
-* Metadata save issues for PCB repository links
-* Upload form sizing inconsistencies
-* Broken file references after restart
-
-### Security
-
-* Added safer dependency checking before startup
-* Added secure filename handling for uploads
-
----
-
-## [0.1.0] - Initial Development
-
-### Added
-
-* Flask-based FabInventory application
-* BOM parsing from CSV and Excel
-* Inventory calculation system
-* Project management support
-* Git integration support
-* Basic Bootstrap UI
+### Removed
+- Nested `.git` repository inside `fabinventory_data/`
+- Dev artifacts: `error.md`, `check_import.py`, `WhatsFabInventory.md`, `instance/users.db`
+- Test project data from repository tracking
