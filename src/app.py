@@ -360,13 +360,32 @@ def project_detail(name):
 
             print("PCB BOM ERROR:", e)
 
+    # ── Gerber file listing ────────────────────────────────────
+    gerber_files = []
+    if project.pcb_gerber_folder:
+        gerber_dir = Path(state.data_path) / "projects" / name / project.pcb_gerber_folder
+        if gerber_dir.exists():
+            gerber_exts = (".gbr", ".gbrjob", ".drl", ".nc")
+            gerber_files = sorted(
+                [
+                    {
+                        "name": f.name,
+                        "path": str(f.relative_to(Path(state.data_path) / "projects" / name)),
+                    }
+                    for f in gerber_dir.rglob("*")
+                    if f.suffix.lower() in gerber_exts and f.is_file()
+                ],
+                key=lambda x: x["name"].lower(),
+            )
+
     return render_template(
         'project_details.html',
         project=project,
         summary=summary,
         print3d_rows=print3d_rows,
         mechanical_rows=mechanical_rows,
-        pcb_rows=pcb_rows
+        pcb_rows=pcb_rows,
+        gerber_files=gerber_files,
     )
 
 
@@ -1328,23 +1347,52 @@ def upload_gerber_zip(name):
         return redirect(url_for("project_detail", name=name, tab="pcb"))
 
     filename = secure_filename(file.filename)
+    zip_data = file.read()
 
-    # SAVE INSIDE PROJECT FOLDER
+    # Save the ZIP
     state.project_manager.file_manager.save_project_file(
-        name,
-        "gerbers",
-        filename,
-        file.read()
+        name, "gerbers", filename, zip_data
     )
-
-    # SAVE RELATIVE PATH
     project.pcb_gerber_zip = f"gerbers/{filename}"
 
+    # Extract ZIP to a subfolder
+    import io as io_mod
+    extract_base = filename.rsplit(".", 1)[0]  # strip .zip
+    extract_dir_name = f"gerbers/{extract_base}"
+    project_dir = state.file_manager._project_dir(name)
+    extract_path = project_dir / extract_dir_name
+    extract_path.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with zipfile.ZipFile(io_mod.BytesIO(zip_data)) as zf:
+            zf.extractall(extract_path)
+    except zipfile.BadZipFile:
+        flash("Uploaded file is not a valid ZIP archive.", "error")
+        return redirect(url_for("project_detail", name=name, tab="pcb"))
+
+    # Validate: check for Gerber files
+    gerber_exts = (".gbr", ".gbrjob", ".drl", ".nc")
+    gerber_files = sorted(
+        f.relative_to(extract_path)
+        for f in extract_path.rglob("*")
+        if f.suffix.lower() in gerber_exts and f.is_file()
+    )
+
+    if not gerber_files:
+        flash(
+            "ZIP extracted but no Gerber files (.gbr, .drl) found inside. "
+            "Is this a valid manufacturing ZIP?",
+            "warning",
+        )
+    else:
+        project.pcb_gerber_folder = extract_dir_name
+        flash(
+            f"Gerber ZIP uploaded — {len(gerber_files)} Gerber file(s) found.",
+            "success",
+        )
+
     project.updated_at = datetime.now().isoformat()
-
     state.project_manager.file_manager.save_project(project)
-
-    flash("Gerber ZIP uploaded successfully", "success")
 
     return redirect(url_for("project_detail", name=name, tab="pcb"))
 
