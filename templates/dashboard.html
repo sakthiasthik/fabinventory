@@ -22,7 +22,7 @@
             <i class="bi bi-exclamation-triangle-fill text-warning"></i>
             {{ inventory_summary.total_to_order }} component{{ 's' if inventory_summary.total_to_order != 1 }} need ordering
         </h5>
-        <a href="{{ url_for('create_order') }}" class="btn btn-warning btn-sm">
+        <a href="{{ url_for('orders.create_order') }}" class="btn btn-warning btn-sm">
             <i class="bi bi-cart-plus"></i> Create Order
         </a>
     </div>
@@ -57,7 +57,7 @@
         {% if inventory_summary.total_to_order > 10 %}
         <div class="px-3 py-2 text-muted" style="font-size:0.85rem;">
             Showing 10 of {{ inventory_summary.total_to_order }} items.
-            <a href="{{ url_for('inventory') }}">View all in Inventory →</a>
+            <a href="{{ url_for('inventory.inventory') }}">View all in Inventory →</a>
         </div>
         {% endif %}
     </div>
@@ -72,7 +72,7 @@
 <!-- Stats row -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <a href="{{ url_for('projects') }}" style="text-decoration: none;">
+        <a href="{{ url_for('main.projects') }}" style="text-decoration: none;">
             <div class="card text-white bg-primary">
                 <div class="card-body">
                     <h5 class="card-title">Projects</h5>
@@ -82,7 +82,7 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{{ url_for('inventory') }}" style="text-decoration: none;">
+        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Components</h5>
@@ -92,7 +92,7 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{{ url_for('inventory') }}" style="text-decoration: none;">
+        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
             <div class="card text-white bg-warning">
                 <div class="card-body">
                     <h5 class="card-title">To Order</h5>
@@ -102,7 +102,7 @@
         </a>
     </div>
     <div class="col-md-3">
-        <a href="{{ url_for('orders') }}" style="text-decoration: none;">
+        <a href="{{ url_for('orders.orders') }}" style="text-decoration: none;">
             <div class="card text-white bg-info">
                 <div class="card-body">
                     <h5 class="card-title">Pending Orders</h5>
@@ -117,7 +117,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Recent Projects</h5>
-        <a href="{{ url_for('projects') }}" class="btn btn-sm btn-outline-secondary">View all</a>
+        <a href="{{ url_for('main.projects') }}" class="btn btn-sm btn-outline-secondary">View all</a>
     </div>
     <div class="card-body p-0">
         {% if projects %}
@@ -140,7 +140,7 @@
                         <td>{{ project.total_quantity }}</td>
                         <td>{{ project.updated_at[:10] }}</td>
                         <td>
-                            <a href="{{ url_for('project_detail', name=project.name) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{{ url_for('project.project_detail', name=project.name) }}" class="btn btn-sm btn-outline-primary">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -160,7 +160,8 @@
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New Project</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
