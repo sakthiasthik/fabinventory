@@ -139,27 +139,34 @@
     <!-- GIT USER IDENTITY -->
     <div class="col-md-6 mb-4">
         <div class="card">
-            <div class="card-header"><h5 class="mb-0">Git User Identity</h5></div>
+            <div class="card-header"><h5 class="mb-0">Commit Author Identity</h5></div>
             <div class="card-body">
-                <p class="text-muted small">Git needs a name and email to create commits. This is stored in the repo config.</p>
+                <div class="alert alert-light border mb-3">
+                    <p class="mb-1 small text-muted">Current identity used for commits:</p>
+                    <strong>{{ git_user.name }}</strong>
+                    <code class="ms-2">&lt;{{ git_user.email }}&gt;</code>
+                </div>
+                <p class="text-muted small">This is read from your Git config. Change it here to update who commits are attributed to.</p>
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" name="git_user_name"
+                               value="{{ git_user.name }}"
                                placeholder="Your Name"
                                {% if not git_active %}disabled{% endif %}>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" name="git_user_email"
+                               value="{{ git_user.email }}"
                                placeholder="you@example.com"
                                {% if not git_active %}disabled{% endif %}>
                     </div>
                     <button type="submit" name="action" value="set_user"
                             class="btn btn-outline-secondary w-100"
                             {% if not git_active %}disabled{% endif %}>
-                        <i class="bi bi-person-check"></i> Set Git User
+                        <i class="bi bi-person-check"></i> Update Identity
                     </button>
                 </form>
             </div>
