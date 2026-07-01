@@ -1,496 +1,848 @@
 [
   {
-    "internal_id": "SA-ELE-00018",
-    "value": "10k",
-    "footprint": "603",
-    "total_required": 10,
+    "internal_id": "SA-ELE-00001",
+    "value": "100nF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 55,
     "current_stock": 0,
     "used_in_projects": [
-      "yowuee[p"
+      "Raven",
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
-      "RC0603FR-0710KL"
+      "CL10B104KA8NNWC"
     ],
-    "last_updated": "2026-05-11T16:54:24.975426"
+    "last_updated": "2026-07-01T09:28:11.573975"
   },
   {
-    "internal_id": "SA-ELE-00019",
-    "value": "Antenna_Shield",
-    "footprint": "ANT:CONUFL001-SMD-T",
+    "internal_id": "SA-ELE-00004",
+    "value": "100pF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CC0603KRX7R8BB101"
+    ],
+    "last_updated": "2026-07-01T09:28:11.573990"
+  },
+  {
+    "internal_id": "SA-ELE-00009",
+    "value": "1µF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CL10A105KA8NFNC"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574001"
+  },
+  {
+    "internal_id": "SA-ELE-00008",
+    "value": "4.7nF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 7,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CC0603KRX7R8BB472"
+    ],
+    "last_updated": "2026-07-01T09:28:11.573999"
+  },
+  {
+    "internal_id": "SA-ELE-00006",
+    "value": "4.7µF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 7,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CL10A475KP8NNNC"
+    ],
+    "last_updated": "2026-07-01T09:28:11.573995"
+  },
+  {
+    "internal_id": "SA-ELE-00007",
+    "value": "47pF",
+    "footprint": "C_0603_1608Metric",
+    "total_required": 12,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CC0603JRNPO8BN470"
+    ],
+    "last_updated": "2026-07-01T09:28:11.573997"
+  },
+  {
+    "internal_id": "SA-ELE-00046",
+    "value": "10µF",
+    "footprint": "C_0805_2012Metric",
+    "total_required": 4,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CL21A106KOQNNNG"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574094"
+  },
+  {
+    "internal_id": "SA-ELE-00005",
+    "value": "4.7µF",
+    "footprint": "C_0805_2012Metric",
     "total_required": 6,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Raven",
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
-      "CONUFL001-SMD-T"
+      "CL21A475KAQNNNE"
     ],
-    "last_updated": "2026-05-11T16:54:24.975242"
+    "last_updated": "2026-07-01T09:28:11.573993"
   },
   {
-    "internal_id": "SA-ELE-00020",
-    "value": "ADCH002/MAN0826C230",
-    "footprint": "ANT:ADCH002",
-    "total_required": 2,
+    "internal_id": "SA-ELE-00003",
+    "value": "22µF",
+    "footprint": "C_1206_3216Metric",
+    "total_required": 12,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ADCH002 / MAN0826C230"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975275"
-  },
-  {
-    "internal_id": "SA-ELE-00021",
-    "value": "YPGS001AA",
-    "footprint": "ANT:YPGS001AA",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "YPGS001AA"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975280"
-  },
-  {
-    "internal_id": "SA-ELE-00022",
-    "value": "SKRKAGE020",
-    "footprint": "Button_Switch_SMD:SW_Push_SPST_NO_Alps_SKRK",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SKRKAGE020"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975287"
-  },
-  {
-    "internal_id": "SA-ELE-00023",
-    "value": "22uf/25V",
-    "footprint": "Capacitor_SMD:C_1206_3216Metric",
-    "total_required": 16,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
+      "Raven",
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
       "CL31A226KAHNNNE"
     ],
-    "last_updated": "2026-05-11T16:54:24.975293"
-  },
-  {
-    "internal_id": "SA-ELE-00024",
-    "value": "100nf",
-    "footprint": "Capacitor_SMD:C_0603_1608Metric",
-    "total_required": 12,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MC0603B104K250CT"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975299"
-  },
-  {
-    "internal_id": "SA-ELE-00025",
-    "value": "10uf/25V",
-    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-6032-28_Kemet-C",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "TAJC106K025RNJ"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975305"
-  },
-  {
-    "internal_id": "SA-ELE-00026",
-    "value": "100uf/6V3",
-    "footprint": "Capacitor_Tantalum_SMD:CP_EIA-3528-21_Kemet-B",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "TC212B107K006B"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975311"
-  },
-  {
-    "internal_id": "SA-ELE-00027",
-    "value": "10uf",
-    "footprint": "Capacitor_SMD:C_0805_2012Metric",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      " CL21A106KAYNNNG"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975317"
-  },
-  {
-    "internal_id": "SA-ELE-00028",
-    "value": "100pf",
-    "footprint": "Capacitor_SMD:C_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MC0603N101J500CT"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975325"
-  },
-  {
-    "internal_id": "SA-ELE-00029",
-    "value": "BLUE_LED",
-    "footprint": "LED_SMD:LED_0805_2012Metric",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MP000442"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975329"
-  },
-  {
-    "internal_id": "SA-ELE-00030",
-    "value": "RED_LED",
-    "footprint": "LED_SMD:LED_0805_2012Metric",
-    "total_required": 10,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MP006842"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975333"
-  },
-  {
-    "internal_id": "SA-ELE-00031",
-    "value": "USB4105 - Type C USB 2.0 Connector",
-    "footprint": "USB:USB_C_Receptacle_Palconn_UTC16-G",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "USB4105-15-A-120"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975336"
-  },
-  {
-    "internal_id": "SA-ELE-00032",
-    "value": "EC200U",
-    "footprint": "wireless_network:EG-21",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "EC200U"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975340"
-  },
-  {
-    "internal_id": "SA-ELE-00033",
-    "value": "ESP32-C3-WROOM-02",
-    "footprint": "Espressif:ESP32-C3-WROOM-02",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ESP-C3-WROOM-02"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975343"
-  },
-  {
-    "internal_id": "SA-ELE-00034",
-    "value": "4R7uH",
-    "footprint": "Inductor:L_APV_APH0650_6045",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "ASPI-0630LR-4R7M"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975347"
-  },
-  {
-    "internal_id": "SA-ELE-00035",
-    "value": "47nH",
-    "footprint": "Inductor_SMD:L_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "LQG18HN47NJ00D"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975350"
-  },
-  {
-    "internal_id": "SA-ELE-00036",
-    "value": "BC547",
-    "footprint": "Package_TO_SOT_SMD:SOT-23",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "BC547"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975353"
-  },
-  {
-    "internal_id": "SA-ELE-00037",
-    "value": "SI2302",
-    "footprint": "Package_TO_SOT_SMD:SOT-23",
-    "total_required": 4,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SI2302"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975357"
-  },
-  {
-    "internal_id": "SA-ELE-00038",
-    "value": "SI2301",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-3",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "SI2301"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975361"
-  },
-  {
-    "internal_id": "SA-ELE-00039",
-    "value": "DMG6601LVT-7",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "DMG6601LVT-7"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975366"
-  },
-  {
-    "internal_id": "SA-ELE-00040",
-    "value": "5K1",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 16,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X5101FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975372"
-  },
-  {
-    "internal_id": "SA-ELE-00041",
-    "value": "0R",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 26,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X000 PTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975379"
-  },
-  {
-    "internal_id": "SA-ELE-00042",
-    "value": "10K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 12,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X1002FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975384"
-  },
-  {
-    "internal_id": "SA-ELE-00043",
-    "value": "56K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 2,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X5602FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975391"
-  },
-  {
-    "internal_id": "SA-ELE-00044",
-    "value": "4K7",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 6,
-    "current_stock": 0,
-    "used_in_projects": [
-      "teyu",
-      "ble"
-    ],
-    "associated_mpns": [
-      "MCWR06X4701FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975398"
+    "last_updated": "2026-07-01T09:28:11.573988"
   },
   {
     "internal_id": "SA-ELE-00045",
-    "value": "1K",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 6,
+    "value": "C_Polarized",
+    "footprint": "CP_Radial_D6.3mm_P2.50mm",
+    "total_required": 1,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Turtle"
     ],
-    "associated_mpns": [
-      "MCWR06X1001FTL"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975404"
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574091"
   },
   {
-    "internal_id": "SA-ELE-00046",
-    "value": "10R",
-    "footprint": "Resistor_SMD:R_0603_1608Metric",
-    "total_required": 2,
+    "internal_id": "SA-ELE-00002",
+    "value": "C_Polarized",
+    "footprint": "CP_Radial_D8.0mm_P3.50mm",
+    "total_required": 4,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.573985"
+  },
+  {
+    "internal_id": "SA-ELE-00015",
+    "value": "TZMC3V3-GS08",
+    "footprint": "D_MiniMELF",
+    "total_required": 34,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
-      "MCWR06X10R0FTL"
+      "TZMC3V3-GS08"
     ],
-    "last_updated": "2026-05-11T16:54:24.975408"
+    "last_updated": "2026-07-01T09:28:11.574017"
+  },
+  {
+    "internal_id": "SA-ELE-00010",
+    "value": "M7",
+    "footprint": "D_SMA",
+    "total_required": 20,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "M7"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574004"
   },
   {
     "internal_id": "SA-ELE-00047",
-    "value": "SY81103",
-    "footprint": "Package_TO_SOT_SMD:SOT-23-6",
-    "total_required": 2,
+    "value": "SS16-E3/61T",
+    "footprint": "D_SMA",
+    "total_required": 16,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Turtle"
     ],
     "associated_mpns": [
-      "SY81103ABT"
+      "SS16-E3/61T"
     ],
-    "last_updated": "2026-05-11T16:54:24.975412"
+    "last_updated": "2026-07-01T09:28:11.574101"
   },
   {
-    "internal_id": "SA-ELE-00048",
-    "value": "NXB0104BQ-Q100X",
-    "footprint": "Nexperia:NXB0104BQQ100X",
+    "internal_id": "SA-ELE-00013",
+    "value": "SS520-HF",
+    "footprint": "D_SMA",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "SS520-HF"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574011"
+  },
+  {
+    "internal_id": "SA-ELE-00057",
+    "value": "140817140010",
+    "footprint": "DIP-4_W7.62mm",
+    "total_required": 10,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "associated_mpns": [
+      "140817140010"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574153"
+  },
+  {
+    "internal_id": "SA-ELE-00025",
+    "value": "SolderJumper_3_Bridged12",
+    "footprint": "J_0402_1005Metric",
+    "total_required": 9,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574042"
+  },
+  {
+    "internal_id": "SA-ELE-00052",
+    "value": "0R",
+    "footprint": "J_0603_1608Metric",
     "total_required": 2,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Turtle"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574114"
+  },
+  {
+    "internal_id": "SA-ELE-00021",
+    "value": "Conn_01x03",
+    "footprint": "JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574031"
+  },
+  {
+    "internal_id": "SA-ELE-00022",
+    "value": "Conn_01x05",
+    "footprint": "JST_XH_B5B-XH-A_1x05_P2.50mm_Vertical",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574035"
+  },
+  {
+    "internal_id": "SA-ELE-00024",
+    "value": "Conn_01x06",
+    "footprint": "JST_XH_B6B-XH-A_1x06_P2.50mm_Vertical",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574039"
+  },
+  {
+    "internal_id": "SA-ELE-00018",
+    "value": "600mΩ",
+    "footprint": "L_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
-      "NXB0104BQ-Q100X"
+      "BLM18RK601SN1D"
     ],
-    "last_updated": "2026-05-11T16:54:24.975415"
+    "last_updated": "2026-07-01T09:28:11.574024"
+  },
+  {
+    "internal_id": "SA-ELE-00026",
+    "value": "6.8µH",
+    "footprint": "L_APV_APH0650_6045",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "ASPI-0630LR-6R8M-T15"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574044"
+  },
+  {
+    "internal_id": "SA-ELE-00019",
+    "value": "1Ω",
+    "footprint": "L_TDK_ACT45B-510",
+    "total_required": 6,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "B82787C0513H002"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574026"
+  },
+  {
+    "internal_id": "SA-ELE-00016",
+    "value": "Green LED",
+    "footprint": "LED_0805_2012Metric",
+    "total_required": 34,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "150080VS75000"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574019"
+  },
+  {
+    "internal_id": "SA-ELE-00054",
+    "value": "Red LED",
+    "footprint": "LED_0805_2012Metric",
+    "total_required": 11,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "associated_mpns": [
+      "150080RS75000"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574134"
+  },
+  {
+    "internal_id": "SA-ELE-00011",
+    "value": "Red LED",
+    "footprint": "LED_1206_3216Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "150120RS75000"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574006"
+  },
+  {
+    "internal_id": "SA-ELE-00017",
+    "value": "LED_RAGB",
+    "footprint": "LED_D5.0mm-4_RGB_Staggered_Pins",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574022"
+  },
+  {
+    "internal_id": "SA-ELE-00044",
+    "value": "STM32G0B1CBTx",
+    "footprint": "LQFP-48_7x7mm_P0.5mm",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "STM32G0B1CBT6"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574087"
   },
   {
     "internal_id": "SA-ELE-00049",
-    "value": "6-pin_Nano_SIM_CARD_holder",
-    "footprint": "SIM Card Holder:KLS1-SIM-076_NANO_Push",
-    "total_required": 2,
+    "value": "Conn_02x02_Top_Bottom",
+    "footprint": "Molex_Micro-Fit_3.0_43045-0400_2x02_P3.00mm_Horizontal",
+    "total_required": 3,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Turtle",
+      "octopus"
     ],
-    "associated_mpns": [
-      "KLS1-SIM-076"
-    ],
-    "last_updated": "2026-05-11T16:54:24.975418"
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574107"
   },
   {
     "internal_id": "SA-ELE-00050",
-    "value": "AMS1117-3.3",
-    "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+    "value": "51810.0601.120307",
+    "footprint": "Molex_Micro-Fit_3.0_43045-0600_2x03_P3.00mm_Horizontal",
     "total_required": 2,
     "current_stock": 0,
     "used_in_projects": [
-      "teyu",
-      "ble"
+      "Turtle",
+      "octopus"
     ],
     "associated_mpns": [
-      "AMS1117-3.3"
+      "51810.0601.120307"
     ],
-    "last_updated": "2026-05-11T16:54:24.975422"
+    "last_updated": "2026-07-01T09:28:11.574109"
+  },
+  {
+    "internal_id": "SA-ELE-00055",
+    "value": "Conn_02x04_Top_Bottom",
+    "footprint": "Molex_Micro-Fit_3.0_43045-0800_2x04_P3.00mm_Horizontal",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "associated_mpns": [
+      "43045-0800"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574141"
+  },
+  {
+    "internal_id": "SA-ELE-00051",
+    "value": "51810.0601.120507",
+    "footprint": "Molex_Micro-Fit_3.0_43045-1000_2x05_P3.00mm_Horizontal",
+    "total_required": 7,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "51810.0601.120507"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574112"
+  },
+  {
+    "internal_id": "SA-ELE-00020",
+    "value": "Conn_02x05_Top_Bottom",
+    "footprint": "Molex_Micro-Fit_3.0_43045-1012_2x05_P3.00mm_Vertical",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [
+      "43045-1012"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574029"
+  },
+  {
+    "internal_id": "SA-ELE-00048",
+    "value": "MountingHole",
+    "footprint": "MountingHole_3.2mm_M3_Pad_Via",
+    "total_required": 8,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574105"
+  },
+  {
+    "internal_id": "SA-ELE-00033",
+    "value": "0Ω",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "CQ03WAF0000T5E"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574060"
+  },
+  {
+    "internal_id": "SA-ELE-00029",
+    "value": "100kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-07100KL"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574051"
+  },
+  {
+    "internal_id": "SA-ELE-00031",
+    "value": "10kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 56,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-0710KL"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574056"
+  },
+  {
+    "internal_id": "SA-ELE-00032",
+    "value": "1kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 35,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-071KL"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574058"
+  },
+  {
+    "internal_id": "SA-ELE-00038",
+    "value": "4.7kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 33,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-074K7L"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574072"
+  },
+  {
+    "internal_id": "SA-ELE-00035",
+    "value": "5.1kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 6,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-075K1L"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574064"
+  },
+  {
+    "internal_id": "SA-ELE-00034",
+    "value": "60.4Ω",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 14,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-0760R4L"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574062"
+  },
+  {
+    "internal_id": "SA-ELE-00030",
+    "value": "75kΩ",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "RC0603FR-1075KL"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574053"
+  },
+  {
+    "internal_id": "SA-ELE-00036",
+    "value": "R_Small_US",
+    "footprint": "R_0603_1608Metric",
+    "total_required": 21,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574066"
+  },
+  {
+    "internal_id": "SA-ELE-00037",
+    "value": "R_Small_US",
+    "footprint": "R_1206_3216Metric",
+    "total_required": 32,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574068"
+  },
+  {
+    "internal_id": "SA-ELE-00056",
+    "value": "MAX485E",
+    "footprint": "SOIC-8_3.9x4.9mm_P1.27mm",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574151"
+  },
+  {
+    "internal_id": "SA-ELE-00043",
+    "value": "TCAN1051HGVDRQ1",
+    "footprint": "SOIC-8_3.9x4.9mm_P1.27mm",
+    "total_required": 6,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "TCAN1051HGVDRQ1"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574083"
+  },
+  {
+    "internal_id": "SA-ELE-00014",
+    "value": "BAT54s",
+    "footprint": "SOT-23-3",
+    "total_required": 18,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "BAT54SLT1G"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574013"
+  },
+  {
+    "internal_id": "SA-ELE-00028",
+    "value": "NHDTC114ETR",
+    "footprint": "SOT-23-3",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [
+      "NHDTC114ETR"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574048"
+  },
+  {
+    "internal_id": "SA-ELE-00012",
+    "value": "PESD2IVN48T-Q",
+    "footprint": "SOT-23-3",
+    "total_required": 7,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "PESD2IVN48T-QR"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574009"
+  },
+  {
+    "internal_id": "SA-ELE-00027",
+    "value": "SI2302CDS-T1-GE3",
+    "footprint": "SOT-23-3",
+    "total_required": 33,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "SI2302CDS-T1-GE3"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574046"
+  },
+  {
+    "internal_id": "SA-ELE-00042",
+    "value": "TLV75733PDBVR",
+    "footprint": "SOT-23-5",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "TLV75733PDBVR"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574081"
+  },
+  {
+    "internal_id": "SA-ELE-00041",
+    "value": "SY81103ABT",
+    "footprint": "SOT-23-6",
+    "total_required": 3,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven",
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "Silergy"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574079"
+  },
+  {
+    "internal_id": "SA-ELE-00040",
+    "value": "SW_DIP_x04",
+    "footprint": "SW_DIP_SPSTx04_Slide_9.78x12.34mm_W7.62mm_P2.54mm",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [],
+    "last_updated": "2026-07-01T09:28:11.574076"
+  },
+  {
+    "internal_id": "SA-ELE-00039",
+    "value": "SKRKAGE020",
+    "footprint": "SW_PUSH_6mm",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [
+      "SKRKAGE020"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574074"
+  },
+  {
+    "internal_id": "SA-ELE-00053",
+    "value": "SKRKAGE020",
+    "footprint": "SW_Push_SPST_NO_Alps_SKRK",
+    "total_required": 2,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Turtle",
+      "octopus"
+    ],
+    "associated_mpns": [
+      "SKRKAGE020"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574122"
+  },
+  {
+    "internal_id": "SA-ELE-00023",
+    "value": "21PC.84060.3A200",
+    "footprint": "USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "Raven"
+    ],
+    "associated_mpns": [
+      "21PC.84060.3A200"
+    ],
+    "last_updated": "2026-07-01T09:28:11.574037"
   }
 ]

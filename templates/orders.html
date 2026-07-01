@@ -5,17 +5,16 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-0">Purchase Orders</h1>
-    <a href="{{ url_for('create_order') }}" class="btn btn-primary">
+    <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Create Order
     </a>
 </div>
 
-{% if orders %}
 
-<!-- Filter pills -->
+<!-- Filter pills for existing orders -->
 <div class="d-flex gap-2 mb-3">
     <button class="btn btn-sm btn-dark filter-btn active" data-filter="all">
-        All <span class="badge bg-secondary ms-1">{{ orders|length }}</span>
+        All Orders <span class="badge bg-secondary ms-1">{{ orders|length }}</span>
     </button>
     <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="pending">
         Pending <span class="badge bg-warning text-dark ms-1">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</span>
@@ -25,6 +24,7 @@
     </button>
 </div>
 
+<!-- Orders Table -->
 <div class="table-responsive">
     <table class="table table-hover" id="ordersTable">
         <thead class="table-dark">
@@ -55,23 +55,28 @@
                 </td>
                 <td class="text-center">{{ order.line_items|length }}</td>
                 <td class="text-center">{{ order.total_items }}</td>
-                <td>{{ order.created_at[:10] }}</td>
+                <td>{{ order.created_at[:10] if order.created_at else '—' }}</td>
                 <td>{{ order.received_at[:10] if order.received_at else '—' }}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-secondary me-1" onclick="viewOrderDetails('{{ order.order_id }}')">
                         <i class="bi bi-eye"></i>
                     </button>
                     {% if order.status == 'pending' %}
-                    <button class="btn btn-sm btn-success" onclick="confirmReceiveOrder('{{ order.order_id }}', {{ order.line_items|length }}, {{ order.total_items }})">
-                        <i class="bi bi-check-circle"></i> Receive
+                    <button class="btn btn-sm btn-success" onclick="confirmReceiveOrder('{{ order.order_id }}')">
+                        <i class="bi bi-check-circle"></i>
                     </button>
                     {% endif %}
                 </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center text-muted">No orders yet</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 
 <!-- Order Details Modal -->
 <div class="modal fade" id="orderDetailsModal" tabindex="-1">
@@ -89,86 +94,53 @@
     </div>
 </div>
 
-<!-- Receive Order Confirmation Modal -->
-<div class="modal fade" id="receiveOrderModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Receipt</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Mark <strong id="receiveOrderId"></strong> as received?</p>
-                <div class="alert alert-info mb-0">
-                    <i class="bi bi-info-circle"></i>
-                    This will add <strong id="receiveOrderQty"></strong> units across
-                    <strong id="receiveOrderLines"></strong> components to your stock.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="receiveOrderForm" method="POST">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle"></i> Confirm Receipt
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% else %}
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i> No orders yet.
-    <a href="{{ url_for('create_order') }}">Create your first purchase order</a>
-</div>
-{% endif %}
-
 <script>
-// Filter pills
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('active', 'btn-dark', 'btn-warning', 'btn-success');
-            b.classList.add('btn-outline-' + (b.dataset.filter === 'pending' ? 'warning' : b.dataset.filter === 'received' ? 'success' : 'secondary'));
-        });
-        const filter = this.dataset.filter;
-        this.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
-        this.classList.add('active', filter === 'pending' ? 'btn-warning' : filter === 'received' ? 'btn-success' : 'btn-dark');
+// Store project components data
+let currentProjectComponents = [];
+let selectedComponents = new Set();
+let additionalComponents = [];  // Store custom components
+let nextAdditionalId = 1;
 
-        document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
-            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
-        });
-    });
-});
+// Escape HTML to prevent XSS from BOM data
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
+// Get CSRF token from cookie (set by Flask-WTF)
+function getCsrfToken() {
+    const match = document.cookie.match(/csrf_token=([^;]+)/);
+    return match ? match[1] : '';
+}
+
+// View order details
 function viewOrderDetails(orderId) {
     fetch(`/api/order/${orderId}`)
         .then(r => r.json())
         .then(order => {
-            const statusColor = order.status === 'pending' ? 'warning' : 'success';
             document.getElementById('orderDetailsContent').innerHTML = `
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong>Order ID:</strong> <code>${order.order_id}</code><br>
-                        <strong>Supplier:</strong> ${order.supplier}<br>
-                        <strong>Status:</strong> <span class="badge bg-${statusColor} ${order.status === 'pending' ? 'text-dark' : ''}">${order.status}</span>
+                        <strong>Order ID:</strong> <code>${escapeHtml(order.order_id)}</code><br>
+                        <strong>Supplier:</strong> ${escapeHtml(order.supplier)}<br>
+                        <strong>Status:</strong> <span class="badge bg-${order.status === 'pending' ? 'warning' : 'success'}">${escapeHtml(order.status)}</span>
                     </div>
                     <div class="col-md-6">
-                        <strong>Created:</strong> ${order.created_at ? order.created_at.slice(0,10) : '—'}<br>
-                        <strong>Received:</strong> ${order.received_at ? order.received_at.slice(0,10) : 'Not yet'}<br>
-                        <strong>Notes:</strong> ${order.notes || '—'}
+                        <strong>Created:</strong> ${order.created_at ? escapeHtml(order.created_at.slice(0,10)) : '—'}<br>
+                        <strong>Received:</strong> ${order.received_at ? escapeHtml(order.received_at.slice(0,10)) : 'Not yet'}<br>
+                        <strong>Notes:</strong> ${escapeHtml(order.notes || '—')}
                     </div>
                 </div>
                 <h6>Line Items</h6>
                 <div class="table-responsive">
                     <table class="table table-sm">
-                        <thead><tr><th>Internal ID</th><th>MPN</th><th>Qty</th></tr></thead>
+                        <thead><tr><th>Component ID</th><th>Description</th><th>Qty</th></tr></thead>
                         <tbody>
                             ${order.line_items.map(item => `
                                 <tr>
-                                    <td><code>${item.internal_id}</code></td>
-                                    <td>${item.manufacturer_part_number || '—'}</td>
+                                    <td><code>${escapeHtml(item.internal_id)}</code></td>
+                                    <td>${escapeHtml(item.manufacturer_part_number || 'Custom Component')}</td>
                                     <td>${item.qty_ordered}</td>
                                 </tr>
                             `).join('')}
@@ -180,12 +152,60 @@ function viewOrderDetails(orderId) {
         });
 }
 
-function confirmReceiveOrder(orderId, lineItems, totalQty) {
-    document.getElementById('receiveOrderId').textContent = orderId;
-    document.getElementById('receiveOrderLines').textContent = lineItems;
-    document.getElementById('receiveOrderQty').textContent = totalQty;
-    document.getElementById('receiveOrderForm').action = `/order/${orderId}/receive`;
-    new bootstrap.Modal(document.getElementById('receiveOrderModal')).show();
+// Confirm receive order
+function confirmReceiveOrder(orderId) {
+    if (confirm('Mark this order as received? Stock will be updated automatically.')) {
+        fetch(`/order/${orderId}/receive`, {method: 'POST'})
+            .then(() => location.reload());
+    }
 }
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active', 'btn-dark', 'btn-warning', 'btn-success');
+            b.classList.add('btn-outline-' + (b.dataset.filter === 'pending' ? 'warning' : b.dataset.filter === 'received' ? 'success' : 'secondary'));
+        });
+        const filter = this.dataset.filter;
+        this.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
+        this.classList.add('active', filter === 'pending' ? 'btn-warning' : filter === 'received' ? 'btn-success' : 'btn-dark');
+
+        document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
+            if (row.cells && row.cells.length > 0) {
+                row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+            }
+        });
+    });
+});
 </script>
+
+<style>
+    #projectComponentsPanel {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .component-checkbox {
+        cursor: pointer;
+        transform: scale(1.2);
+    }
+    
+    #projectSelect {
+        cursor: pointer;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        cursor: pointer;
+    }
+    
+    #additionalComponentsList table {
+        font-size: 0.9rem;
+    }
+</style>
 {% endblock %}
