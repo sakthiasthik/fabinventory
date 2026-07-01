@@ -9,7 +9,7 @@
 
     <div class="d-flex gap-2">
         <!-- Download BOM Template -->
-        <a href="{{ url_for('download_bom_template') }}" class="btn btn-outline-success">
+        <a href="{{ url_for('main.download_bom_template') }}" class="btn btn-outline-success">
             <i class="bi bi-download"></i> BOM Template
         </a>
 
@@ -34,7 +34,7 @@
 
                         {% if project.image %}
 
-                            <img src="{{ url_for('serve_project_file', name=project.name, filepath='images/' + project.image) }}"
+                            <img src="{{ url_for('project.serve_project_file', name=project.name, filepath='images/' + project.image) }}"
                                 class="project-image">
 
                         {% else %}
@@ -79,7 +79,7 @@
 
                         <div class="btn-group" role="group">
 
-                            <a href="{{ url_for('project_detail', name=project.name) }}"
+                            <a href="{{ url_for('project.project_detail', name=project.name) }}"
                             class="btn btn-sm btn-outline-primary">
 
                             View
@@ -117,7 +117,7 @@
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('create_project') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New Project</h5>
