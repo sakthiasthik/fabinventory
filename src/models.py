@@ -371,5 +371,5 @@ class MasterItemPrn3D:
 @dataclass
 class Config:
     company_prefix: str
-    repo_path: str = "./fabinventory_data"
+    data_path: str = "./fabinventory_data"
     last_sync: Optional[str] = None
