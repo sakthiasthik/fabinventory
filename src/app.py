@@ -921,6 +921,7 @@ def git_settings():
     current_branch = state.git_manager.get_current_branch()
     git_active = state.git_manager.is_active()
     git_user = state.git_manager.get_user()
+    commits_ahead = state.git_manager.commits_ahead()
 
     return render_template(
         'git_settings.html',
@@ -930,12 +931,15 @@ def git_settings():
         current_branch=current_branch,
         git_active=git_active,
         git_user=git_user,
+        commits_ahead=commits_ahead,
     )
  
 @app.context_processor
 def inject_git_status():
     if state.initialized and state.git_manager:
-        return {'git_status': state.git_manager.get_status()}
+        status = state.git_manager.get_status()
+        status['commits_ahead'] = state.git_manager.commits_ahead()
+        return {'git_status': status}
     return {'git_status': None}
  
  
