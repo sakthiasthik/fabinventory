@@ -402,4 +402,14 @@ body {
     color: #6c757d;
 
     font-size: 1rem;
+
+
+/* Gerber file listing */
+.gerber-file-list code {
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+.gerber-file-list .bi {
+    font-size: 0.85rem;
+}
 }
