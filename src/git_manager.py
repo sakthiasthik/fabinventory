@@ -27,9 +27,11 @@ class GitManager:
     def __init__(self, repo_path: str = ".", user_name: Optional[str] = None,
                  user_email: Optional[str] = None):
         self.repo_path = Path(repo_path).resolve()
-        self.user_name = user_name or os.getenv("GIT_AUTHOR_NAME", "FabInventory")
-        self.user_email = user_email or os.getenv("GIT_AUTHOR_EMAIL", "fabinventory@local")
         self.repo = None
+
+        # Start with env overrides, then fall back to git config, then hard default
+        self.user_name = user_name or os.getenv("GIT_AUTHOR_NAME") or ""
+        self.user_email = user_email or os.getenv("GIT_AUTHOR_EMAIL") or ""
 
         if GIT_AVAILABLE:
             self._init_repo()
@@ -37,16 +39,56 @@ class GitManager:
     # ── helpers ─────────────────────────────────────────────────
 
     def _init_repo(self):
-        """Open the existing repo at *repo_path* — never create one."""
+        """Open the existing repo at *repo_path* — never create one.
+        Also reads the real Git user identity from config."""
         if not GIT_AVAILABLE:
             return
         try:
             dot_git = self.repo_path / ".git"
             if dot_git.exists():
                 self.repo = Repo(self.repo_path)
+                self._read_git_user()
         except Exception as e:
             print(f"Git: could not open repo at {self.repo_path} — {e}")
             self.repo = None
+
+    def _read_git_user(self):
+        """Read user.name / user.email from repo config, falling back
+        to global config, and finally to a sensible default."""
+        if not self.repo:
+            return
+        reader = self.repo.config_reader()
+        # Try repo-level first, then global
+        name = self._cfg_get(reader, "user", "name")
+        email = self._cfg_get(reader, "user", "email")
+
+        # Only override if not already set via env/constructor
+        if not self.user_name:
+            self.user_name = name or "Unknown"
+        if not self.user_email:
+            self.user_email = email or "unknown@local"
+
+        # If it's STILL the old hardcoded default from env, replace it
+        if self.user_name == "FabInventory":
+            self.user_name = name or "Unknown"
+
+    @staticmethod
+    def _cfg_get(reader, section, option):
+        """Try repo config, then global config, then return None."""
+        try:
+            return reader.get_value(section, option)
+        except Exception:
+            pass
+        # Try global git config
+        try:
+            from git import GitConfigParser
+            global_cfg = GitConfigParser(
+                os.path.expanduser("~/.gitconfig"), read_only=True
+            )
+            return global_cfg.get_value(section, option)
+        except Exception:
+            pass
+        return None
 
     def is_active(self) -> bool:
         """True when Git is available AND a repo was found."""
@@ -137,8 +179,12 @@ class GitManager:
         except Exception:
             return "main"
 
+    def get_user(self) -> Dict[str, str]:
+        """Return the current Git user identity being used for commits."""
+        return {"name": self.user_name, "email": self.user_email}
+
     def set_user(self, name: str, email: str) -> bool:
-        """Set git user.name and user.email in the repo config."""
+        """Set git user.name and user.email in the repo config (persistent)."""
         if not self.is_active():
             return False
         try:

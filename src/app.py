@@ -920,6 +920,7 @@ def git_settings():
     remote_urls = state.git_manager.get_remote_urls()
     current_branch = state.git_manager.get_current_branch()
     git_active = state.git_manager.is_active()
+    git_user = state.git_manager.get_user()
 
     return render_template(
         'git_settings.html',
@@ -928,6 +929,7 @@ def git_settings():
         remote_urls=remote_urls,
         current_branch=current_branch,
         git_active=git_active,
+        git_user=git_user,
     )
  
 @app.context_processor
