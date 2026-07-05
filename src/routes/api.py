@@ -1,4 +1,5 @@
 """FabInventory — API Blueprint"""
+from pathlib import Path
 from flask import Blueprint, jsonify, request
 from src.core import state, api_login_required
 
@@ -22,76 +23,159 @@ def api_order_details(order_id):
 @api_bp.route('/project/<project_name>/components')
 @api_login_required
 def api_project_components(project_name):
-    """API endpoint to get components for a specific project"""
+    """API endpoint to get ALL components (elec, mech, pcb, 3d) for a project."""
     if not state.init_app():
         return jsonify({'error': 'Not initialized'}), 500
 
-    # Get the project
     project = state.project_manager.get_project(project_name)
     if not project:
         return jsonify({'error': 'Project not found'}), 404
 
-    # Get inventory data to calculate stock levels
-    inventory_items = state.inventory_manager.get_inventory()
+    data_root = Path(state.data_path) / "projects" / project_name
+    components = []
+    seen_ids = set()
 
-    # Create a lookup dict for stock levels
+    # ── Electrical ──────────────────────────────────────────────
+    inventory_items = state.inventory_manager.get_inventory()
     stock_lookup = {}
     for item in inventory_items:
         key = f"{item.value}|{item.footprint}"
         stock_lookup[key] = {
             'current_stock': item.current_stock,
-            'total_required': item.total_required,
-            'internal_id': item.internal_id
+            'internal_id': item.internal_id,
         }
 
-    # Build components list
-    components = []
     for bom_row in project.bom:
-        if not bom_row.is_active():  # Skip DNP components
+        if not bom_row.is_active():
             continue
-
         key = f"{bom_row.value}|{bom_row.footprint}"
-        stock_info = stock_lookup.get(key, {'current_stock': 0, 'total_required': 0, 'internal_id': None})
-
-        # Use ONLY project BOM quantity
-        project_qty = bom_row.qty
-
-        to_order = max(
-            0,
-            project_qty - stock_info.get('current_stock', 0)
-        )
-
+        stock_info = stock_lookup.get(key, {'current_stock': 0, 'internal_id': None})
+        cid = stock_info.get('internal_id') or key
+        if cid in seen_ids:
+            continue
+        seen_ids.add(cid)
         components.append({
-            'id': key,
-            'internal_id': stock_info.get(
-                'internal_id',
-                f"TEMP-{len(components)+1}"
-            ),
+            'id': cid,
+            'internal_id': stock_info.get('internal_id') or '',
+            'category': 'electrical',
+            'label': f"{bom_row.value} — {bom_row.footprint}",
             'value': bom_row.value,
             'footprint': bom_row.footprint,
             'mpn': bom_row.manufacturer_part_number,
-            'manufacturer_part_number': bom_row.manufacturer_part_number,
-            'manufacturer_name': bom_row.manufacturer_name,
             'qty': bom_row.qty,
-            'dnp': bom_row.dnp,
-            'dnp_raw': bom_row.dnp_raw,
-
-            # IMPORTANT FIX
-            'total_required': project_qty,
-
-            'current_stock': stock_info.get(
-                'current_stock',
-                0
-            ),
-
-            'to_order': to_order,
-            'reference': bom_row.reference
+            'to_order': max(0, bom_row.qty - stock_info.get('current_stock', 0)),
+            'current_stock': stock_info.get('current_stock', 0),
+            'reference': bom_row.reference,
         })
+
+    # ── Mechanical ──────────────────────────────────────────────
+    if project.mechanical_bom:
+        from src.bom_parser import BOMParser
+        mech_path = data_root / project.mechanical_bom
+        if mech_path.exists():
+            try:
+                for row in BOMParser.parse_file(str(mech_path), bom_type='mechanical'):
+                    cid = f"mech-{row.get('part_name','')}|{row.get('value','')}"
+                    if cid in seen_ids:
+                        continue
+                    seen_ids.add(cid)
+                    qty = int(row.get('quantity', 0))
+                    mech_inv = state.inventory_manager.mech_inventory
+                    stock = 0
+                    int_id = ''
+                    for mi in mech_inv:
+                        if mi.get_aggregation_key() == f"{row.get('part_name','')}|{row.get('value','')}":
+                            stock = mi.current_stock
+                            int_id = mi.internal_id
+                            break
+                    components.append({
+                        'id': cid,
+                        'internal_id': int_id,
+                        'category': 'mechanical',
+                        'label': f"{row.get('part_name','')} — {row.get('value','')}",
+                        'part_name': row.get('part_name', ''),
+                        'value': row.get('value', ''),
+                        'qty': qty,
+                        'to_order': max(0, qty - stock),
+                        'current_stock': stock,
+                        'reference': '',
+                    })
+            except Exception as e:
+                print(f"Mech parse error: {e}")
+
+    # ── PCB ────────────────────────────────────────────────────
+    if project.pcb_bom:
+        from src.bom_parser import BOMParser
+        pcb_path = data_root / project.pcb_bom
+        if pcb_path.exists():
+            try:
+                for row in BOMParser.parse_file(str(pcb_path), bom_type='pcb'):
+                    cid = f"pcb-{row.get('board_name','')}"
+                    if cid in seen_ids:
+                        continue
+                    seen_ids.add(cid)
+                    qty = int(row.get('quantity', 0))
+                    pcb_inv = state.inventory_manager.pcb_inventory
+                    stock = 0
+                    int_id = ''
+                    for pi in pcb_inv:
+                        if pi.board_name == row.get('board_name', ''):
+                            stock = pi.current_stock
+                            int_id = pi.internal_id
+                            break
+                    components.append({
+                        'id': cid,
+                        'internal_id': int_id,
+                        'category': 'pcb',
+                        'label': f"PCB: {row.get('board_name','')}",
+                        'board_name': row.get('board_name', ''),
+                        'qty': qty,
+                        'to_order': max(0, qty - stock),
+                        'current_stock': stock,
+                        'reference': '',
+                    })
+            except Exception as e:
+                print(f"PCB parse error: {e}")
+
+    # ── 3D Print ───────────────────────────────────────────────
+    if project.print3d_bom:
+        from src.bom_parser import BOMParser
+        prn_path = data_root / project.print3d_bom
+        if prn_path.exists():
+            try:
+                for row in BOMParser.parse_file(str(prn_path), bom_type='3dprint'):
+                    cid = f"3d-{row.get('part_name','')}"
+                    if cid in seen_ids:
+                        continue
+                    seen_ids.add(cid)
+                    qty = int(row.get('quantity', 0))
+                    prn_inv = state.inventory_manager.print3d_inventory
+                    stock = 0
+                    int_id = ''
+                    for pi in prn_inv:
+                        if pi.part_name == row.get('part_name', ''):
+                            stock = pi.current_stock
+                            int_id = pi.internal_id
+                            break
+                    components.append({
+                        'id': cid,
+                        'internal_id': int_id,
+                        'category': '3dprint',
+                        'label': f"3D: {row.get('part_name','')} ({row.get('material','')})",
+                        'part_name': row.get('part_name', ''),
+                        'material': row.get('material', ''),
+                        'qty': qty,
+                        'to_order': max(0, qty - stock),
+                        'current_stock': stock,
+                        'reference': '',
+                    })
+            except Exception as e:
+                print(f"3D parse error: {e}")
 
     return jsonify({
         'project_name': project_name,
         'components': components,
-        'total_components': len(components)
+        'total_components': len(components),
     })
 
 
