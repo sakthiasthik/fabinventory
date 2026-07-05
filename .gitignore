@@ -31,6 +31,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+!fabinventory.spec
 
 # Installer logs
 pip-log.txt
@@ -64,6 +65,9 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
+
+# FabInventory — user data (auto-generated on first run)
+fabinventory_data/
 
 # Scrapy stuff:
 .scrapy

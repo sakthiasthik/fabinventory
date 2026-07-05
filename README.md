@@ -229,6 +229,28 @@ For team use: set up a shared remote (GitHub/GitLab/Bitbucket) in Git Settings, 
 
 ---
 
+## Standalone Executable (all platforms)
+
+Build a single-folder executable that runs without Python or pip:
+
+```bash
+pip install pyinstaller
+pyinstaller fabinventory.spec --noconfirm
+```
+
+Output: `dist/FabInventory/` — zip this folder and distribute.
+
+| File | Purpose |
+|---|---|
+| `dist/FabInventory/FabInventory` | Double-click to launch (or `./FabInventory` in terminal) |
+| `dist/FabInventory/_internal/` | Bundled Python + dependencies (don't touch) |
+
+The app auto-creates `.env` and `fabinventory_data/` on first run. Browser opens at `http://localhost:9000`.
+
+> **Note:** Do NOT commit `dist/` or `build/` to Git — they are build artifacts. They are already in `.gitignore`. Only commit `fabinventory.spec` (the build recipe).
+
+---
+
 ## Development
 
 ```bash
@@ -239,6 +261,10 @@ python -m pytest test/ -v
 # Run the app in debug mode
 python run.py
 # → http://localhost:9000 (debug mode auto-reloads on code changes)
+
+# Build executable
+pip install pyinstaller
+pyinstaller fabinventory.spec --noconfirm
 ```
 
 ---

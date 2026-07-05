@@ -1,0 +1,84 @@
+name: Sync Developer Branches
+
+on:
+  push:
+    branches:
+      - 'dev-*'               # Trigger on any dev-* branch push
+
+# ── Only one sync at a time ────────────────────────────────────
+concurrency:
+  group: dev-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge ${{ github.ref_name }} → dev → all dev-*
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history for merges
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ── Step 1: merge pushed branch into dev ────────────────
+      - name: Merge ${{ github.ref_name }} → dev
+        id: merge-dev
+        run: |
+          SOURCE="${{ github.ref_name }}"
+          echo "::group::Merge $SOURCE → dev"
+
+          git fetch origin dev
+          git checkout dev
+          git merge "origin/$SOURCE" --no-ff --no-edit
+
+          echo "::endgroup::"
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+
+      # ── Step 2: sync dev back to all other dev-* branches ───
+      - name: Sync dev → all dev-* branches
+        run: |
+          PUSHED="${{ github.ref_name }}"
+
+          echo "::group::Discovering dev-* branches"
+          # List all remote dev-* branches, strip origin/ prefix, exclude pushed
+          mapfile -t DEV_BRANCHES < <(
+            git branch -r | grep 'origin/dev-' | sed 's|.*origin/||' | grep -v "^${PUSHED}$" | sort -u
+          )
+          printf '  %s\n' "${DEV_BRANCHES[@]}"
+          echo "::endgroup::"
+
+          FAILED=()
+          for BRANCH in "${DEV_BRANCHES[@]}"; do
+            echo "::group::Merge dev → $BRANCH"
+            git checkout "$BRANCH"
+            if git merge dev --no-ff --no-edit; then
+              git push origin "$BRANCH"
+              echo "  ✅ synced $BRANCH"
+            else
+              echo "  ❌ CONFLICT merging dev → $BRANCH"
+              FAILED+=("$BRANCH")
+              # Abort this merge to keep repo clean
+              git merge --abort 2>/dev/null || true
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Merge conflicts on: ${FAILED[*]}"
+            exit 1
+          fi
+
+      # ── Push dev (only after all syncs succeed) ─────────────
+      - name: Push dev
+        run: |
+          git checkout dev
+          git push origin dev

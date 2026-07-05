@@ -522,7 +522,7 @@
 
                 <div class="row g-4">
 
-                    <div class="col-lg-5">
+                    <div class="col-md-5">
 
                         <h5 class="mb-3">
                             PCB Preview
@@ -573,7 +573,7 @@
 
                     </div>
 
-                <div class="col-lg-7">
+                <div class="col-md-7">
 
                 <form method="POST"
                     action="{{ url_for('project.upload_pcb_image', name=project.name) }}"
@@ -690,6 +690,8 @@
 
     </div> <!-- END CARD -->
 
+</div> <!-- END PCB TAB -->
+
     <!-- 3D PRINT -->
     <div class="tab-pane fade {% if request.args.get('tab') == '3dprint' %}show active{% endif %}"
         id="print3d-tab">
@@ -736,7 +738,7 @@
 
                     <!-- Preview Area -->
 
-                    <div class="col-lg-7">
+                    <div class="col-md-7">
 
                         <div id="viewer3d"
                             style="
@@ -752,7 +754,7 @@
 
                     <!-- Model Info -->
 
-                    <div class="col-lg-5">
+                    <div class="col-md-5">
 
                         <form method="POST"
                             action="{{ url_for('project.upload_3d_image', name=project.name) }}"
@@ -1077,7 +1079,7 @@ window.addEventListener('load', function () {
 
     loader.load(
 
-        "{{ '/' + project.model_3d_file.replace('\\', '/') }}",
+        "{{ url_for('project.serve_project_file', name=project.name, filepath=project.model_3d_file) }}",
 
         function (geometry) {
 
