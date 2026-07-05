@@ -4,6 +4,7 @@ Blueprint architecture — see ``src/routes/__init__.py`` for the route map.
 ``src/core.py`` holds shared state, auth decorators, and config.
 """
 import os
+import sys
 import secrets
 from datetime import datetime
 from pathlib import Path
@@ -34,12 +35,27 @@ from flask_wtf.csrf import CSRFProtect
 
 from src.core import state
 
+# ── Resolve paths (handles PyInstaller frozen bundles) ─────────
+def _resolve_root():
+    """Return the project root directory (works in dev and frozen)."""
+    # PyInstaller one-file: sys._MEIPASS is the temp dir
+    bundle = getattr(sys, '_MEIPASS', None)
+    if bundle:
+        return bundle
+    # PyInstaller one-folder: _internal/ sits next to the exe
+    exe_dir = os.path.dirname(sys.executable)
+    internal = os.path.join(exe_dir, '_internal')
+    if os.path.isdir(internal):
+        return internal
+    # Dev mode: __file__ is src/app.py → go up 2 levels
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+ROOT = _resolve_root()
+TEMPLATE_DIR = os.path.join(ROOT, 'templates')
+STATIC_DIR = os.path.join(ROOT, 'static')
+
 # ── Flask setup ───────────────────────────────────────────────
-app = Flask(
-    __name__,
-    static_folder='../static',
-    template_folder='../templates',
-)
+app = Flask(__name__, static_folder=STATIC_DIR, template_folder=TEMPLATE_DIR)
 
 secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
@@ -48,13 +64,11 @@ if not secret_key:
         "Check that your .env file exists and contains SECRET_KEY=..."
     )
 app.secret_key = secret_key
-app.config['UPLOAD_FOLDER'] = Path('static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
-app.config['UPLOAD_FOLDER'].mkdir(parents=True, exist_ok=True)
 
-import os as _os
-_template_dir = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), 'templates')
-app.template_folder = _template_dir
+_upload_dir = Path(STATIC_DIR) / 'uploads'
+app.config['UPLOAD_FOLDER'] = _upload_dir
+_upload_dir.mkdir(parents=True, exist_ok=True)
 
 csrf = CSRFProtect(app)
 
@@ -109,7 +123,8 @@ app.register_blueprint(git_bp)
 def main():
     """Run the Flask application."""
     state.init_app()
-    app.run(debug=True, host='0.0.0.0', port=9000)
+    frozen = getattr(sys, 'frozen', False)
+    app.run(debug=not frozen, host='0.0.0.0', port=9000, use_reloader=not frozen)
 
 
 if __name__ == '__main__':

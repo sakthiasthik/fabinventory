@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "internal_id": "SA-MEC-00058",
+    "part_name": "Brass Inserts",
+    "value": "M3 x 4mm",
+    "total_required": 4,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.743500"
+  },
+  {
+    "internal_id": "SA-MEC-00060",
+    "part_name": "M3 Allen Socket head",
+    "value": "M3 x 16mm",
+    "total_required": 8,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.743512"
+  },
+  {
+    "internal_id": "SA-MEC-00059",
+    "part_name": "M3 Phillips Countersunk",
+    "value": "M3 x 10mm",
+    "total_required": 8,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.743509"
+  }
+]
