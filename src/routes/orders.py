@@ -75,18 +75,19 @@ def create_order():
             flash('Failed to create order', 'error')
 
     # GET request - show form
-
     items_to_order = state.inventory_manager.get_items_to_order()
-
+    mech_items = [i for i in state.inventory_manager.mech_inventory if i.to_order > 0]
+    pcb_items = [i for i in state.inventory_manager.pcb_inventory if i.to_order > 0]
+    prn_items = [i for i in state.inventory_manager.print3d_inventory if i.to_order > 0]
     projects_list = state.project_manager.list_projects()
 
     return render_template(
-
         'create_order.html',
-
         items_to_order=items_to_order,
-
-        projects=projects_list
+        mech_items=mech_items,
+        pcb_items=pcb_items,
+        prn_items=prn_items,
+        projects=projects_list,
     )
 
 
