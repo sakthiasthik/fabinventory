@@ -1,1 +1,57 @@
-[]
+[
+  {
+    "internal_id": "SA-PRN-00063",
+    "part_name": "Left Base",
+    "material": "PLA",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.749412"
+  },
+  {
+    "internal_id": "SA-PRN-00064",
+    "part_name": "Left Top Plate",
+    "material": "PLA",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.749414"
+  },
+  {
+    "internal_id": "SA-PRN-00061",
+    "part_name": "Right Base",
+    "material": "PLA",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.749402"
+  },
+  {
+    "internal_id": "SA-PRN-00062",
+    "part_name": "Right Top Plate",
+    "material": "PLA",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.749409"
+  },
+  {
+    "internal_id": "SA-PRN-00065",
+    "part_name": "Screw Support",
+    "material": "PLA",
+    "total_required": 1,
+    "current_stock": 0,
+    "used_in_projects": [
+      "octopus"
+    ],
+    "last_updated": "2026-07-01T18:19:33.749416"
+  }
+]

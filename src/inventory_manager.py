@@ -103,22 +103,52 @@ class InventoryManager:
     # ── PCB ─────────────────────────────────────────────────────
 
     def _update_pcb(self, projects):
+        """Build PCB inventory from projects that have Gerber files.
+        Each project with Gerber data counts as one board entry.
+        If a PCB BOM is also uploaded, those rows are included too."""
         from src.bom_parser import BOMParser
 
         all_rows = []
         for project in projects:
-            if not project.pcb_bom:
-                continue
-            project_dir = self.file_manager._project_dir(project.name)
-            full_path = project_dir / project.pcb_bom
-            if not full_path.exists():
-                continue
-            try:
-                rows = BOMParser.parse_file(str(full_path), bom_type="pcb")
-                for row in rows:
-                    all_rows.append((project.name, row))
-            except Exception as e:
-                print(f"Error parsing PCB BOM for {project.name}: {e}")
+            board_found = False
+
+            # Check for Gerber files — each project with Gerbers = 1 board
+            if project.pcb_gerber_folder or project.pcb_gerber_zip:
+                board_name = project.name  # default
+
+                # Try to get a meaningful name from the Gerber path
+                path = (project.pcb_gerber_folder or project.pcb_gerber_zip or "")
+                parts = path.replace("\\", "/").rstrip("/").split("/")
+                # Skip generic folder names like "gerbers", "extracted"
+                skip = {"gerbers", "extracted"}
+                meaningful = [p for p in parts if p.lower() not in skip]
+                if meaningful:
+                    # Take the last meaningful part, clean it up
+                    name = meaningful[-1]
+                    # Strip common suffixes
+                    for suffix in ("Completed", "_gerber_x2", "_gerber", "-gerber"):
+                        if name.endswith(suffix):
+                            name = name[:-len(suffix)]
+                    board_name = name
+
+                all_rows.append((project.name, {
+                    "board_name": board_name,
+                    "quantity": 1,
+                }))
+                board_found = True
+
+            # Also check for PCB BOM (additional/alternative)
+            if project.pcb_bom:
+                project_dir = self.file_manager._project_dir(project.name)
+                full_path = project_dir / project.pcb_bom
+                if full_path.exists():
+                    try:
+                        rows = BOMParser.parse_file(str(full_path), bom_type="pcb")
+                        for row in rows:
+                            all_rows.append((project.name, row))
+                        board_found = True
+                    except Exception as e:
+                        print(f"Error parsing PCB BOM for {project.name}: {e}")
 
         self.pcb_inventory = self.aggregator.aggregate_pcb(
             all_rows, self.pcb_inventory, self.file_manager.get_next_id

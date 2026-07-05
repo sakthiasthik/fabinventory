@@ -13,7 +13,7 @@
     "associated_mpns": [
       "CL10B104KA8NNWC"
     ],
-    "last_updated": "2026-07-01T09:28:11.573975"
+    "last_updated": "2026-07-01T18:19:33.697849"
   },
   {
     "internal_id": "SA-ELE-00004",
@@ -29,7 +29,7 @@
     "associated_mpns": [
       "CC0603KRX7R8BB101"
     ],
-    "last_updated": "2026-07-01T09:28:11.573990"
+    "last_updated": "2026-07-01T18:19:33.697865"
   },
   {
     "internal_id": "SA-ELE-00009",
@@ -45,7 +45,7 @@
     "associated_mpns": [
       "CL10A105KA8NFNC"
     ],
-    "last_updated": "2026-07-01T09:28:11.574001"
+    "last_updated": "2026-07-01T18:19:33.697878"
   },
   {
     "internal_id": "SA-ELE-00008",
@@ -61,7 +61,7 @@
     "associated_mpns": [
       "CC0603KRX7R8BB472"
     ],
-    "last_updated": "2026-07-01T09:28:11.573999"
+    "last_updated": "2026-07-01T18:19:33.697875"
   },
   {
     "internal_id": "SA-ELE-00006",
@@ -77,7 +77,7 @@
     "associated_mpns": [
       "CL10A475KP8NNNC"
     ],
-    "last_updated": "2026-07-01T09:28:11.573995"
+    "last_updated": "2026-07-01T18:19:33.697871"
   },
   {
     "internal_id": "SA-ELE-00007",
@@ -93,7 +93,7 @@
     "associated_mpns": [
       "CC0603JRNPO8BN470"
     ],
-    "last_updated": "2026-07-01T09:28:11.573997"
+    "last_updated": "2026-07-01T18:19:33.697873"
   },
   {
     "internal_id": "SA-ELE-00046",
@@ -108,7 +108,7 @@
     "associated_mpns": [
       "CL21A106KOQNNNG"
     ],
-    "last_updated": "2026-07-01T09:28:11.574094"
+    "last_updated": "2026-07-01T18:19:33.697970"
   },
   {
     "internal_id": "SA-ELE-00005",
@@ -124,7 +124,7 @@
     "associated_mpns": [
       "CL21A475KAQNNNE"
     ],
-    "last_updated": "2026-07-01T09:28:11.573993"
+    "last_updated": "2026-07-01T18:19:33.697867"
   },
   {
     "internal_id": "SA-ELE-00003",
@@ -140,7 +140,7 @@
     "associated_mpns": [
       "CL31A226KAHNNNE"
     ],
-    "last_updated": "2026-07-01T09:28:11.573988"
+    "last_updated": "2026-07-01T18:19:33.697862"
   },
   {
     "internal_id": "SA-ELE-00045",
@@ -152,7 +152,7 @@
       "Turtle"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574091"
+    "last_updated": "2026-07-01T18:19:33.697966"
   },
   {
     "internal_id": "SA-ELE-00002",
@@ -166,7 +166,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.573985"
+    "last_updated": "2026-07-01T18:19:33.697859"
   },
   {
     "internal_id": "SA-ELE-00015",
@@ -182,7 +182,7 @@
     "associated_mpns": [
       "TZMC3V3-GS08"
     ],
-    "last_updated": "2026-07-01T09:28:11.574017"
+    "last_updated": "2026-07-01T18:19:33.697892"
   },
   {
     "internal_id": "SA-ELE-00010",
@@ -198,7 +198,7 @@
     "associated_mpns": [
       "M7"
     ],
-    "last_updated": "2026-07-01T09:28:11.574004"
+    "last_updated": "2026-07-01T18:19:33.697880"
   },
   {
     "internal_id": "SA-ELE-00047",
@@ -212,7 +212,7 @@
     "associated_mpns": [
       "SS16-E3/61T"
     ],
-    "last_updated": "2026-07-01T09:28:11.574101"
+    "last_updated": "2026-07-01T18:19:33.697977"
   },
   {
     "internal_id": "SA-ELE-00013",
@@ -228,7 +228,7 @@
     "associated_mpns": [
       "SS520-HF"
     ],
-    "last_updated": "2026-07-01T09:28:11.574011"
+    "last_updated": "2026-07-01T18:19:33.697887"
   },
   {
     "internal_id": "SA-ELE-00057",
@@ -242,7 +242,7 @@
     "associated_mpns": [
       "140817140010"
     ],
-    "last_updated": "2026-07-01T09:28:11.574153"
+    "last_updated": "2026-07-01T18:19:33.698030"
   },
   {
     "internal_id": "SA-ELE-00025",
@@ -254,7 +254,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574042"
+    "last_updated": "2026-07-01T18:19:33.697917"
   },
   {
     "internal_id": "SA-ELE-00052",
@@ -266,7 +266,7 @@
       "Turtle"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574114"
+    "last_updated": "2026-07-01T18:19:33.697990"
   },
   {
     "internal_id": "SA-ELE-00021",
@@ -278,7 +278,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574031"
+    "last_updated": "2026-07-01T18:19:33.697907"
   },
   {
     "internal_id": "SA-ELE-00022",
@@ -292,7 +292,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574035"
+    "last_updated": "2026-07-01T18:19:33.697909"
   },
   {
     "internal_id": "SA-ELE-00024",
@@ -304,7 +304,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574039"
+    "last_updated": "2026-07-01T18:19:33.697914"
   },
   {
     "internal_id": "SA-ELE-00018",
@@ -320,7 +320,7 @@
     "associated_mpns": [
       "BLM18RK601SN1D"
     ],
-    "last_updated": "2026-07-01T09:28:11.574024"
+    "last_updated": "2026-07-01T18:19:33.697900"
   },
   {
     "internal_id": "SA-ELE-00026",
@@ -336,7 +336,7 @@
     "associated_mpns": [
       "ASPI-0630LR-6R8M-T15"
     ],
-    "last_updated": "2026-07-01T09:28:11.574044"
+    "last_updated": "2026-07-01T18:19:33.697920"
   },
   {
     "internal_id": "SA-ELE-00019",
@@ -352,7 +352,7 @@
     "associated_mpns": [
       "B82787C0513H002"
     ],
-    "last_updated": "2026-07-01T09:28:11.574026"
+    "last_updated": "2026-07-01T18:19:33.697902"
   },
   {
     "internal_id": "SA-ELE-00016",
@@ -368,7 +368,7 @@
     "associated_mpns": [
       "150080VS75000"
     ],
-    "last_updated": "2026-07-01T09:28:11.574019"
+    "last_updated": "2026-07-01T18:19:33.697895"
   },
   {
     "internal_id": "SA-ELE-00054",
@@ -382,7 +382,7 @@
     "associated_mpns": [
       "150080RS75000"
     ],
-    "last_updated": "2026-07-01T09:28:11.574134"
+    "last_updated": "2026-07-01T18:19:33.698009"
   },
   {
     "internal_id": "SA-ELE-00011",
@@ -398,7 +398,7 @@
     "associated_mpns": [
       "150120RS75000"
     ],
-    "last_updated": "2026-07-01T09:28:11.574006"
+    "last_updated": "2026-07-01T18:19:33.697883"
   },
   {
     "internal_id": "SA-ELE-00017",
@@ -410,7 +410,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574022"
+    "last_updated": "2026-07-01T18:19:33.697897"
   },
   {
     "internal_id": "SA-ELE-00044",
@@ -426,7 +426,7 @@
     "associated_mpns": [
       "STM32G0B1CBT6"
     ],
-    "last_updated": "2026-07-01T09:28:11.574087"
+    "last_updated": "2026-07-01T18:19:33.697961"
   },
   {
     "internal_id": "SA-ELE-00049",
@@ -439,7 +439,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574107"
+    "last_updated": "2026-07-01T18:19:33.697983"
   },
   {
     "internal_id": "SA-ELE-00050",
@@ -454,7 +454,7 @@
     "associated_mpns": [
       "51810.0601.120307"
     ],
-    "last_updated": "2026-07-01T09:28:11.574109"
+    "last_updated": "2026-07-01T18:19:33.697985"
   },
   {
     "internal_id": "SA-ELE-00055",
@@ -468,7 +468,7 @@
     "associated_mpns": [
       "43045-0800"
     ],
-    "last_updated": "2026-07-01T09:28:11.574141"
+    "last_updated": "2026-07-01T18:19:33.698016"
   },
   {
     "internal_id": "SA-ELE-00051",
@@ -483,7 +483,7 @@
     "associated_mpns": [
       "51810.0601.120507"
     ],
-    "last_updated": "2026-07-01T09:28:11.574112"
+    "last_updated": "2026-07-01T18:19:33.697987"
   },
   {
     "internal_id": "SA-ELE-00020",
@@ -497,7 +497,7 @@
     "associated_mpns": [
       "43045-1012"
     ],
-    "last_updated": "2026-07-01T09:28:11.574029"
+    "last_updated": "2026-07-01T18:19:33.697905"
   },
   {
     "internal_id": "SA-ELE-00048",
@@ -510,7 +510,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574105"
+    "last_updated": "2026-07-01T18:19:33.697981"
   },
   {
     "internal_id": "SA-ELE-00033",
@@ -526,7 +526,7 @@
     "associated_mpns": [
       "CQ03WAF0000T5E"
     ],
-    "last_updated": "2026-07-01T09:28:11.574060"
+    "last_updated": "2026-07-01T18:19:33.697936"
   },
   {
     "internal_id": "SA-ELE-00029",
@@ -542,7 +542,7 @@
     "associated_mpns": [
       "RC0603FR-07100KL"
     ],
-    "last_updated": "2026-07-01T09:28:11.574051"
+    "last_updated": "2026-07-01T18:19:33.697927"
   },
   {
     "internal_id": "SA-ELE-00031",
@@ -558,7 +558,7 @@
     "associated_mpns": [
       "RC0603FR-0710KL"
     ],
-    "last_updated": "2026-07-01T09:28:11.574056"
+    "last_updated": "2026-07-01T18:19:33.697932"
   },
   {
     "internal_id": "SA-ELE-00032",
@@ -574,7 +574,7 @@
     "associated_mpns": [
       "RC0603FR-071KL"
     ],
-    "last_updated": "2026-07-01T09:28:11.574058"
+    "last_updated": "2026-07-01T18:19:33.697934"
   },
   {
     "internal_id": "SA-ELE-00038",
@@ -590,7 +590,7 @@
     "associated_mpns": [
       "RC0603FR-074K7L"
     ],
-    "last_updated": "2026-07-01T09:28:11.574072"
+    "last_updated": "2026-07-01T18:19:33.697947"
   },
   {
     "internal_id": "SA-ELE-00035",
@@ -606,7 +606,7 @@
     "associated_mpns": [
       "RC0603FR-075K1L"
     ],
-    "last_updated": "2026-07-01T09:28:11.574064"
+    "last_updated": "2026-07-01T18:19:33.697940"
   },
   {
     "internal_id": "SA-ELE-00034",
@@ -622,7 +622,7 @@
     "associated_mpns": [
       "RC0603FR-0760R4L"
     ],
-    "last_updated": "2026-07-01T09:28:11.574062"
+    "last_updated": "2026-07-01T18:19:33.697938"
   },
   {
     "internal_id": "SA-ELE-00030",
@@ -638,7 +638,7 @@
     "associated_mpns": [
       "RC0603FR-1075KL"
     ],
-    "last_updated": "2026-07-01T09:28:11.574053"
+    "last_updated": "2026-07-01T18:19:33.697929"
   },
   {
     "internal_id": "SA-ELE-00036",
@@ -652,7 +652,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574066"
+    "last_updated": "2026-07-01T18:19:33.697942"
   },
   {
     "internal_id": "SA-ELE-00037",
@@ -666,7 +666,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574068"
+    "last_updated": "2026-07-01T18:19:33.697944"
   },
   {
     "internal_id": "SA-ELE-00056",
@@ -678,7 +678,7 @@
       "octopus"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574151"
+    "last_updated": "2026-07-01T18:19:33.698028"
   },
   {
     "internal_id": "SA-ELE-00043",
@@ -694,7 +694,7 @@
     "associated_mpns": [
       "TCAN1051HGVDRQ1"
     ],
-    "last_updated": "2026-07-01T09:28:11.574083"
+    "last_updated": "2026-07-01T18:19:33.697959"
   },
   {
     "internal_id": "SA-ELE-00014",
@@ -710,7 +710,7 @@
     "associated_mpns": [
       "BAT54SLT1G"
     ],
-    "last_updated": "2026-07-01T09:28:11.574013"
+    "last_updated": "2026-07-01T18:19:33.697890"
   },
   {
     "internal_id": "SA-ELE-00028",
@@ -724,7 +724,7 @@
     "associated_mpns": [
       "NHDTC114ETR"
     ],
-    "last_updated": "2026-07-01T09:28:11.574048"
+    "last_updated": "2026-07-01T18:19:33.697924"
   },
   {
     "internal_id": "SA-ELE-00012",
@@ -740,7 +740,7 @@
     "associated_mpns": [
       "PESD2IVN48T-QR"
     ],
-    "last_updated": "2026-07-01T09:28:11.574009"
+    "last_updated": "2026-07-01T18:19:33.697885"
   },
   {
     "internal_id": "SA-ELE-00027",
@@ -756,7 +756,7 @@
     "associated_mpns": [
       "SI2302CDS-T1-GE3"
     ],
-    "last_updated": "2026-07-01T09:28:11.574046"
+    "last_updated": "2026-07-01T18:19:33.697922"
   },
   {
     "internal_id": "SA-ELE-00042",
@@ -772,7 +772,7 @@
     "associated_mpns": [
       "TLV75733PDBVR"
     ],
-    "last_updated": "2026-07-01T09:28:11.574081"
+    "last_updated": "2026-07-01T18:19:33.697957"
   },
   {
     "internal_id": "SA-ELE-00041",
@@ -788,7 +788,7 @@
     "associated_mpns": [
       "Silergy"
     ],
-    "last_updated": "2026-07-01T09:28:11.574079"
+    "last_updated": "2026-07-01T18:19:33.697955"
   },
   {
     "internal_id": "SA-ELE-00040",
@@ -800,7 +800,7 @@
       "Raven"
     ],
     "associated_mpns": [],
-    "last_updated": "2026-07-01T09:28:11.574076"
+    "last_updated": "2026-07-01T18:19:33.697952"
   },
   {
     "internal_id": "SA-ELE-00039",
@@ -814,7 +814,7 @@
     "associated_mpns": [
       "SKRKAGE020"
     ],
-    "last_updated": "2026-07-01T09:28:11.574074"
+    "last_updated": "2026-07-01T18:19:33.697950"
   },
   {
     "internal_id": "SA-ELE-00053",
@@ -829,7 +829,7 @@
     "associated_mpns": [
       "SKRKAGE020"
     ],
-    "last_updated": "2026-07-01T09:28:11.574122"
+    "last_updated": "2026-07-01T18:19:33.697998"
   },
   {
     "internal_id": "SA-ELE-00023",
@@ -843,6 +843,6 @@
     "associated_mpns": [
       "21PC.84060.3A200"
     ],
-    "last_updated": "2026-07-01T09:28:11.574037"
+    "last_updated": "2026-07-01T18:19:33.697911"
   }
 ]
