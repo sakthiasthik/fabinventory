@@ -71,10 +71,37 @@ class ProjectManager:
         
         return False
     
+    # Map project model field suffix → BOMParser type name
+    _BOM_TYPE_MAP = {"mechanical": "mechanical", "print3d": "3dprint", "pcb": "pcb"}
+
+    def _count_bom_rows(self, project, field_suffix):
+        """Count rows in a non-electrical BOM file. Returns 0 if unreadable."""
+        try:
+            from src.bom_parser import BOMParser
+            project_dir = self.file_manager._project_dir(project.name)
+            bom_path = getattr(project, f"{field_suffix}_bom", None)
+            if not bom_path:
+                return 0
+            full_path = project_dir / bom_path
+            if not full_path.exists():
+                return 0
+            parser_type = self._BOM_TYPE_MAP.get(field_suffix, field_suffix)
+            rows = BOMParser.parse_file(str(full_path), bom_type=parser_type)
+            return len(rows)
+        except Exception:
+            return 0
+
     def list_projects(self) -> List[Dict[str, Any]]:
-        """List all projects with metadata"""
+        """List all projects with metadata and category counts"""
         projects_info = []
         for name, project in self.projects.items():
+            has_mech = bool(project.mechanical_bom)
+            has_pcb = bool(project.pcb_gerber_folder or project.pcb_gerber_zip or project.pcb_bom)
+            has_3d = bool(project.print3d_bom)
+
+            mech_count = self._count_bom_rows(project, "mechanical") if has_mech else 0
+            print3d_count = self._count_bom_rows(project, "print3d") if has_3d else 0
+
             projects_info.append({
                 "name": project.name,
                 "description": project.description,
@@ -82,7 +109,14 @@ class ProjectManager:
                 "updated_at": project.updated_at,
                 "component_count": len(project.bom),
                 "total_quantity": sum(row.qty for row in project.bom if not row.dnp),
-                "image": project.image
+                "image": project.image,
+                "has_mechanical": has_mech,
+                "has_pcb": has_pcb,
+                "has_3dprint": has_3d,
+                "elec_count": len(project.bom),
+                "mech_count": mech_count,
+                "pcb_count": 1 if has_pcb else 0,
+                "print3d_count": print3d_count,
             })
         return projects_info
     
