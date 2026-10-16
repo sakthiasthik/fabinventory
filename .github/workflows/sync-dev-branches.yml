@@ -3,6 +3,7 @@ name: Sync Developer Branches
 on:
   push:
     branches:
+      - 'dev'                 # direct pushes / PR merges into dev also sync out
       - 'dev-*'               # Trigger on any dev-* branch push
 
 # ── Only one sync at a time ────────────────────────────────────
@@ -12,7 +13,7 @@ concurrency:
 
 jobs:
   sync:
-    name: Merge ${{ github.ref_name }} → dev → all dev-*
+    name: Sync ${{ github.ref_name }} across dev + all dev-*
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,40 +30,52 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # ── Step 1: merge pushed branch into dev ────────────────
+      # ── Step 1: merge pushed branch into dev (skip if the push is already to dev) ──
       - name: Merge ${{ github.ref_name }} → dev
-        id: merge-dev
+        if: github.ref_name != 'dev'
         run: |
           SOURCE="${{ github.ref_name }}"
           echo "::group::Merge $SOURCE → dev"
 
           git fetch origin dev
           git checkout dev
-          git merge "origin/$SOURCE" --no-ff --no-edit
+
+          if git merge "origin/$SOURCE" --no-ff --no-edit; then
+            echo "  ✅ merged $SOURCE into dev"
+          else
+            echo "::error::CONFLICT merging $SOURCE → dev — resolve manually"
+            git merge --abort 2>/dev/null || true
+            exit 1
+          fi
 
           echo "::endgroup::"
-          echo "merged=true" >> "$GITHUB_OUTPUT"
 
-      # ── Step 2: sync dev back to all other dev-* branches ───
+      # ── Step 2: sync dev back to ALL dev-* branches (pushed one included) ──
       - name: Sync dev → all dev-* branches
         run: |
-          PUSHED="${{ github.ref_name }}"
-
           echo "::group::Discovering dev-* branches"
-          # List all remote dev-* branches, strip origin/ prefix, exclude pushed
+          # Refresh refs, then list all remote dev-* branches, strip origin/ prefix
+          git fetch origin
           mapfile -t DEV_BRANCHES < <(
-            git branch -r | grep 'origin/dev-' | sed 's|.*origin/||' | grep -v "^${PUSHED}$" | sort -u
+            git branch -r | grep 'origin/dev-' | sed 's|.*origin/||' | sort -u
           )
           printf '  %s\n' "${DEV_BRANCHES[@]}"
           echo "::endgroup::"
+
+          # Local dev must be the merged state (step 1) or fresh origin/dev (dev push)
+          git checkout dev
 
           FAILED=()
           for BRANCH in "${DEV_BRANCHES[@]}"; do
             echo "::group::Merge dev → $BRANCH"
             git checkout "$BRANCH"
             if git merge dev --no-ff --no-edit; then
-              git push origin "$BRANCH"
-              echo "  ✅ synced $BRANCH"
+              if git push origin "$BRANCH"; then
+                echo "  ✅ synced $BRANCH"
+              else
+                echo "  ❌ PUSH FAILED for $BRANCH"
+                FAILED+=("$BRANCH")
+              fi
             else
               echo "  ❌ CONFLICT merging dev → $BRANCH"
               FAILED+=("$BRANCH")
@@ -73,7 +86,7 @@ jobs:
           done
 
           if [ ${#FAILED[@]} -gt 0 ]; then
-            echo "::error::Merge conflicts on: ${FAILED[*]}"
+            echo "::error::Sync problems on: ${FAILED[*]}"
             exit 1
           fi
 
