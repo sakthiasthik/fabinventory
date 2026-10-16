@@ -10,6 +10,7 @@
 
 ### ✅ What changed
 
+- **Order-page investigation done** — 4 bugs found (quantity mismatch on duplicate BOM rows, inverted DNP detection, silent row dropping, case-sensitive aggregation key). All documented in **[BUG.md](BUG.md)** — fixes planned one by one.
 - **Branches simplified**: only `main`, `dev`, `dev-sakthi` remain. Old branches preserved as `archive/*` tags (`archive/dev-sneha`, `archive/test`, …)
 - **Sync workflow fixed** (`.github/workflows/sync-dev-branches.yml`):
   - the branch that triggers a push now *also* receives `dev` back (it was excluded before)
