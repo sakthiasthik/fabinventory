@@ -1,9 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}Create Order{% endblock %}
+{% block title %}BOM Consolidation{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Create Purchase Order</h1>
+<div class="page-header">
+    <div>
+        <h1>Consolidate BOM</h1>
+        <p class="subtitle">
+            Pick projects and board quantities → all BOMs get consolidated into one list →
+            create a purchase order from the result.
+        </p>
+    </div>
+    <div class="d-flex flex-column gap-2 align-items-end">
+        <button class="btn btn-primary" onclick="orderSelectedComponents()">
+            <i class="bi bi-cart-check"></i> Create Order from Consolidated BOM
+        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-success" onclick="saveConsolidation()">
+                <i class="bi bi-save"></i> Save Consolidation
+            </button>
+            <a href="{{ url_for('orders.orders') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> View Purchase Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Saved consolidations -->
+{% if consolidations %}
+<div class="card mb-4 border-success">
+    <div class="card-header bg-success bg-opacity-10">
+        <h6 class="mb-0"><i class="bi bi-archive"></i> Saved Consolidations</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for con in consolidations %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-bold">{{ con.id }}</div>
+                                <div class="small text-muted">{{ con.name }}</div>
+                            </div>
+                            {% if con.order_id %}
+                                <span class="badge bg-primary">Ordered → {{ con.order_id }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mt-2">
+                            {% for p in con.projects %}
+                                {{ p.name }} ×{{ p.qty }}{{ ' + ' if not loop.last }}
+                            {% endfor %}
+                        </div>
+                        <div class="small mt-1">
+                            {{ con.components|length }} line(s) ·
+                            to order: {{ con.components|sum(attribute='to_order') }}
+                        </div>
+                        {% if con.vendor %}
+                        <div class="small mt-1">
+                            <i class="bi bi-shop"></i> {{ con.vendor }}
+                            {% if con.vendor_link %}
+                                <a href="{{ con.vendor_link }}" target="_blank" class="ms-1">Site ↗</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="d-flex gap-2 mt-2">
+                            <a class="btn btn-sm btn-success"
+                               href="{{ url_for('orders.consolidation_detail', consolidation_id=con.id) }}">
+                                <i class="bi bi-folder2-open"></i> Open
+                            </a>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('orders.consolidation_export', consolidation_id=con.id) }}">
+                                <i class="bi bi-download"></i> CSV
+                            </a>
+                            {% if con.order_id %}
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="{{ url_for('orders.order_tracking') }}">
+                                <i class="bi bi-truck"></i> Track
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- All Items to Order (across inventory) -->
 {% set total_to_order = (items_to_order|length) + (mech_items|length) + (pcb_items|length) + (prn_items|length) %}
@@ -33,10 +119,9 @@
 
 <!-- Project Selection Card -->
 <div class="card mb-4">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0">
-            <i class="bi bi-folder2-open"></i> Select Project to View Components
-        </h5>
+    <div class="card-header d-flex align-items-center gap-2">
+        <span class="header-icon"><i class="bi bi-folder2-open"></i></span>
+        <h5 class="mb-0">Select Project to View Components</h5>
     </div>
     <div class="card-body">
         <div class="row">
@@ -99,10 +184,10 @@
                     <button class="btn btn-sm btn-success me-2" onclick="orderAllFromProject()">
                         <i class="bi bi-cart-plus"></i> Order All Components
                     </button>
-                    <button class="btn btn-sm btn-info me-2" onclick="exportProjectComponents()">
+                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="exportProjectComponents()">
                         <i class="bi bi-download"></i> Export to CSV
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="showAddComponentModal()">
+                    <button class="btn btn-sm btn-outline-primary" onclick="showAddComponentModal()">
                         <i class="bi bi-plus-circle"></i> Add Custom Component
                     </button>
                 </div>
@@ -191,7 +276,7 @@
                     <strong>Total Quantity:</strong> <span id="totalSelectedQty">0</span> units
                 </div>
                 <button class="btn btn-primary" onclick="orderSelectedComponents()" id="orderSelectedBtn" disabled>
-                    <i class="bi bi-cart-check"></i> Create Order (Selected + Additional)
+                    <i class="bi bi-cart-check"></i> Create Order from Consolidated BOM
                 </button>
             </div>
         </div>
@@ -263,10 +348,122 @@
         return div.innerHTML;
     }
 
-    // Get CSRF token from cookie (set by Flask-WTF)
+    // Get CSRF token — Flask-WTF may not set a cookie, so prefer the
+    // token rendered in the page's own hidden inputs (always present)
     function getCsrfToken() {
         const match = document.cookie.match(/csrf_token=([^;]+)/);
-        return match ? match[1] : '';
+        if (match) return match[1];
+        const input = document.querySelector('input[name="csrf_token"]');
+        return input ? input.value : '';
+    }
+
+    // Saved consolidations from the server (rendered by Jinja)
+    const savedConsolidations = {{ consolidations|tojson }};
+
+    // Save the current consolidated list as a record with a sequence number
+    async function saveConsolidation() {
+        // Hand-added custom components must be saved too — posting only
+        // currentProjectComponents silently dropped them from the record
+        // and from every order created out of it.
+        const custom = additionalComponents.map(c => ({
+            id: `CUSTOM-${c.id}`,
+            internal_id: `CUSTOM-${c.id}`,
+            category: 'custom',
+            label: c.value,
+            value: c.value,
+            footprint: c.footprint || '',
+            mpn: c.mpn || '',
+            qty: c.qty,
+            total_required: c.qty,
+            to_order: c.qty,
+            current_stock: 0,
+            project_references: [],
+        }));
+        const components = [...currentProjectComponents, ...custom];
+
+        if (!components.length) {
+            alert('Nothing to save — add projects or custom components first');
+            return;
+        }
+        const defaultName =
+            selectedProjects.map(p => p.name).join(' + ') || 'Custom order';
+        const name = prompt('Name this consolidation:', defaultName);
+        if (!name) return;
+
+        try {
+            const response = await fetch('/api/save-consolidation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    name: name,
+                    projects: selectedProjects,
+                    components: components,
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`Consolidation saved as ${data.consolidation_id}`);
+                location.reload();
+            } else {
+                alert('Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            // A failed fetch used to be invisible: no try/catch at all
+            alert('Failed to save: ' + err.message);
+        }
+    }
+
+    // Create an order FROM a saved consolidation (vendor + vendor link)
+    async function createOrderFromConsolidation(index) {
+        const con = savedConsolidations[index];
+        if (!con) return;
+
+        const vendor = prompt(`Vendor for ${con.id}:`, con.vendor || 'Mouser');
+        if (!vendor) return;
+        const vendorLink = prompt('Vendor website link (optional):', con.vendor_link || '');
+        if (vendorLink === null) return;
+
+        const items = (con.components || [])
+            .map(comp => ({
+                internal_id: comp.id || comp.internal_id,
+                // to_order = 0 is a real value (part fully stocked);
+                // `|| total_required` would order the whole requirement.
+                qty: (comp.to_order === undefined || comp.to_order === null)
+                    ? (comp.total_required || 0)
+                    : comp.to_order
+            }))
+            .filter(item => item.qty > 0);
+
+        if (!items.length) {
+            alert('Nothing to order in this consolidation (to order = 0 everywhere)');
+            return;
+        }
+
+        const response = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                project_name: con.name,
+                supplier: vendor,
+                vendor_link: vendorLink || '',
+                consolidation_id: con.id,
+                items: items,
+                notes: `From consolidation ${con.id}`
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(`Order ${data.order_id} created from ${con.id}`);
+            location.reload();
+        } else {
+            alert('Failed: ' + (data.error || 'Unknown error'));
+        }
     }
 
     // Load project components via API
@@ -606,6 +803,12 @@
         
         ) || 0;
 
+        // Manual qty edits must be written back so Save Consolidation
+        // (and the record it creates) uses the edited quantity, not the
+        // originally computed to_order.
+        const comp = currentProjectComponents.find(c => c.id === id);
+        if (comp) comp.to_order = qty;
+
         const checkbox = document.querySelector(
 
             `.component-checkbox[data-id="${id}"]`
@@ -751,52 +954,41 @@
         orderSelectedComponents();
     }
 
-    // Export project components to CSV
+    // Export consolidated components to CSV — one reference column per
+    // project, so each project's designators are side by side and easy
+    // to filter in Excel
     function exportProjectComponents() {
         if (!currentProjectComponents.length) {
             alert('No components to export');
             return;
         }
-        
-        const projectName =
-            selectedProjects
-                .map(p => p.name)
-                .join('_');
-        let csv = 'Component,Footprint,MPN,Reference,DNP,Required Qty,In Stock,To Order\n';
+
+        const projectNames = selectedProjects.map(p => p.name);
+        let csv = 'Component,Footprint,MPN,' +
+            projectNames.map(n => `"${n} Reference"`).join(',') +
+            ',DNP,Required Qty,In Stock,To Order\n';
+
         currentProjectComponents.forEach(comp => {
-            const projectRefs =
-
-                (comp.project_references || [])
-
-                .map(ref =>
-
-                    `${ref.project} x${ref.qty} -> ${ref.reference}`
-                )
-
-                .join("\n");
+            const refsByProject = {};
+            (comp.project_references || []).forEach(ref => {
+                refsByProject[ref.project] = refsByProject[ref.project] || [];
+                if (ref.reference) refsByProject[ref.project].push(ref.reference);
+            });
 
             csv +=
-
-                `"${comp.value}",` +
-
-                `"${comp.footprint}",` +
-
+                `"${comp.value || ''}",` +
+                `"${comp.footprint || ''}",` +
                 `"${comp.mpn || ''}",` +
-
-                `"${projectRefs}",` +
-
+                projectNames.map(n => `"${(refsByProject[n] || []).join(', ')}"`).join(',') + ',' +
                 `"${comp.dnp_raw || ''}",` +
-
                 `${comp.total_required},` +
-
                 `${comp.current_stock},` +
-
                 `${comp.to_order}\n`;
         });
-        
+
         const blob = new Blob([csv], {type: 'text/csv'});
         const a = document.createElement('a');
-        a.download = `${projectName}_components.csv`;
+        a.download = `${projectNames.join('_')}_consolidated.csv`;
         a.href = URL.createObjectURL(blob);
         a.click();
     }

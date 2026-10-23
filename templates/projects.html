@@ -4,10 +4,13 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Projects</h1>
+<div class="page-header">
+    <div>
+        <h1>Projects</h1>
+        <p class="subtitle">Every board, assembly and enclosure — with its BOMs, images and build files.</p>
+    </div>
 
-    <div class="d-flex gap-2">
+    <div class="actions">
         <!-- Download BOM Template -->
         <a href="{{ url_for('main.download_bom_template') }}" class="btn btn-outline-success">
             <i class="bi bi-download"></i> BOM Template
@@ -21,26 +24,30 @@
 </div>
 
 {% if projects %}
-<div class="row">
+<div class="row g-3">
     {% for project in projects %}
-    <div class="col-md-6 mb-3">
-        <div class="card">
+    <div class="col-lg-6">
+        <div class="card project-card h-100">
             <div class="card-body">
-
-                <div class="row">
+                <div class="row g-3 h-100">
 
                     <!-- IMAGE -->
-                    <div class="col-md-4">
+                    <div class="col-5">
 
                         {% if project.image %}
 
                             <img src="{{ url_for('project.serve_project_file', name=project.name, filepath='images/' + project.image) }}"
-                                class="project-image">
+                                class="project-image fi-zoom" alt="{{ project.name }}"
+                                title="Click to view full size"
+                                onclick="openLightbox([{src: this.src, caption: '{{ project.name }}'}], 0)">
 
                         {% else %}
 
                             <div class="project-placeholder">
-                                No Image
+                                <div class="text-center">
+                                    <i class="bi bi-cpu fs-3 d-block mb-1"></i>
+                                    <small>No image</small>
+                                </div>
                             </div>
 
                         {% endif %}
@@ -49,50 +56,41 @@
 
 
                     <!-- DETAILS -->
-                    <div class="col-md-8">
+                    <div class="col-7 d-flex flex-column">
 
                         <h5 class="card-title">{{ project.name }}</h5>
 
-                        <p class="card-text text-muted">
+                        <p class="card-text text-muted small">
                             {{ project.description or 'No description' }}
                         </p>
 
-                        <div class="row mb-2">
-
-                            <div class="col-6">
-
-                                <small class="text-muted">Components:</small>
-                                <br>
-                                <strong>{{ project.component_count }}</strong>
-
-                            </div>
-
-                            <div class="col-6">
-
-                                <small class="text-muted">Total Qty:</small>
-                                <br>
-                                <strong>{{ project.total_quantity }}</strong>
-
-                            </div>
-
+                        <div class="project-meta">
+                            <span class="meta-chip">
+                                <i class="bi bi-list-ul"></i>
+                                <strong>{{ project.component_count }}</strong> components
+                            </span>
+                            <span class="meta-chip">
+                                <i class="bi bi-boxes"></i>
+                                <strong>{{ project.total_quantity }}</strong> qty
+                            </span>
                         </div>
 
-                        <div class="btn-group" role="group">
+                        <div class="d-flex gap-2 mt-auto">
 
                             <a href="{{ url_for('project.project_detail', name=project.name) }}"
-                            class="btn btn-sm btn-outline-primary">
-
-                            View
-
+                               class="btn btn-sm btn-primary flex-fill">
+                                Open project <i class="bi bi-arrow-right"></i>
                             </a>
 
                             <button type="button"
                                     class="btn btn-sm btn-outline-danger"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteProjectModal"
-                                    data-project="{{ project.name }}">
+                                    data-project="{{ project.name }}"
+                                    title="Delete project"
+                                    aria-label="Delete {{ project.name }}">
 
-                                    Delete
+                                    <i class="bi bi-trash"></i>
 
                             </button>
 
@@ -108,54 +106,18 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="alert alert-info">
-    No projects yet. Click "New Project" to get started!
+<div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-folder-plus"></i></div>
+    <h5>No projects yet</h5>
+    <p>Projects hold your BOMs, PCB images, gerbers and 3D models. Create one to get started.</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+        <i class="bi bi-plus-circle"></i> New Project
+    </button>
 </div>
 {% endif %}
 
 <!-- Create Project Modal -->
-<div class="modal fade" id="createProjectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create New Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Project Name *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Upload BOM (Excel)</label>
-                        <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
-                        <div class="form-text">Optional: Upload BOM now or later</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Project Image</label>
-                        <input type="file"
-                            name="project_image"
-                            class="form-control"
-                            accept="image/*">
-                        <div class="form-text">
-                            Optional: Upload project image
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Project</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% include '_create_project_modal.html' %}
 
 <!-- Delete Project Modal -->
 <div class="modal fade" id="deleteProjectModal" tabindex="-1">

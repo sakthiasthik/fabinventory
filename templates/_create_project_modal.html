@@ -1,0 +1,38 @@
+<!-- Create Project Modal (shared include: dashboard + projects page) -->
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Project Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload BOM <span class="text-muted">(optional)</span></label>
+                        <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
+                        <div class="form-text">You can also upload a BOM later from the project page.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Project Image <span class="text-muted">(optional)</span></label>
+                        <input type="file" name="project_image" class="form-control" accept="image/*">
+                        <div class="form-text">A photo or screenshot of the board — shown on the project page.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -145,6 +145,48 @@ def _normalize_link(link: str) -> str:
     return link
 
 
+def _merge_tree(src: Path, dest_dir: Path) -> list:
+    """Move ``src`` into ``dest_dir`` without ever losing data.
+
+    - Both directories → merge their children recursively.
+    - A name collision (or a file-vs-directory clash) → keep both: the
+      incoming item is stored as ``<name>-migrated-N``.
+
+    Returns the list of renamed destinations so setup can tell the user.
+    """
+    dest = dest_dir / src.name
+
+    # Two same-named project folders are different projects, not two
+    # halves of one tree — keep the incoming project whole under a
+    # collision name instead of mixing their bom/meta files.
+    both_projects = (
+        src.is_dir() and dest.is_dir()
+        and (src / 'meta.json').exists()
+        and (dest / 'meta.json').exists()
+    )
+
+    if src.is_dir() and dest.is_dir() and not both_projects:
+        renamed = []
+        for child in list(src.iterdir()):
+            renamed.extend(_merge_tree(child, dest))
+        try:
+            src.rmdir()
+        except OSError:
+            pass  # leftover unreadable entries are left in place
+        return renamed
+
+    if dest.exists():
+        n = 2
+        while (dest_dir / f"{src.name}-migrated-{n}").exists():
+            n += 1
+        dest = dest_dir / f"{src.name}-migrated-{n}"
+        shutil.move(str(src), str(dest))
+        return [dest]
+
+    shutil.move(str(src), str(dest))
+    return []
+
+
 def _update_env_data_path(new_path: str) -> None:
     """Rewrite DATA_PATH in .env so restarts keep using the new folder."""
     try:
@@ -170,6 +212,11 @@ def _update_env_data_path(new_path: str) -> None:
 @main_bp.route('/setup', methods=['GET', 'POST'])
 def setup():
     """Initial setup — company details, prefix, links."""
+    # Once configured, setup must not run again: re-running it would
+    # rename the data folder and overwrite the company config.
+    if state.init_app():
+        return redirect(url_for('main.index'))
+
     if request.method == 'POST':
         company_name = request.form.get('company_name', '').strip()
         prefix = request.form.get('company_prefix', '').strip().upper()
@@ -201,10 +248,22 @@ def setup():
         if new_path != old_path:
             if old_path.exists():
                 if new_path.exists():
-                    # Merge leftovers from an earlier attempt
-                    for item in old_path.iterdir():
-                        shutil.move(str(item), str(new_path / item.name))
-                    old_path.rmdir()
+                    # Merge leftovers from an earlier attempt. Colliding
+                    # names are kept as "-migrated-N" instead of being
+                    # skipped or raising NotADirectoryError mid-setup.
+                    renamed = []
+                    for item in list(old_path.iterdir()):
+                        renamed.extend(_merge_tree(item, new_path))
+                    try:
+                        old_path.rmdir()
+                    except OSError:
+                        pass
+                    if renamed:
+                        flash(
+                            f'{len(renamed)} item(s) already existed and were '
+                            f'kept as "-migrated-N" in {new_path}',
+                            'warning',
+                        )
                 else:
                     shutil.move(str(old_path), str(new_path))
             else:

@@ -213,7 +213,9 @@ class InventoryManager:
 
     # ── Orders ──────────────────────────────────────────────────
 
-    def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "") -> Optional[Order]:
+    def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "",
+                     consolidation_id: Optional[str] = None,
+                     vendor_link: Optional[str] = None) -> Optional[Order]:
         existing_orders = self.file_manager.list_orders()
         max_num = 0
         for o in existing_orders:
@@ -239,7 +241,9 @@ class InventoryManager:
             order_id=order_id,
             supplier=supplier,
             line_items=line_items,
-            notes=notes
+            notes=notes,
+            consolidation_id=consolidation_id,
+            vendor_link=vendor_link
         )
 
         if self.file_manager.save_order(order):
@@ -268,7 +272,10 @@ class InventoryManager:
     def get_order_summary(self) -> Dict[str, Any]:
         orders = self.file_manager.list_orders()
 
-        pending_orders = [o for o in orders if o.status == "pending"]
+        # Orders that still need attention. Older data used "pending";
+        # current orders move draft → ordered → shipped → received.
+        active_statuses = {"pending", "draft", "ordered", "shipped"}
+        pending_orders = [o for o in orders if o.status in active_statuses]
         received_orders = [o for o in orders if o.status == "received"]
 
         total_pending_items = sum(o.total_items for o in pending_orders)

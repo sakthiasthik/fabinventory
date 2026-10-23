@@ -3,11 +3,12 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-3 align-items-center">
-    <div class="col">
-        <h1 class="mb-0">Dashboard</h1>
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">A live snapshot of your projects, stock and open orders.</p>
     </div>
-    <div class="col-auto">
+    <div class="actions">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
             <i class="bi bi-plus-circle"></i> New Project
         </button>
@@ -70,45 +71,45 @@
 {% endif %}
 
 <!-- Stats row -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <a href="{{ url_for('main.projects') }}" style="text-decoration: none;">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Projects</h5>
-                    <h2 class="card-text">{{ projects|length }}</h2>
-                </div>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <a href="{{ url_for('main.projects') }}" class="stat-card stat-primary">
+            <div class="stat-top">
+                <span class="stat-icon"><i class="bi bi-folder2-open"></i></span>
+                <i class="bi bi-arrow-up-right stat-arrow"></i>
             </div>
+            <div class="stat-value">{{ projects|length }}</div>
+            <div class="stat-label">Projects</div>
         </a>
     </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Components</h5>
-                    <h2 class="card-text">{{ inventory_summary.total_components }}</h2>
-                </div>
+    <div class="col-6 col-lg-3">
+        <a href="{{ url_for('inventory.inventory') }}" class="stat-card stat-success">
+            <div class="stat-top">
+                <span class="stat-icon"><i class="bi bi-cpu"></i></span>
+                <i class="bi bi-arrow-up-right stat-arrow"></i>
             </div>
+            <div class="stat-value">{{ inventory_summary.total_components }}</div>
+            <div class="stat-label">Components</div>
         </a>
     </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('inventory.inventory') }}" style="text-decoration: none;">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">To Order</h5>
-                    <h2 class="card-text">{{ inventory_summary.total_to_order }}</h2>
-                </div>
+    <div class="col-6 col-lg-3">
+        <a href="{{ url_for('inventory.inventory') }}" class="stat-card stat-warning">
+            <div class="stat-top">
+                <span class="stat-icon"><i class="bi bi-cart-plus"></i></span>
+                <i class="bi bi-arrow-up-right stat-arrow"></i>
             </div>
+            <div class="stat-value">{{ inventory_summary.total_to_order }}</div>
+            <div class="stat-label">To Order</div>
         </a>
     </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('orders.orders') }}" style="text-decoration: none;">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Pending Orders</h5>
-                    <h2 class="card-text">{{ order_summary.pending_orders }}</h2>
-                </div>
+    <div class="col-6 col-lg-3">
+        <a href="{{ url_for('orders.orders') }}" class="stat-card stat-info">
+            <div class="stat-top">
+                <span class="stat-icon"><i class="bi bi-truck"></i></span>
+                <i class="bi bi-arrow-up-right stat-arrow"></i>
             </div>
+            <div class="stat-value">{{ order_summary.pending_orders }}</div>
+            <div class="stat-label">Pending Orders</div>
         </a>
     </div>
 </div>
@@ -148,45 +149,18 @@
             </table>
         </div>
         {% else %}
-        <div class="p-4 text-muted">
-            No projects yet.
-            <button class="btn btn-link p-0 ms-1" data-bs-toggle="modal" data-bs-target="#createProjectModal">Create your first project</button>
+        <div class="empty-state m-3">
+            <div class="empty-icon"><i class="bi bi-folder-plus"></i></div>
+            <h5>No projects yet</h5>
+            <p>Create a project and upload a BOM to start tracking component demand.</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="bi bi-plus-circle"></i> Create your first project
+            </button>
         </div>
         {% endif %}
     </div>
 </div>
 
 <!-- Create Project Modal -->
-<div class="modal fade" id="createProjectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('project.create_project') }}" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create New Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Project Name *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Upload BOM <span class="text-muted">(optional)</span></label>
-                        <input type="file" name="bom_file" class="form-control" accept=".xlsx,.xls,.csv">
-                        <div class="form-text">You can also upload a BOM later from the project page.</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Project</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% include '_create_project_modal.html' %}
 {% endblock %}

@@ -124,7 +124,11 @@ def main():
     """Run the Flask application."""
     state.init_app()
     frozen = getattr(sys, 'frozen', False)
-    app.run(debug=not frozen, host='0.0.0.0', port=9000, use_reloader=not frozen)
+    # Debug mode is opt-in (FLASK_DEBUG=1 in .env): the Werkzeug debugger
+    # exposes a code console on the network, so it must never be on by
+    # default for an app that binds 0.0.0.0.
+    debug = (not frozen) and os.environ.get('FLASK_DEBUG') == '1'
+    app.run(debug=debug, host='0.0.0.0', port=9000, use_reloader=debug)
 
 
 if __name__ == '__main__':

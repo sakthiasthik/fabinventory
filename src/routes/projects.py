@@ -1,6 +1,7 @@
 """Projects Flask Blueprint — /project/* routes."""
 import os
 import io
+import re
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -23,8 +24,36 @@ import pandas as pd
 
 from src.core import state, login_required
 from src.bom_parser import BOMParser
+from src.models import BomRow
 
 project_bp = Blueprint('project', __name__)
+
+
+def _next_image_number(image_dir: Path, project_name: str) -> int:
+    """Next free '<project>_img_<n>' number across ALL extensions."""
+    pattern = re.compile(rf"^{re.escape(project_name)}_img_(\d+)\.[^.]+$")
+    max_n = 0
+    if image_dir.exists():
+        for f in image_dir.iterdir():
+            m = pattern.match(f.name)
+            if m:
+                max_n = max(max_n, int(m.group(1)))
+    return max_n + 1
+
+
+def _next_project_image_name(project_name: str, ext: str) -> str:
+    """Return '<project>_img_<n>.<ext>' with the next free number,
+    so every uploaded image gets a predictable, project-scoped name."""
+    images_dir = Path(state.data_path) / "projects" / project_name / "images"
+    n = _next_image_number(images_dir, project_name)
+    return f"{project_name}_img_{n}{ext}"
+
+
+def _next_pcb_image_name(project_name: str, ext: str) -> str:
+    """Same numbering scheme, but scoped to the project's pcb_images dir."""
+    pcb_dir = Path(state.data_path) / "projects" / project_name / "pcb_images"
+    n = _next_image_number(pcb_dir, project_name)
+    return f"{project_name}_img_{n}{ext}"
 
 
 # ── Project detail ────────────────────────────────────────────────
@@ -91,10 +120,42 @@ def project_detail(name):
                 key=lambda x: x["name"].lower(),
             )
 
+    # ── Per-category stats for the cards under the project name ──
+    # (they must follow the active tab, not always show electronics)
+    def _rows_total(rows):
+        return sum(int(r.get('quantity', 0)) for r in rows)
+
+    elec_placed = [r for r in project.bom if r.is_active()]
+    elec_dnp = [r for r in project.bom if r.dnp]
+
+    tab_stats = {
+        'electrical': {
+            'total_lines': len(project.bom),
+            'dnp_lines': len(elec_dnp),
+            'placed_lines': len(elec_placed),
+            'total_qty': sum(r.qty for r in project.bom),
+            'dnp_qty': sum(r.qty for r in elec_dnp),
+            'placed_qty': sum(r.qty for r in elec_placed),
+        },
+        'mechanical': {
+            'lines': len(mechanical_rows),
+            'qty': _rows_total(mechanical_rows),
+        },
+        'pcb': {
+            'lines': len(pcb_rows),
+            'qty': _rows_total(pcb_rows),
+        },
+        '3dprint': {
+            'lines': len(print3d_rows),
+            'qty': _rows_total(print3d_rows),
+        },
+    }
+
     return render_template(
         'project_details.html',
         project=project,
         summary=summary,
+        tab_stats=tab_stats,
         print3d_rows=print3d_rows,
         mechanical_rows=mechanical_rows,
         pcb_rows=pcb_rows,
@@ -138,7 +199,18 @@ def create_project():
                     if filepath.exists():
                         filepath.unlink()
 
-            # Step 3: Refresh all inventories
+            # Step 3: Handle project image (optional)
+            image_file = request.files.get('project_image')
+            if image_file and image_file.filename != "":
+                ext = Path(image_file.filename).suffix.lower()
+                img_name = _next_project_image_name(name, ext)
+                state.project_manager.file_manager.save_project_file(
+                    name, 'images', img_name, image_file.read()
+                )
+                project.image = img_name
+                state.project_manager.file_manager.save_project(project)
+
+            # Step 4: Refresh all inventories
             projects = list(state.project_manager.projects.values())
             state.inventory_manager.update_inventory(projects)
             state.inventory_manager.update_non_elec_inventory(projects)
@@ -216,6 +288,130 @@ def upload_bom(name):
     return redirect(url_for('project.project_detail', name=name))
 
 
+# ── Edit BOM in place ────────────────────────────────────────────
+
+
+def _parse_bom_edit_payload(bom_rows, payload):
+    """Validate an in-place BOM edit payload into a fresh list of BomRow.
+
+    Rows posted by the browser replace the current BOM. ``orig_index``
+    links a row back to its old position so fields the editor does not
+    show (LCSC part number / supplier / SKU) survive the edit. A row with
+    no reference, value or footprint is treated as blank and dropped.
+    Raises ValueError with a user-readable message.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError('Expected a JSON object')
+    posted = payload.get('rows')
+    if not isinstance(posted, list):
+        raise ValueError('Expected a list of BOM rows')
+    if len(posted) > 10000:
+        raise ValueError('Too many BOM rows (max 10000)')
+
+    def text(row, key, max_len):
+        value = row.get(key, '')
+        if value is None:
+            return ''
+        value = str(value).strip()
+        if len(value) > max_len:
+            raise ValueError(f'{key} is too long (max {max_len} characters)')
+        return value
+
+    def number(row, key, default):
+        value = row.get(key, default)
+        if value is None or value == '':
+            return default
+        try:
+            return max(0, int(float(value)))
+        except (TypeError, ValueError):
+            raise ValueError(f'{key} must be a number')
+
+    new_rows = []
+    for pos, row in enumerate(posted):
+        if not isinstance(row, dict):
+            raise ValueError(f'Row {pos + 1} is malformed')
+
+        orig = row.get('orig_index')
+        base = None
+        if isinstance(orig, int) and 0 <= orig < len(bom_rows):
+            base = bom_rows[orig]
+
+        reference = text(row, 'reference', 500)
+        value = text(row, 'value', 200)
+        footprint = text(row, 'footprint', 200)
+        if not reference and not value and not footprint:
+            continue  # blank line — same outcome as deleting it
+
+        dnp = row.get('dnp')
+        if isinstance(dnp, str):
+            dnp = dnp.strip().lower() in ('1', 'true', 'yes', 'on', 'x')
+        dnp = bool(dnp)
+
+        new_rows.append(BomRow(
+            si_no=number(row, 'si_no', pos + 1),
+            reference=reference,
+            value=value,
+            footprint=footprint,
+            manufacturer_part_number=text(
+                row, 'manufacturer_part_number', 500
+            ),
+            manufacturer_name=text(row, 'manufacturer_name', 500),
+            manufacturer_part_number_lcsc=(
+                base.manufacturer_part_number_lcsc if base else None
+            ),
+            manufacturer_name_lcsc=(
+                base.manufacturer_name_lcsc if base else None
+            ),
+            lcsc_sku=base.lcsc_sku if base else None,
+            qty=number(row, 'qty', 0),
+            dnp=dnp,
+            dnp_raw='X' if dnp else '',
+        ))
+
+    return new_rows
+
+
+@project_bp.route('/<name>/bom/edit', methods=['POST'])
+@login_required
+def edit_bom(name):
+    """Save an edited electrical BOM without a download / re-upload cycle."""
+    if not state.init_app():
+        return jsonify({'success': False, 'error': 'App not initialized'}), 500
+
+    project = state.project_manager.get_project(name)
+    if not project:
+        return jsonify({'success': False, 'error': 'Project not found'}), 404
+
+    try:
+        new_bom = _parse_bom_edit_payload(
+            project.bom, request.get_json(silent=True)
+        )
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+    old_bom = project.bom
+    project.bom = new_bom
+    project.updated_at = datetime.now().isoformat()
+    if not state.project_manager.file_manager.save_project(project):
+        # Keep memory and disk in agreement if the write failed.
+        project.bom = old_bom
+        return (
+            jsonify({'success': False, 'error': 'Could not save the BOM file'}),
+            500,
+        )
+
+    # Keep master inventory (and therefore orders) in sync with the edit.
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_inventory(projects)
+    state.inventory_manager.update_non_elec_inventory(projects)
+
+    if state.git_manager:
+        state.git_manager.commit(f"Edited BOM for project '{name}'")
+
+    flash(f'BOM updated — {len(project.bom)} line(s) saved', 'success')
+    return jsonify({'success': True, 'count': len(project.bom)})
+
+
 # ── Upload project image ─────────────────────────────────────────
 
 
@@ -239,9 +435,10 @@ def upload_project_image(name):
         flash("No selected image", "danger")
         return redirect(url_for('project.project_detail', name=name))
 
-    # SAVE TO PROJECT FOLDER
-    filename = secure_filename(file.filename)
-    saved = state.project_manager.file_manager.save_project_file(
+    # SAVE TO PROJECT FOLDER — renamed to <project>_img_<n>.<ext>
+    ext = Path(file.filename).suffix.lower()
+    filename = _next_project_image_name(name, ext)
+    state.project_manager.file_manager.save_project_file(
         name, 'images', filename, file.read()
     )
 
@@ -746,7 +943,10 @@ def upload_pcb_image(name):
         flash("No file selected", "danger")
         return redirect(url_for("project.project_detail", name=name, tab="pcb"))
 
-    filename = secure_filename(file.filename)
+    # Renamed to <project>_img_<n>.<ext> and kept in a LIST so the PCB tab
+    # can show a slide-show when there are several images
+    ext = Path(file.filename).suffix.lower()
+    filename = _next_pcb_image_name(name, ext)
 
     # SAVE INSIDE PROJECT FOLDER
     state.project_manager.file_manager.save_project_file(
@@ -756,8 +956,15 @@ def upload_pcb_image(name):
         file.read()
     )
 
-    # SAVE RELATIVE PATH
-    project.pcb_image = f"pcb_images/{filename}"
+    rel_path = f"pcb_images/{filename}"
+
+    # SAVE RELATIVE PATH(S)
+    if not hasattr(project, 'pcb_images') or project.pcb_images is None:
+        project.pcb_images = []
+    if rel_path not in project.pcb_images:
+        project.pcb_images.append(rel_path)
+    if not project.pcb_image:
+        project.pcb_image = rel_path
 
     project.updated_at = datetime.now().isoformat()
 
@@ -804,23 +1011,46 @@ def remove_pcb_image(name):
         flash("Project not found", "danger")
         return redirect(url_for('main.projects'))
 
-    if project.pcb_image:
+    project_dir = state.project_manager.file_manager._project_dir(name)
 
-        project_dir = state.project_manager.file_manager._project_dir(name)
+    # All images known to this project (single image + gallery list)
+    all_images = list(project.pcb_images or [])
+    if project.pcb_image and project.pcb_image not in all_images:
+        all_images.append(project.pcb_image)
 
-        image_path = os.path.join(
-            project_dir,
-            project.pcb_image
-        )
+    # `image` names the exact slide to delete. Without it (old forms,
+    # bookmarks) remove everything, but per-image is what the UI uses.
+    target = (request.form.get('image') or '').strip()
 
+    if target:
+        if target not in all_images:
+            flash("Image not found on this project", "error")
+            return redirect(
+                url_for('project.project_detail', name=name, tab='pcb')
+            )
+
+        image_path = os.path.join(project_dir, target)
         if os.path.exists(image_path):
             os.remove(image_path)
 
-    project.pcb_image = None
+        project.pcb_images = [
+            p for p in (project.pcb_images or []) if p != target
+        ]
+        if project.pcb_image == target:
+            project.pcb_image = (
+                project.pcb_images[0] if project.pcb_images else None
+            )
+        flash("PCB image removed", "success")
+    else:
+        for rel_path in all_images:
+            image_path = os.path.join(project_dir, rel_path)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        project.pcb_image = None
+        project.pcb_images = []
+        flash("All PCB images removed", "success")
 
     state.file_manager.save_project(project)
-
-    flash("PCB image removed", "success")
 
     return redirect(
         url_for(

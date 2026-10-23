@@ -153,3 +153,19 @@ def test_non_numeric_si_no_falls_back_instead_of_dropping_row():
     assert len(rows) == 2
     assert rows[0].si_no == 1          # fallback = dataframe row index + 1
     assert rows[1].si_no == 2
+
+
+def test_rows_without_reference_value_and_footprint_are_skipped():
+    """Junk rows (only mpn/qty filled, nothing identifying) must not
+    become BOM rows."""
+    rows, warnings = _parse_csv_detailed(
+        "si.no,reference,value,footprint,mpn,manufacturer,qty\n"
+        "1,R1,10k,0603,M1,Yageo,5\n"
+        "2,,,,M9,Vishay,2\n"
+        "3,,,,,,7\n"
+        "4,R4,4.7k,0805,M2,Yageo,3\n"
+    )
+    assert len(rows) == 2
+    assert rows[0].reference == "R1"
+    assert rows[1].reference == "R4"
+    assert warnings == []              # skipped silently, not as errors
