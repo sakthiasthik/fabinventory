@@ -463,15 +463,24 @@ class BOMParser:
 
                 if bom_type == "electrical":
 
+                    reference = str(get("reference", "")).strip()
+                    value = str(get("value", "")).strip()
+                    footprint = str(get("footprint", "")).strip()
+
+                    # Junk row: no designator, no value and no footprint —
+                    # skip silently instead of polluting the BOM
+                    if not reference and not value and not footprint:
+                        continue
+
                     bom_row = BomRow(
 
                         si_no=cls.parse_int_fallback(get("si_no"), idx + 1),
 
-                        reference=str(get("reference", "")),
+                        reference=reference,
 
-                        value=str(get("value", "")),
+                        value=value,
 
-                        footprint=str(get("footprint", "")),
+                        footprint=footprint,
 
                         manufacturer_part_number=str(
                             get("manufacturer_part_number", "")

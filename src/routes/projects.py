@@ -91,10 +91,42 @@ def project_detail(name):
                 key=lambda x: x["name"].lower(),
             )
 
+    # ── Per-category stats for the cards under the project name ──
+    # (they must follow the active tab, not always show electronics)
+    def _rows_total(rows):
+        return sum(int(r.get('quantity', 0)) for r in rows)
+
+    elec_placed = [r for r in project.bom if r.is_active()]
+    elec_dnp = [r for r in project.bom if r.dnp]
+
+    tab_stats = {
+        'electrical': {
+            'total_lines': len(project.bom),
+            'dnp_lines': len(elec_dnp),
+            'placed_lines': len(elec_placed),
+            'total_qty': sum(r.qty for r in project.bom),
+            'dnp_qty': sum(r.qty for r in elec_dnp),
+            'placed_qty': sum(r.qty for r in elec_placed),
+        },
+        'mechanical': {
+            'lines': len(mechanical_rows),
+            'qty': _rows_total(mechanical_rows),
+        },
+        'pcb': {
+            'lines': len(pcb_rows),
+            'qty': _rows_total(pcb_rows),
+        },
+        '3dprint': {
+            'lines': len(print3d_rows),
+            'qty': _rows_total(print3d_rows),
+        },
+    }
+
     return render_template(
         'project_details.html',
         project=project,
         summary=summary,
+        tab_stats=tab_stats,
         print3d_rows=print3d_rows,
         mechanical_rows=mechanical_rows,
         pcb_rows=pcb_rows,
@@ -138,7 +170,17 @@ def create_project():
                     if filepath.exists():
                         filepath.unlink()
 
-            # Step 3: Refresh all inventories
+            # Step 3: Handle project image (optional)
+            image_file = request.files.get('project_image')
+            if image_file and image_file.filename != "":
+                img_name = secure_filename(image_file.filename)
+                state.project_manager.file_manager.save_project_file(
+                    name, 'images', img_name, image_file.read()
+                )
+                project.image = img_name
+                state.project_manager.file_manager.save_project(project)
+
+            # Step 4: Refresh all inventories
             projects = list(state.project_manager.projects.values())
             state.inventory_manager.update_inventory(projects)
             state.inventory_manager.update_non_elec_inventory(projects)

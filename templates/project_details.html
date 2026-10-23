@@ -23,34 +23,37 @@
 </div>
 
 
-<!-- Project Stats -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-light">
+<!-- Project Stats — one block per category, follows the active tab -->
+{% set active_tab = request.args.get('tab', 'electrical') %}
+
+<div class="row mb-4 tab-stats {% if active_tab == 'electrical' %}d-flex{% else %}d-none{% endif %}" id="stats-electrical">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted">Components</h6>
-                <h3>{{ summary.total_components }}</h3>
+                <h3>{{ tab_stats.electrical.total_lines }}</h3>
+                <div class="small text-muted lh-sm">
+                    Total line items: {{ tab_stats.electrical.total_lines }}<br>
+                    DNP line items: {{ tab_stats.electrical.dnp_lines }}<br>
+                    Placement line items: {{ tab_stats.electrical.placed_lines }}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-light">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted">Total Quantity</h6>
-                <h3>{{ summary.total_quantity }}</h3>
+                <h3>{{ tab_stats.electrical.total_qty }}</h3>
+                <div class="small text-muted lh-sm">
+                    DNP quantity: {{ tab_stats.electrical.dnp_qty }}<br>
+                    Placement quantity: {{ tab_stats.electrical.placed_qty }}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-light">
-            <div class="card-body text-center">
-                <h6 class="text-muted">DNP Components</h6>
-                <h3>{{ summary.dnp_components }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted">Last Updated</h6>
                 <h6 class="mt-2">{{ project.updated_at[:10] }}</h6>
@@ -58,6 +61,107 @@
         </div>
     </div>
 </div>
+
+<div class="row mb-4 tab-stats {% if active_tab == 'mechanical' %}d-flex{% else %}d-none{% endif %}" id="stats-mechanical">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Mechanical Parts</h6>
+                <h3>{{ tab_stats.mechanical.lines }}</h3>
+                <div class="small text-muted lh-sm">Line items: {{ tab_stats.mechanical.lines }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Quantity</h6>
+                <h3>{{ tab_stats.mechanical.qty }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Last Updated</h6>
+                <h6 class="mt-2">{{ project.updated_at[:10] }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 tab-stats {% if active_tab == 'pcb' %}d-flex{% else %}d-none{% endif %}" id="stats-pcb">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">PCBs</h6>
+                <h3>{{ tab_stats.pcb.lines }}</h3>
+                <div class="small text-muted lh-sm">Boards: {{ tab_stats.pcb.lines }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Quantity</h6>
+                <h3>{{ tab_stats.pcb.qty }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Last Updated</h6>
+                <h6 class="mt-2">{{ project.updated_at[:10] }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 tab-stats {% if active_tab == '3dprint' %}d-flex{% else %}d-none{% endif %}" id="stats-print3d">
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">3D Print Parts</h6>
+                <h3>{{ tab_stats.print3d.lines }}</h3>
+                <div class="small text-muted lh-sm">Line items: {{ tab_stats.print3d.lines }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Quantity</h6>
+                <h3>{{ tab_stats.print3d.qty }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-2">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Last Updated</h6>
+                <h6 class="mt-2">{{ project.updated_at[:10] }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Swap the stats cards to match the active category tab
+    (function () {
+        function showStatsFor(targetId) {
+            const key = (targetId || '').replace('#', '').replace('-tab', '');
+            document.querySelectorAll('.tab-stats').forEach(el => {
+                const show = el.id === 'stats-' + key;
+                el.classList.toggle('d-none', !show);
+                el.classList.toggle('d-flex', show);
+            });
+        }
+        document.querySelectorAll('#projectTabs [data-bs-toggle="tab"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', (e) => showStatsFor(e.target.getAttribute('data-bs-target')));
+        });
+    })();
+</script>
 
 
 
@@ -214,8 +318,9 @@
 
                         <!-- Export Image -->
                         {% if project.image %}
-                        <a href="{{ url_for('static',
-                            filepath='uploads/projects/' ~ project.image) }}"
+                        <a href="{{ url_for('project.serve_project_file',
+                            name=project.name,
+                            filepath='images/' ~ project.image) }}"
                         download
                         class="btn btn-outline-secondary mb-1">
 
