@@ -52,12 +52,27 @@ class BOMParser:
 
             "qty": ["qty", "quantity"],
 
+            # DNP-style columns: a marker means DO NOT populate
             "dnp": [
                 "dnp",
                 "do not populate",
+                "dnf",
+                "no pop",
+                "no stuff",
+                "n/f",
+                "not fitted",
+                "not populated"
+            ],
+
+            # Populate-style columns: a marker means the part IS populated
+            # (the opposite convention — handled by inverting the check)
+            "populate": [
                 "populate",
                 "placement",
-                "fitted"
+                "fitted",
+                "populated",
+                "mounted",
+                "stuff"
             ]
         },
 
@@ -193,6 +208,46 @@ class BOMParser:
             if ch.isalnum()
         )
 
+    # Values that mean "do not populate" in a DNP-style column
+    # (already normalized: uppercase, letters/digits only)
+    DNP_MARKERS = {
+        '1', 'YES', 'TRUE', 'X', 'DNP', 'DNF',
+        'NOPOP', 'NF', 'NOTFITTED', 'NOTPOPULATED',
+    }
+
+    # Values that mean "this part IS populated" in a Populate-style column
+    FITTED_MARKERS = {
+        '1', 'YES', 'TRUE', 'Y',
+        'FITTED', 'POPULATED', 'MOUNTED', 'STUFFED', 'STUFF',
+    }
+
+    @staticmethod
+    def _normalize_marker(value: str) -> str:
+        """Uppercase a marker and strip everything but letters/digits."""
+        return ''.join(ch for ch in str(value).upper() if ch.isalnum())
+
+    @classmethod
+    def _is_dnp(cls, dnp_raw: str, populate_raw: str) -> bool:
+        """True when the row is Do-Not-Populate.
+
+        BOMs use two opposite conventions:
+        - DNP-style columns (DNP / Do Not Populate / DNF):
+          a marker means the part is NOT populated.
+        - Populate-style columns (Populate / Placement / Fitted):
+          a marker (1 / YES / FITTED …) means the part IS populated,
+          so anything that is not a fitted marker counts as DNP.
+          An empty cell is treated as populated (the safer default —
+          blank populate columns must not drop parts from the order).
+        If both columns exist, the explicit DNP column wins.
+        """
+        d = cls._normalize_marker(dnp_raw)
+        p = cls._normalize_marker(populate_raw)
+        if d:
+            return d in cls.DNP_MARKERS
+        if p:
+            return p not in cls.FITTED_MARKERS
+        return False
+
 
     @classmethod
     def parse_file(
@@ -321,16 +376,13 @@ class BOMParser:
                     get("dnp", "")
                 ).strip()
 
-                normalized_dnp = raw_dnp_value.upper()
+                raw_populate_value = str(
+                    get("populate", "")
+                ).strip()
 
-                # DNP values
-                is_dnp = normalized_dnp in [
-                    '1',
-                    'YES',
-                    'TRUE',
-                    'X',
-                    'DNP'
-                ]
+                # DNP columns say "skip me"; Populate columns say "fit me"
+                # (inverted). _is_dnp handles both conventions.
+                is_dnp = cls._is_dnp(raw_dnp_value, raw_populate_value)
 
                 if bom_type == "electrical":
 
