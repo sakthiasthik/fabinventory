@@ -375,8 +375,29 @@ class MasterItemPrn3D:
         return cls(**filtered)
 
 
+def derive_company_prefix(company_name: str) -> str:
+    """Derive a 2-letter prefix from a company name.
+
+    'Sakthi' → 'SA', 'Sakthi Electronics' → 'SA', 'A B Solutions' → 'AB',
+    'X' → 'XX'. Falls back to 'FI' (FabInventory) for empty/garbage input.
+    """
+    words = [
+        w for w in re.sub(r'[^A-Za-z0-9 ]', ' ', company_name or '').split() if w
+    ]
+    if not words:
+        return "FI"
+    if len(words[0]) >= 2:
+        return words[0][:2].upper()
+    if len(words) >= 2:
+        return (words[0][0] + words[1][0]).upper()
+    return (words[0][0] * 2).upper()
+
+
 @dataclass
 class Config:
     company_prefix: str
+    company_name: str = ""
+    website: str = ""
+    git_link: str = ""
     data_path: str = "./fabinventory_data"
     last_sync: Optional[str] = None

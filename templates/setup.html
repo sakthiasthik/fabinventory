@@ -13,16 +13,33 @@
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label for="company_prefix" class="form-label">Company Prefix (2 letters)</label>
-                        <input type="text" class="form-control" id="company_prefix" name="company_prefix" 
-                               maxlength="2" pattern="[A-Za-z]{2}" required placeholder="e.g., SA">
-                        <div class="form-text">This will be used for internal part numbers (e.g., SA-ELE-00001)</div>
+                        <label for="company_name" class="form-label">Company Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="company_name" name="company_name"
+                               required placeholder="e.g., Sakthi Electronics"
+                               oninput="previewPrefix()">
+                        <div class="form-text">Your company / team name. It will be stored in your profile.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="data_path" class="form-label">Data Storage Path</label>
-                        <input type="text" class="form-control" id="data_path" name="data_path"
-                               value="./fabinventory_data">
-                        <div class="form-text">Where your inventory data will be stored (JSON files)</div>
+                        <label for="company_prefix" class="form-label">Prefix (optional, 2 letters)</label>
+                        <input type="text" class="form-control" id="company_prefix" name="company_prefix"
+                               maxlength="2" placeholder="e.g., SA">
+                        <div class="form-text">
+                            Used for internal part numbers (e.g., <code>SA-ELE-00001</code>).
+                            Leave blank and it will be derived from the company name automatically.
+                            It is also used in the data folder name on disk
+                            (e.g., <code>fabinventory-data-SA</code>).
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="website" class="form-label">Company Website (optional)</label>
+                        <input type="text" class="form-control" id="website" name="website"
+                               placeholder="e.g., www.sakthi.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="git_link" class="form-label">Git / Bitbucket Link (optional)</label>
+                        <input type="text" class="form-control" id="git_link" name="git_link"
+                               placeholder="e.g., github.com/sakthi/fabinventory">
+                        <div class="form-text">You can change these later from your profile settings.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">Initialize FabInventory</button>
                 </form>
@@ -30,4 +47,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Live preview: derive the prefix from the company name while typing
+    function previewPrefix() {
+        const name = document.getElementById('company_name').value.trim();
+        const words = name.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+        let prefix = 'FI';
+        if (words.length > 0) {
+            prefix = words[0].length >= 2
+                ? words[0].slice(0, 2)
+                : (words.length >= 2 ? words[0][0] + words[1][0] : words[0][0] + words[0][0]);
+        }
+        const input = document.getElementById('company_prefix');
+        if (!input.value) {
+            input.placeholder = prefix.toUpperCase();
+        }
+    }
+</script>
 {% endblock %}

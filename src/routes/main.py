@@ -1,6 +1,10 @@
 """Main Flask Blueprint — auth routes and core pages."""
 import os
+import re
+import shutil
 import requests
+
+from pathlib import Path
 
 from flask import (
     Blueprint,
@@ -23,7 +27,7 @@ from src.core import (
 )
 
 from src.file_manager import FileManager
-from src.models import Config
+from src.models import Config, derive_company_prefix
 
 main_bp = Blueprint('main', __name__)
 
@@ -131,23 +135,102 @@ def index():
     return redirect(url_for('main.dashboard'))
 
 
+def _normalize_link(link: str) -> str:
+    """Return a clean http(s) URL, or '' for empty input."""
+    link = link.strip()
+    if not link:
+        return ''
+    if not re.match(r'^https?://', link, re.IGNORECASE):
+        link = 'https://' + link
+    return link
+
+
+def _update_env_data_path(new_path: str) -> None:
+    """Rewrite DATA_PATH in .env so restarts keep using the new folder."""
+    try:
+        # src/routes/main.py → repo root is three levels up
+        env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+        if not env_file.exists():
+            return
+        lines = env_file.read_text().splitlines()
+        with env_file.open('w') as f:
+            found = False
+            for line in lines:
+                if line.startswith('DATA_PATH='):
+                    f.write(f'DATA_PATH={new_path}\n')
+                    found = True
+                else:
+                    f.write(line + '\n')
+            if not found:
+                f.write(f'DATA_PATH={new_path}\n')
+    except Exception as e:
+        print(f'Could not update .env DATA_PATH: {e}')
+
+
 @main_bp.route('/setup', methods=['GET', 'POST'])
 def setup():
-    """Initial setup - configure company prefix"""
+    """Initial setup — company details, prefix, links."""
     if request.method == 'POST':
-        company_prefix = request.form.get('company_prefix', '').upper()
-        data_path = request.form.get('data_path', './fabinventory_data')
+        company_name = request.form.get('company_name', '').strip()
+        prefix = request.form.get('company_prefix', '').strip().upper()
+        website = _normalize_link(request.form.get('website', ''))
+        git_link = _normalize_link(request.form.get('git_link', ''))
 
-        if len(company_prefix) != 2:
-            flash('Company prefix must be exactly 2 letters', 'error')
+        if not company_name:
+            flash('Company name is required', 'error')
             return render_template('setup.html')
 
-        # Save config
-        config = Config(company_prefix=company_prefix, data_path=data_path)
-        file_manager = FileManager(data_path)
-        file_manager.save_config(config)
+        # Prefix is optional — derive it from the company name when blank
+        if not prefix:
+            prefix = derive_company_prefix(company_name)
+        else:
+            prefix = ''.join(ch for ch in prefix if ch.isalnum())[:2].upper()
+            if len(prefix) < 2:
+                flash('Prefix must be at least 2 letters or numbers', 'error')
+                return render_template('setup.html')
 
-        flash('Setup complete! You can now start using FabInventory.', 'success')
+        # Data folder carries the prefix so it's recognizable on disk
+        # (e.g. ~/fabinventory-data → ~/fabinventory-data-SA).
+        # Never append twice: a folder already named -<PREFIX> is final.
+        old_path = Path(state.data_path).resolve()
+        if old_path.name.upper().endswith(f"-{prefix}"):
+            new_path = old_path
+        else:
+            new_path = old_path.parent / f"{old_path.name}-{prefix}"
+
+        if new_path != old_path:
+            if old_path.exists():
+                if new_path.exists():
+                    # Merge leftovers from an earlier attempt
+                    for item in old_path.iterdir():
+                        shutil.move(str(item), str(new_path / item.name))
+                    old_path.rmdir()
+                else:
+                    shutil.move(str(old_path), str(new_path))
+            else:
+                new_path.mkdir(parents=True, exist_ok=True)
+            _update_env_data_path(str(new_path))
+            state.data_path = str(new_path)
+
+        # Save config through the SAME path the app state uses —
+        # saving to a stray relative path is what made setup loop forever
+        file_manager = FileManager(state.data_path)
+        config = Config(
+            company_prefix=prefix,
+            company_name=company_name,
+            website=website,
+            git_link=git_link,
+            data_path=state.data_path,
+        )
+        if not file_manager.save_config(config):
+            flash('Failed to save configuration — check folder permissions', 'error')
+            return render_template('setup.html')
+
+        state.file_manager = file_manager
+        state.config = config
+        state.initialized = False  # force full re-init on the next request
+
+        flash('Setup complete! Welcome to FabInventory.', 'success')
         return redirect(url_for('main.index'))
 
     return render_template('setup.html')

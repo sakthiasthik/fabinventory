@@ -15,10 +15,19 @@
 - **Bug 3 fixed** — quantities parse tolerantly (`2.5` → 3 half-up, `1,000`, `10 pcs`, `5 nos`); bad rows are no longer silently dropped — all four upload pages now flash row warnings, and unparseable files are rejected with a message.
 - **Bug 4 fixed** — one `normalize_part_key` helper (collapse whitespace + lowercase) used everywhere: `100nF 0603` and `100nf  0603 ` now merge into ONE master item with shared stock.
 
+### ✅ Setup page reworked (same session)
+
+- Setup now collects **company name** (required) + **optional prefix** — blank prefix auto-derives from the name (`Sakthi Electronics` → `SA`), with a live preview in the form
+- Data folder now carries the prefix on disk: `fabinventory-data` → `fabinventory-data-SA`, and the new path is persisted into `.env` so restarts keep using it
+- Optional **website** and **git/bitbucket** links collected (https:// auto-prepended); stored in config for later editing from profile settings (planned)
+- **Fixed the stuck-setup bug**: the form's stray `data_path` field saved config into a relative in-repo folder while the app read config from the env data path → dashboard bounced back to setup forever. The route now uses the app's own data path, the field is gone, and the flow was verified end-to-end (setup → login → dashboard)
+- `.gitignore` hardened: every `fabinventory_data*` / `fabinventory-data*` variant is ignored — verified no test data can reach the public repo
+
 ### ❌ Mistakes we made (and learned from)
 
 1. The original components endpoint de-duplicated by *dropping* rows instead of summing them — "keep the first row" is never a safe de-duplication.
 2. DNP aliases mixed two opposite column conventions under one key — column *names* carry meaning; parse `DNP` and `Populate` semantics separately.
+3. The setup form let the user edit the storage path — a text box for data paths is a trap: the form saved config to `./fabinventory_data` (in-repo!) while the app looked at the env `DATA_PATH`. The app must own its data path.
 
 ### 🔧 Fixes done
 
