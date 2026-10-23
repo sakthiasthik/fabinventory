@@ -288,6 +288,11 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 "notes": order.notes,
                 "created_at": order.created_at,
                 "received_at": getattr(order, "received_at", None),
+                "shipped_at": getattr(order, "shipped_at", None),
+                "tracking_info": getattr(order, "tracking_info", None),
+                "shipping_info": getattr(order, "shipping_info", None),
+                "consolidation_id": getattr(order, "consolidation_id", None),
+                "vendor_link": getattr(order, "vendor_link", None),
                 "line_items": [
                     {
                         "internal_id": li.internal_id,
