@@ -1,8 +1,8 @@
 # 🐛 Known Bugs
 
 > Found: 2026-10-16 — order page investigation (multi-project / multi-board orders)
-> Status: **OPEN** — to be fixed one by one (see fix order at the bottom)
-> Related session notes: see `CHANGELOG.md` 2026-10-16 entry
+> Status: **ALL 4 FIXED** on 2026-10-23 (see each bug + `CHANGELOG.md` 2026-10-23)
+> Related session notes: see `CHANGELOG.md`
 
 ---
 
@@ -38,6 +38,8 @@ This is the exact cause of the reported *quantity mismatch* when ordering multip
 **Fix:**
 Sum qty across ALL rows per `value|footprint` (collect references too), compute `to_order` on the total sum, not per row.
 
+**Status:** ✅ FIXED — commit `a40da3c` (helpers `_elec/_mech/_pcb/_prn_components` in `src/routes/api.py`, 7 unit tests)
+
 ---
 
 ## Bug 2 — Missing line items: DNP detected INVERTED for Populate/Placement/Fitted columns
@@ -57,6 +59,8 @@ Split the semantics:
 - DNP-named columns (`dnp`, `do not populate`): `1 / YES / TRUE / X / DNP / DNF / NO POP / N/F` = DNP
 - Populate-named columns (`populate`, `placement`, `fitted`): **invert** — `1 / YES / TRUE` = populated (NOT DNP), `0 / NO / empty` = DNP
 
+**Status:** ✅ FIXED — commit `1df296f` (`_is_dnp` helper in `src/bom_parser.py`; empty populate cells default to populated; 5 new tests)
+
 ---
 
 ## Bug 3 — Silent row dropping: one bad quantity cell = one missing part, no warning
@@ -72,6 +76,8 @@ the row is silently skipped (only a console `print`). Upload 50 lines, get 47 pa
 Tolerant quantity parsing (float → rounded int, strip commas/units) AND collect all row warnings
 and show them to the user after upload instead of dropping silently.
 
+**Status:** ✅ FIXED — commit `698d9e9` (`parse_quantity`/`parse_int_fallback` + `parse_file_with_warnings`; all 4 upload routes flash warnings and reject unparseable files; 4 new tests)
+
 ---
 
 ## Bug 4 — Same part split into multiple master items by case/whitespace
@@ -86,6 +92,8 @@ stock split across them, and two projects spelling the same part differently cre
 **Fix:**
 Normalize the key: `strip()` + `lower()` on both value and footprint everywhere the key is built (aggregator + the stock lookup in the components API).
 
+**Status:** ✅ FIXED — commit `cd0b8fa` (single `normalize_part_key` helper in `src/models.py` used by models, aggregator, components API; 4 new tests)
+
 ---
 
 ## ✅ Checked and CORRECT (no action needed)
@@ -96,11 +104,11 @@ Normalize the key: `strip()` + `lower()` on both value and footprint everywhere 
 
 ---
 
-## Fix order (agreed)
+## Fix order (completed 2026-10-23)
 
-1. API endpoint: sum all rows per `value|footprint` → kills the quantity mismatch
-2. DNP logic: separate DNP-column vs Populate-column semantics
-3. Parser: tolerant qty parsing + surface row warnings to the user
-4. Normalize aggregation key (lowercase + strip)
+1. ✅ API endpoint: sum all rows per `value|footprint` → `a40da3c`
+2. ✅ DNP logic: separate DNP-column vs Populate-column semantics → `1df296f`
+3. ✅ Parser: tolerant qty parsing + surface row warnings → `698d9e9`
+4. ✅ Normalize aggregation key (lowercase + strip) → `cd0b8fa`
 
-Each fix gets its own commit + its own CHANGELOG entry.
+Each fix has its own commit + its own CHANGELOG entry (2026-10-23).

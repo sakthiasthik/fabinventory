@@ -1,7 +1,7 @@
 """Master inventory aggregation logic"""
 
 from typing import List, Dict, Optional, Tuple, Callable, Any
-from src.models import Project, MasterItem, MasterItemMech, MasterItemPcb, MasterItemPrn3D
+from src.models import Project, MasterItem, MasterItemMech, MasterItemPcb, MasterItemPrn3D, normalize_part_key
 
 
 class Aggregator:
@@ -25,7 +25,7 @@ class Aggregator:
         existing_ids = {}
         if existing_items:
             for item in existing_items:
-                key = f"{item.value}|{item.footprint}"
+                key = normalize_part_key(item.value, item.footprint)
                 stock_levels[key] = item.current_stock
                 existing_ids[key] = item.internal_id
 
@@ -91,7 +91,7 @@ class Aggregator:
                 existing_ids[key] = item.internal_id
 
         for project_name, row in project_rows:
-            key = f"{row.get('part_name', '')}|{row.get('value', '')}"
+            key = normalize_part_key(row.get('part_name', ''), row.get('value', ''))
             if not key.strip("|"):
                 continue
 
@@ -141,7 +141,7 @@ class Aggregator:
                 existing_ids[key] = item.internal_id
 
         for project_name, row in project_rows:
-            key = row.get("board_name", "").strip()
+            key = normalize_part_key(row.get("board_name", ""))
             if not key:
                 continue
 
@@ -190,7 +190,7 @@ class Aggregator:
                 existing_ids[key] = item.internal_id
 
         for project_name, row in project_rows:
-            key = row.get("part_name", "").strip()
+            key = normalize_part_key(row.get("part_name", ""))
             if not key:
                 continue
 
