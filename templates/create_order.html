@@ -339,10 +339,13 @@
         return div.innerHTML;
     }
 
-    // Get CSRF token from cookie (set by Flask-WTF)
+    // Get CSRF token — Flask-WTF may not set a cookie, so prefer the
+    // token rendered in the page's own hidden inputs (always present)
     function getCsrfToken() {
         const match = document.cookie.match(/csrf_token=([^;]+)/);
-        return match ? match[1] : '';
+        if (match) return match[1];
+        const input = document.querySelector('input[name="csrf_token"]');
+        return input ? input.value : '';
     }
 
     // Saved consolidations from the server (rendered by Jinja)

@@ -38,6 +38,7 @@
 ### ❌ Mistakes we made (and learned from)
 
 1. `save_order` hand-built its dict and silently dropped fields — dataclass `to_dict()` is the single source of serialization; adding a field in two places is how fields get lost.
+2. AJAX posts read the CSRF token from a `csrf_token` **cookie** that Flask-WTF never sets → every save/order click returned 400 "The CSRF token is missing" with no visible explanation. The token must come from the page's hidden `input[name="csrf_token"]` (cookie only as fallback). This was also the user's earlier "JSON error".
 
 ### ✅ Setup page reworked (same session)
 
