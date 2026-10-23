@@ -16,6 +16,13 @@ def validate_project_name(name: str) -> str:
         )
     return name
 
+def normalize_part_key(*parts) -> str:
+    """Canonical aggregation key: whitespace-collapsed, lowercase parts
+    joined with '|'. Keeps '100nF 0603', '100nf  0603 ' and '100NF 0603'
+    in the SAME master item instead of splitting stock across three."""
+    return "|".join(" ".join(str(p).split()).lower() for p in parts)
+
+
 @dataclass
 class BomRow:
     si_no: int
@@ -32,7 +39,7 @@ class BomRow:
     dnp_raw: str = ""
     
     def get_aggregation_key(self):
-        return f"{self.value}|{self.footprint}"
+        return normalize_part_key(self.value, self.footprint)
     
     def is_active(self):
         return not self.dnp and self.qty > 0
@@ -280,7 +287,7 @@ class MasterItemMech:
         return max(0, self.total_required - self.current_stock)
 
     def get_aggregation_key(self):
-        return f"{self.part_name}|{self.value}"
+        return normalize_part_key(self.part_name, self.value)
 
     def to_dict(self):
         return {
@@ -314,7 +321,7 @@ class MasterItemPcb:
         return max(0, self.total_required - self.current_stock)
 
     def get_aggregation_key(self):
-        return self.board_name
+        return normalize_part_key(self.board_name)
 
     def to_dict(self):
         return {
@@ -348,7 +355,7 @@ class MasterItemPrn3D:
         return max(0, self.total_required - self.current_stock)
 
     def get_aggregation_key(self):
-        return self.part_name
+        return normalize_part_key(self.part_name)
 
     def to_dict(self):
         return {

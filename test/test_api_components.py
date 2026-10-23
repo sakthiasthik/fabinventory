@@ -81,6 +81,26 @@ def test_pcb_duplicate_rows_are_summed():
     assert components[0]['to_order'] == 4
 
 
+def test_elec_stock_lookup_is_case_and_space_insensitive():
+    """'10K 0603 ' in the BOM must match master item '10k|0603'."""
+    rows = [_bom_row(value="10K", footprint=" 0603 ", qty=5)]
+    stock_lookup = {
+        "10k|0603": {"current_stock": 2, "internal_id": "SA-ELE-00001"},
+    }
+    components = _elec_components(rows, stock_lookup)
+    assert components[0]['id'] == "SA-ELE-00001"
+    assert components[0]['to_order'] == 3
+
+
+def test_mech_matches_inventory_case_insensitively():
+    rows = [{"part_name": "bolt m3", "value": "10mm", "quantity": 4}]
+    inv = [MasterItemMech(internal_id="SA-MEC-00001", part_name="Bolt M3",
+                           value="10mm", total_required=4, current_stock=1)]
+    components = _mech_components(rows, inv)
+    assert components[0]['internal_id'] == "SA-MEC-00001"
+    assert components[0]['to_order'] == 3
+
+
 def test_prn_duplicate_rows_are_summed():
     rows = [
         {"part_name": "Case", "material": "PLA", "quantity": 1},

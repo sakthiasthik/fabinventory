@@ -2,6 +2,7 @@
 from pathlib import Path
 from flask import Blueprint, jsonify, request
 from src.core import state, api_login_required
+from src.models import normalize_part_key
 
 api_bp = Blueprint('api', __name__)
 
@@ -20,7 +21,7 @@ def _elec_components(bom_rows, stock_lookup):
     for bom_row in bom_rows:
         if not bom_row.is_active():
             continue
-        key = f"{bom_row.value}|{bom_row.footprint}"
+        key = normalize_part_key(bom_row.value, bom_row.footprint)
         stock_info = stock_lookup.get(key, {'current_stock': 0, 'internal_id': None})
         cid = stock_info.get('internal_id') or key
         entry = aggregated.get(cid)
@@ -63,7 +64,7 @@ def _mech_components(rows, mech_inventory):
     """Sum mechanical BOM rows sharing the same part_name|value key."""
     aggregated = {}
     for row in rows:
-        raw_key = f"{row.get('part_name', '')}|{row.get('value', '')}"
+        raw_key = normalize_part_key(row.get('part_name', ''), row.get('value', ''))
         cid = f"mech-{raw_key}"
         entry = aggregated.get(cid)
         if entry is None:
@@ -108,7 +109,7 @@ def _pcb_components(rows, pcb_inventory):
         if entry is None:
             stock, int_id = 0, ''
             for pi in pcb_inventory:
-                if pi.board_name == board_name:
+                if pi.get_aggregation_key() == normalize_part_key(board_name):
                     stock, int_id = pi.current_stock, pi.internal_id
                     break
             entry = aggregated[cid] = {
@@ -145,7 +146,7 @@ def _prn_components(rows, prn_inventory):
         if entry is None:
             stock, int_id = 0, ''
             for pi in prn_inventory:
-                if pi.part_name == part_name:
+                if pi.get_aggregation_key() == normalize_part_key(part_name):
                     stock, int_id = pi.current_stock, pi.internal_id
                     break
             entry = aggregated[cid] = {
@@ -206,7 +207,7 @@ def api_project_components(project_name):
     inventory_items = state.inventory_manager.get_inventory()
     stock_lookup = {}
     for item in inventory_items:
-        key = f"{item.value}|{item.footprint}"
+        key = normalize_part_key(item.value, item.footprint)
         stock_lookup[key] = {
             'current_stock': item.current_stock,
             'internal_id': item.internal_id,

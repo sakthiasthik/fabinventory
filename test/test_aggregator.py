@@ -73,6 +73,41 @@ def test_aggregate_id_generation():
     assert result[0].internal_id == "SA-ELE-00001"
 
 
+def test_aggregate_normalizes_case_and_whitespace():
+    """'100nF 0603' and ' 100nf  0603 ' must land in ONE master item."""
+    agg = Aggregator("SA")
+    p1 = Project(name="P1", bom=[
+        BomRow(si_no=1, reference="R1", value="100nF", footprint="0603",
+               manufacturer_part_number="M1", manufacturer_name="Yageo", qty=5),
+    ])
+    p2 = Project(name="P2", bom=[
+        BomRow(si_no=1, reference="R2", value=" 100nf ", footprint=" 0603 ",
+               manufacturer_part_number="M2", manufacturer_name="Vishay", qty=3),
+    ])
+    result = agg.aggregate([p1, p2])
+    assert len(result) == 1
+    assert result[0].total_required == 8
+    assert "P1" in result[0].used_in_projects
+    assert "P2" in result[0].used_in_projects
+
+
+def test_normalize_preserves_stock_with_case_variant():
+    """Existing stock/ID survive when a new BOM spells the part differently."""
+    agg = Aggregator("SA")
+    existing = MasterItem(
+        internal_id="SA-ELE-00001", value="100nF", footprint="0603",
+        total_required=5, current_stock=10, used_in_projects=[], associated_mpns=["M1"]
+    )
+    project = Project(name="New", bom=[
+        BomRow(si_no=1, reference="R1", value="100NF", footprint="0603 ",
+               manufacturer_part_number="M1", manufacturer_name="Yageo", qty=2),
+    ])
+    result = agg.aggregate([project], existing_items=[existing])
+    assert len(result) == 1
+    assert result[0].current_stock == 10      # preserved, not reset
+    assert result[0].internal_id == "SA-ELE-00001"
+
+
 def test_preserves_existing_stock():
     agg = Aggregator("SA")
     existing = MasterItem(
