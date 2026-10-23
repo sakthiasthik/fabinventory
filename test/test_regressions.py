@@ -11,9 +11,10 @@ import tempfile
 import pytest
 
 from src.file_manager import FileManager
-from src.models import Project
+from src.models import BomRow, Project
 from src.routes.main import _merge_tree
 from src.routes.orders import _component_fields, _order_qty
+from src.routes.projects import _parse_bom_edit_payload
 
 
 @pytest.fixture
@@ -51,6 +52,65 @@ def test_pcb_images_survive_save_load(tmp_fm):
     loaded = fm.load_project('BoardA')
     assert loaded is not None
     assert loaded.pcb_images == project.pcb_images
+
+
+# In-place BOM editing — posted rows replace the BOM safely
+def _bom_row(**overrides):
+    data = dict(
+        si_no=1, reference='R1', value='10k', footprint='0603',
+        manufacturer_part_number='MPN1', manufacturer_name='Yageo',
+        manufacturer_part_number_lcsc='LC1', manufacturer_name_lcsc='LCSC',
+        lcsc_sku='SKU1', qty=2, dnp=False, dnp_raw='',
+    )
+    data.update(overrides)
+    return BomRow(**data)
+
+
+def test_bom_edit_payload_updates_and_preserves_hidden_fields():
+    base = [_bom_row()]
+    rows = _parse_bom_edit_payload(base, {'rows': [{
+        'orig_index': 0, 'si_no': '1', 'reference': 'R1', 'value': '22k',
+        'footprint': '0603', 'manufacturer_part_number': 'MPN1',
+        'manufacturer_name': 'Yageo', 'qty': '5', 'dnp': True,
+    }]})
+    assert len(rows) == 1
+    assert rows[0].value == '22k'
+    assert rows[0].qty == 5
+    assert rows[0].dnp is True
+    assert rows[0].dnp_raw == 'X'
+    # Fields the editor doesn't show must survive
+    assert rows[0].manufacturer_part_number_lcsc == 'LC1'
+    assert rows[0].lcsc_sku == 'SKU1'
+
+
+def test_bom_edit_payload_adds_rows_and_drops_blank_ones():
+    base = [_bom_row()]
+    rows = _parse_bom_edit_payload(base, {'rows': [
+        {'orig_index': 0, 'reference': 'R1', 'value': '10k',
+         'footprint': '0603', 'qty': '2', 'dnp': False},
+        {'orig_index': None, 'reference': 'C9', 'value': '100nF',
+         'footprint': '0603', 'manufacturer_part_number': '',
+         'manufacturer_name': '', 'qty': '3', 'dnp': False},
+        {'orig_index': None, 'reference': '', 'value': '', 'footprint': '',
+         'qty': '1'},
+    ]})
+    assert len(rows) == 2
+    assert rows[1].reference == 'C9'
+    assert rows[1].qty == 3
+
+
+def test_bom_edit_payload_rejects_bad_quantities():
+    with pytest.raises(ValueError, match='qty must be a number'):
+        _parse_bom_edit_payload([], {'rows': [
+            {'reference': 'R1', 'qty': 'ten'}
+        ]})
+
+
+def test_bom_edit_payload_rejects_non_list_rows():
+    with pytest.raises(ValueError, match='list of BOM rows'):
+        _parse_bom_edit_payload([], {'rows': 'nope'})
+    with pytest.raises(ValueError, match='JSON object'):
+        _parse_bom_edit_payload([], None)
 
 
 # Findings 10 & 12 — consolidation ids are validated / generated safely

@@ -6,6 +6,15 @@
 
 ---
 
+## ✅ UI round 3 — 2026-10-23 (adaptive BOM blocks, project layout, in-place BOM edit)
+
+**Status:** no new application defects found; all checks green (60 unit tests, 38/38 + 18/18 browser checks after the header refinement).
+**Verified:** page-size switching resizes each BOM block and moves the footer; project header split (name + detailed 2×2 boxes left, pinned 460×380 image right, no wasted gap); BOM edit → save → master-inventory propagation; hidden LCSC fields survive; no-BOM projects render without edit controls; no horizontal overflow at 1440px or 400px.
+**Regression guard:** `test/test_regressions.py` — `test_bom_edit_payload_updates_and_preserves_hidden_fields`, `test_bom_edit_payload_adds_rows_and_drops_blank_ones`, `test_bom_edit_payload_rejects_bad_quantities`, `test_bom_edit_payload_rejects_non_list_rows`.
+**Still open (unchanged, non-blocking):** no UI to advance an order status (item 1 below); `GitManager` targets the source repo (line 89); `main` behind `dev`, manual PR pending. Test-harness mistakes from this round (stale seed data, wrong tab id, hidden-vs-missing pager) are recorded in `CHANGELOG.md`, not app bugs.
+
+---
+
 ## 🔍 Code review — 2026-10-23 (max effort, 12 findings — ALL FIXED)
 
 **Method:** `code-review` skill at max effort — 10 finder angles, one adversarial verifier per candidate, one final sweep. Scope: the whole uncommitted changeset (~2,000-line diff: setup rework, project page, BOM Consolidation, vendors, consolidation records, order tracking).

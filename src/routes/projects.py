@@ -24,6 +24,7 @@ import pandas as pd
 
 from src.core import state, login_required
 from src.bom_parser import BOMParser
+from src.models import BomRow
 
 project_bp = Blueprint('project', __name__)
 
@@ -285,6 +286,130 @@ def upload_bom(name):
                 filepath.unlink()
 
     return redirect(url_for('project.project_detail', name=name))
+
+
+# ── Edit BOM in place ────────────────────────────────────────────
+
+
+def _parse_bom_edit_payload(bom_rows, payload):
+    """Validate an in-place BOM edit payload into a fresh list of BomRow.
+
+    Rows posted by the browser replace the current BOM. ``orig_index``
+    links a row back to its old position so fields the editor does not
+    show (LCSC part number / supplier / SKU) survive the edit. A row with
+    no reference, value or footprint is treated as blank and dropped.
+    Raises ValueError with a user-readable message.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError('Expected a JSON object')
+    posted = payload.get('rows')
+    if not isinstance(posted, list):
+        raise ValueError('Expected a list of BOM rows')
+    if len(posted) > 10000:
+        raise ValueError('Too many BOM rows (max 10000)')
+
+    def text(row, key, max_len):
+        value = row.get(key, '')
+        if value is None:
+            return ''
+        value = str(value).strip()
+        if len(value) > max_len:
+            raise ValueError(f'{key} is too long (max {max_len} characters)')
+        return value
+
+    def number(row, key, default):
+        value = row.get(key, default)
+        if value is None or value == '':
+            return default
+        try:
+            return max(0, int(float(value)))
+        except (TypeError, ValueError):
+            raise ValueError(f'{key} must be a number')
+
+    new_rows = []
+    for pos, row in enumerate(posted):
+        if not isinstance(row, dict):
+            raise ValueError(f'Row {pos + 1} is malformed')
+
+        orig = row.get('orig_index')
+        base = None
+        if isinstance(orig, int) and 0 <= orig < len(bom_rows):
+            base = bom_rows[orig]
+
+        reference = text(row, 'reference', 500)
+        value = text(row, 'value', 200)
+        footprint = text(row, 'footprint', 200)
+        if not reference and not value and not footprint:
+            continue  # blank line — same outcome as deleting it
+
+        dnp = row.get('dnp')
+        if isinstance(dnp, str):
+            dnp = dnp.strip().lower() in ('1', 'true', 'yes', 'on', 'x')
+        dnp = bool(dnp)
+
+        new_rows.append(BomRow(
+            si_no=number(row, 'si_no', pos + 1),
+            reference=reference,
+            value=value,
+            footprint=footprint,
+            manufacturer_part_number=text(
+                row, 'manufacturer_part_number', 500
+            ),
+            manufacturer_name=text(row, 'manufacturer_name', 500),
+            manufacturer_part_number_lcsc=(
+                base.manufacturer_part_number_lcsc if base else None
+            ),
+            manufacturer_name_lcsc=(
+                base.manufacturer_name_lcsc if base else None
+            ),
+            lcsc_sku=base.lcsc_sku if base else None,
+            qty=number(row, 'qty', 0),
+            dnp=dnp,
+            dnp_raw='X' if dnp else '',
+        ))
+
+    return new_rows
+
+
+@project_bp.route('/<name>/bom/edit', methods=['POST'])
+@login_required
+def edit_bom(name):
+    """Save an edited electrical BOM without a download / re-upload cycle."""
+    if not state.init_app():
+        return jsonify({'success': False, 'error': 'App not initialized'}), 500
+
+    project = state.project_manager.get_project(name)
+    if not project:
+        return jsonify({'success': False, 'error': 'Project not found'}), 404
+
+    try:
+        new_bom = _parse_bom_edit_payload(
+            project.bom, request.get_json(silent=True)
+        )
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+    old_bom = project.bom
+    project.bom = new_bom
+    project.updated_at = datetime.now().isoformat()
+    if not state.project_manager.file_manager.save_project(project):
+        # Keep memory and disk in agreement if the write failed.
+        project.bom = old_bom
+        return (
+            jsonify({'success': False, 'error': 'Could not save the BOM file'}),
+            500,
+        )
+
+    # Keep master inventory (and therefore orders) in sync with the edit.
+    projects = list(state.project_manager.projects.values())
+    state.inventory_manager.update_inventory(projects)
+    state.inventory_manager.update_non_elec_inventory(projects)
+
+    if state.git_manager:
+        state.git_manager.commit(f"Edited BOM for project '{name}'")
+
+    flash(f'BOM updated — {len(project.bom)} line(s) saved', 'success')
+    return jsonify({'success': True, 'count': len(project.bom)})
 
 
 # ── Upload project image ─────────────────────────────────────────

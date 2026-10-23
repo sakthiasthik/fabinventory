@@ -92,7 +92,7 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 /* ============================================================
    Fixed-height table blocks with in-block pagination
    ============================================================
-   Markup: <div class="fi-table-scroll" data-page-size="50">
+   Markup: <div class="fi-table-scroll" data-page-size="25">
                <table>…</table>
            </div>
            (a .fi-pager control bar is created right after the block)
@@ -110,7 +110,7 @@ function initPagedTable(container, pageSize) {
     if (!tbody) return;
     container.dataset.fiPagerInit = '1';
 
-    var state = { page: 1, pageSize: pageSize || 50 };
+    var state = { page: 1, pageSize: pageSize || 25 };
     container._fiPagerState = state;
 
     var pager = (container.nextElementSibling &&
@@ -126,6 +126,7 @@ function initPagedTable(container, pageSize) {
         '<span class="fi-pager-info"></span>' +
         '<div class="fi-pager-controls">' +
         '  <select class="form-select form-select-sm fi-pager-size">' +
+        '    <option value="10">10 / page</option>' +
         '    <option value="25">25 / page</option>' +
         '    <option value="50">50 / page</option>' +
         '    <option value="100">100 / page</option>' +
@@ -158,6 +159,31 @@ function initPagedTable(container, pageSize) {
     function totalPages() {
         return state.pageSize > 0 ? Math.max(1, Math.ceil(rows().length / state.pageSize)) : 1;
     }
+    function sizeBlock() {
+        // Fit the block to the rows on the current page. Changing the
+        // page size (10 / 25 / 50 / 100) therefore grows or shrinks the
+        // block and moves the footer down/up with it, instead of
+        // showing a tiny fixed window of ~5 rows.
+        var onPage = rows().filter(function (r) {
+            return !r.classList.contains('fi-page-hidden');
+        });
+        if (!onPage.length) {
+            container.style.maxHeight = '';
+            return;
+        }
+        var headerH = table.tHead ? table.tHead.getBoundingClientRect().height : 0;
+        var bodyH = 0;
+        onPage.forEach(function (r) {
+            bodyH += r.getBoundingClientRect().height;
+        });
+        if (!bodyH) {
+            // Table sits in a hidden Bootstrap tab pane: measure nothing,
+            // so use a sensible estimate and recalculate on shown.bs.tab.
+            headerH = headerH || 42;
+            bodyH = onPage.length * 44;
+        }
+        container.style.maxHeight = Math.ceil(headerH + bodyH + 2) + 'px';
+    }
     function renderPager() {
         var all = rows();
         var total = all.length;
@@ -182,10 +208,17 @@ function initPagedTable(container, pageSize) {
             total ? ('Page ' + state.page + ' / ' + pages) : '';
         pager.querySelector('.fi-pager-prev').disabled = state.page <= 1;
         pager.querySelector('.fi-pager-next').disabled = state.page >= pages;
-        pager.style.display =
-            state.pageSize > 0 && total > state.pageSize ? '' : 'none';
+
+        // Keep the bar visible for short lists too: it holds the
+        // "rows per page" selector, so hiding it would trap the user
+        // at the current page size. The single placeholder row of an
+        // empty section gets no pager.
+        var emptyPlaceholder = total === 1 && tbody.querySelector('td[colspan]');
+        pager.style.display = (total > 0 && !emptyPlaceholder) ? '' : 'none';
+        sizeBlock();
     }
     container._fiPagerRender = renderPager;
+    container._fiPagerSize = sizeBlock;
     renderPager();
 }
 
@@ -196,10 +229,20 @@ function refreshFiPager(container) {
     }
 }
 
+function refreshFiPagerSizes() {
+    document.querySelectorAll('.fi-table-scroll').forEach(function (el) {
+        if (el._fiPagerSize) el._fiPagerSize();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.fi-table-scroll').forEach(function (el) {
-        initPagedTable(el, parseInt(el.dataset.pageSize || '50', 10));
+        initPagedTable(el, parseInt(el.dataset.pageSize || '25', 10));
     });
+    // Row heights change with viewport width (text wraps) and when a
+    // hidden tab becomes visible (it measured as zero until then).
+    window.addEventListener('resize', refreshFiPagerSizes);
+    document.addEventListener('shown.bs.tab', refreshFiPagerSizes);
 });
 
 /* ============================================================
