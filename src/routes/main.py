@@ -170,6 +170,11 @@ def _update_env_data_path(new_path: str) -> None:
 @main_bp.route('/setup', methods=['GET', 'POST'])
 def setup():
     """Initial setup — company details, prefix, links."""
+    # Once configured, setup must not run again: re-running it would
+    # rename the data folder and overwrite the company config.
+    if state.init_app():
+        return redirect(url_for('main.index'))
+
     if request.method == 'POST':
         company_name = request.form.get('company_name', '').strip()
         prefix = request.form.get('company_prefix', '').strip().upper()

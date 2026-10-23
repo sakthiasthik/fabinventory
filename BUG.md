@@ -6,6 +6,31 @@
 
 ---
 
+## 🕵️ Full-site audit — 2026-10-23 (Playwright crawl)
+
+**Method:** Playwright headless Chromium. Every page crawled with console/page-error capture, broken-image check, 400px phone-width check, and unauthenticated-access check.
+
+### 🐛 Found & fixed in this session (status: ✅ FIXED locally)
+
+1. **`/setup` was re-runnable forever** — a public route that renames the data folder and overwrites the company config, even when logged out. Now redirects once the app is configured.
+2. **Werkzeug debugger exposed on the network** — `app.run(debug=True)` on `0.0.0.0` means anyone on the LAN could use the debug console (the PIN is printed in the log). Debug is now opt-in via `FLASK_DEBUG=1`.
+3. **Inventory search box overflowed at phone width** (`min-width:220px`) → page scrolled horizontally. Fixed with `max-width`.
+
+### ✅ Verified clean (no action)
+
+- All 14 pages: HTTP 200, zero console errors, zero page errors, zero broken images
+- All protected pages redirect (302) to login when logged out; APIs return 401
+- No horizontal scroll at phone width on any page (after fix #3)
+- Bootstrap icons render correctly (font + glyphs verified)
+- Consolidation flow works in a real browser (73 rows loaded after adding a project)
+
+### ⏳ Known, non-blocking
+
+- Old `.pyc` files exist in past commit history (cosmetic — strip later if desired)
+- `main` branch is behind `dev` (manual PR pending — user's rule)
+
+---
+
 ## Bug 1 — Order page quantity mismatch: duplicate BOM rows are dropped
 
 **Severity:** 🔴 Critical (wrong quantities on orders)

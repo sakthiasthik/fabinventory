@@ -27,6 +27,19 @@
 1. Duplicating the create-project form in two templates with different fields — one modal must be a shared include, or the two will drift apart.
 2. Jinja: `tab_stats.print3d` fails — dict keys must use `tab_stats['3dprint']` when the key isn't an exact identifier; caught by the isolated verification run, not the unit tests.
 
+### ✅ Full-site audit with Playwright (same session — local)
+
+- Every page crawled headlessly (14 pages): all 200, **zero** JS errors, zero broken images; auth verified (302→login, APIs 401); phone-width (400px) responsive checks
+- Fixed 3 findings: `/setup` re-runnable after configuration (locked now), Werkzeug debugger exposed on 0.0.0.0 (now opt-in via `FLASK_DEBUG=1`), inventory search box overflow at phone width
+- Audit findings + method recorded in `BUG.md` ("Full-site audit" section)
+
+### ✅ Vendors + per-vendor orders + consolidation download (same session — local)
+
+- **Vendors page** (navbar): add/edit/delete suppliers with contact, email, website (auto `https://`), notes — stored in `vendors/vendors.json`
+- **Consolidation detail page**: every saved consolidation opens to a line-item table (component, footprint, MPN, per-project references, to-order) with a **vendor dropdown per line**. "Create Orders (one per vendor)" splits the consolidation and creates **one PO per vendor**, each carrying that vendor's website link automatically
+- **Download CSV** on every saved consolidation — same per-project reference columns as the page export, plus a Vendor column
+- Order Tracking shows each split PO with its vendor link + CON badge — that's the multi-vendor answer: one order per vendor, tracked separately
+
 ### ✅ Consolidation workflow (same session — local, not yet committed)
 
 - **Create Order button moved to the TOP** of the BOM Consolidation page (also fixed 400 diagnostics: the API now logs rejected items and returns clearer error messages)
