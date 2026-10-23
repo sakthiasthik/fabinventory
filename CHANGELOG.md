@@ -15,6 +15,18 @@
 - **Bug 3 fixed** — quantities parse tolerantly (`2.5` → 3 half-up, `1,000`, `10 pcs`, `5 nos`); bad rows are no longer silently dropped — all four upload pages now flash row warnings, and unparseable files are rejected with a message.
 - **Bug 4 fixed** — one `normalize_part_key` helper (collapse whitespace + lowercase) used everywhere: `100nF 0603` and `100nf  0603 ` now merge into ONE master item with shared stock.
 
+### ✅ Project page & create-project fixes (same session — local, not yet committed)
+
+- **Unified create-project**: dashboard and projects page had two *different* modals (dashboard lacked the image field); both POST to the same route, which *ignored* the image. Now one shared `_create_project_modal.html` include + the route saves `project_image` — identical behavior everywhere
+- **Screenshot upload fixed**: after a successful image upload, the "Export Image" link used `url_for('static', filepath=…)` → `BuildError` → 500. Now uses `serve_project_file` (verified: page renders 200 with the image)
+- **Per-tab stats**: the cards under the project name showed electronics numbers on every tab. Now each tab has its own block — Electrical shows line-item breakdown (Total / DNP / Placement) and quantity breakdown (Total / DNP / Placement); Mechanical/PCB/3D show their own line-item + quantity counts. A small JS swaps the block with the active tab
+- **Junk BOM rows skipped**: electrical BOM rows with no designator, no value AND no footprint are silently dropped instead of polluting the BOM (unit test added)
+
+### ❌ Mistakes we made (and learned from)
+
+1. Duplicating the create-project form in two templates with different fields — one modal must be a shared include, or the two will drift apart.
+2. Jinja: `tab_stats.print3d` fails — dict keys must use `tab_stats['3dprint']` when the key isn't an exact identifier; caught by the isolated verification run, not the unit tests.
+
 ### ✅ Setup page reworked (same session)
 
 - Setup now collects **company name** (required) + **optional prefix** — blank prefix auto-derives from the name (`Sakthi Electronics` → `SA`), with a live preview in the form

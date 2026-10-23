@@ -114,6 +114,8 @@ body {
     border-radius: 10px;
 
     border: 1px solid #ddd;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 
@@ -146,18 +148,45 @@ body {
 
 .project-thumbnail {
 
-    width: 90px;
-    height: 90px;
+    width: 140px;
+    height: 140px;
 
     object-fit: cover;
 
-    border-radius: 12px;
+    border-radius: 16px;
 
     border: 1px solid #ddd;
 
     background: white;
 
-    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.project-thumb-placeholder {
+
+    width: 140px;
+    height: 140px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+
+    border: 1px dashed #ccc;
+
+    background: #f8f9fa;
+}
+
+/* Per-tab stats cards under the project name */
+.tab-stats .card {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.tab-stats .card h3 {
+    font-weight: 600;
 }
 
 /* ====================================

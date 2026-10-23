@@ -1,9 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Create Order{% endblock %}
+{% block title %}BOM Consolidation{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Create Purchase Order</h1>
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-1">Consolidate BOM</h1>
+        <p class="text-muted mb-0">
+            Pick projects and board quantities → all BOMs get consolidated into one list →
+            create a purchase order from the result.
+        </p>
+    </div>
+    <a href="{{ url_for('orders.orders') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-list-ul"></i> View Purchase Orders
+    </a>
+</div>
 
 <!-- All Items to Order (across inventory) -->
 {% set total_to_order = (items_to_order|length) + (mech_items|length) + (pcb_items|length) + (prn_items|length) %}
@@ -191,7 +202,7 @@
                     <strong>Total Quantity:</strong> <span id="totalSelectedQty">0</span> units
                 </div>
                 <button class="btn btn-primary" onclick="orderSelectedComponents()" id="orderSelectedBtn" disabled>
-                    <i class="bi bi-cart-check"></i> Create Order (Selected + Additional)
+                    <i class="bi bi-cart-check"></i> Create Order from Consolidated BOM
                 </button>
             </div>
         </div>
