@@ -3,31 +3,46 @@
 {% block title %}Purchase Orders{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">Purchase Orders</h1>
-    <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary">
-        <i class="bi bi-collection"></i> Consolidate BOM
-    </a>
+<div class="page-header">
+    <div>
+        <h1>Purchase Orders</h1>
+        <p class="subtitle">Every purchase order, from draft to received.</p>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary">
+            <i class="bi bi-collection"></i> Consolidate BOM
+        </a>
+    </div>
 </div>
 
 
 <!-- Filter pills for existing orders -->
-<div class="d-flex gap-2 mb-3">
-    <button class="btn btn-sm btn-dark filter-btn active" data-filter="all">
-        All Orders <span class="badge bg-secondary ms-1">{{ orders|length }}</span>
+<div class="d-flex gap-2 mb-3 flex-wrap">
+    <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">
+        All <span class="badge ms-1">{{ orders|length }}</span>
     </button>
-    <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="pending">
-        Pending <span class="badge bg-warning text-dark ms-1">{{ orders|selectattr('status', 'equalto', 'pending')|list|length }}</span>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="draft">
+        Draft <span class="badge ms-1">{{ orders|selectattr('status', 'equalto', 'draft')|list|length }}</span>
     </button>
-    <button class="btn btn-sm btn-outline-success filter-btn" data-filter="received">
-        Received <span class="badge bg-success ms-1">{{ orders|selectattr('status', 'equalto', 'received')|list|length }}</span>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="ordered">
+        Ordered <span class="badge ms-1">{{ orders|selectattr('status', 'equalto', 'ordered')|list|length }}</span>
+    </button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="shipped">
+        Shipped <span class="badge ms-1">{{ orders|selectattr('status', 'equalto', 'shipped')|list|length }}</span>
+    </button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="received">
+        Received <span class="badge ms-1">{{ orders|selectattr('status', 'equalto', 'received')|list|length }}</span>
+    </button>
+    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="cancelled">
+        Cancelled <span class="badge ms-1">{{ orders|selectattr('status', 'equalto', 'cancelled')|list|length }}</span>
     </button>
 </div>
 
 <!-- Orders Table -->
-<div class="table-responsive">
-    <table class="table table-hover" id="ordersTable">
-        <thead class="table-dark">
+<div class="table-card">
+<div class="table-responsive fi-table-scroll" id="ordersScroll" data-page-size="50">
+    <table class="table table-hover mb-0" id="ordersTable">
+        <thead>
             <tr>
                 <th>Order ID</th>
                 <th>Supplier</th>
@@ -45,8 +60,12 @@
                 <td><code>{{ order.order_id }}</code></td>
                 <td><strong>{{ order.supplier }}</strong></td>
                 <td>
-                    {% if order.status == 'pending' %}
-                    <span class="badge bg-warning text-dark">Pending</span>
+                    {% if order.status == 'draft' %}
+                    <span class="badge bg-secondary">Draft</span>
+                    {% elif order.status == 'ordered' %}
+                    <span class="badge bg-primary">Ordered</span>
+                    {% elif order.status == 'shipped' %}
+                    <span class="badge bg-info text-dark">Shipped</span>
                     {% elif order.status == 'received' %}
                     <span class="badge bg-success">Received</span>
                     {% else %}
@@ -75,6 +94,7 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
 </div>
 
 
@@ -124,7 +144,7 @@ function viewOrderDetails(orderId) {
                     <div class="col-md-6">
                         <strong>Order ID:</strong> <code>${escapeHtml(order.order_id)}</code><br>
                         <strong>Supplier:</strong> ${escapeHtml(order.supplier)}<br>
-                        <strong>Status:</strong> <span class="badge bg-${order.status === 'pending' ? 'warning' : 'success'}">${escapeHtml(order.status)}</span>
+                        <strong>Status:</strong> <span class="badge bg-${({draft: 'secondary', ordered: 'primary', shipped: 'info text-dark', received: 'success', cancelled: 'danger'})[order.status] || 'secondary'}">${escapeHtml(order.status)}</span>
                     </div>
                     <div class="col-md-6">
                         <strong>Created:</strong> ${order.created_at ? escapeHtml(order.created_at.slice(0,10)) : '—'}<br>
@@ -160,22 +180,23 @@ function confirmReceiveOrder(orderId) {
     }
 }
 
-// Filter buttons
+// Filter buttons — the active pill is styled in style.css; JS only
+// toggles .active and hides rows whose status doesn't match.
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('active', 'btn-dark', 'btn-warning', 'btn-success');
-            b.classList.add('btn-outline-' + (b.dataset.filter === 'pending' ? 'warning' : b.dataset.filter === 'received' ? 'success' : 'secondary'));
-        });
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
         const filter = this.dataset.filter;
-        this.classList.remove('btn-outline-warning', 'btn-outline-success', 'btn-outline-secondary');
-        this.classList.add('active', filter === 'pending' ? 'btn-warning' : filter === 'received' ? 'btn-success' : 'btn-dark');
 
         document.querySelectorAll('#ordersTable tbody tr').forEach(row => {
             if (row.cells && row.cells.length > 0) {
                 row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
             }
         });
+
+        // Re-run the in-block pagination over the filtered rows
+        refreshFiPager(document.getElementById('ordersScroll'));
     });
 });
 </script>

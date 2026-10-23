@@ -272,7 +272,10 @@ class InventoryManager:
     def get_order_summary(self) -> Dict[str, Any]:
         orders = self.file_manager.list_orders()
 
-        pending_orders = [o for o in orders if o.status == "pending"]
+        # Orders that still need attention. Older data used "pending";
+        # current orders move draft → ordered → shipped → received.
+        active_statuses = {"pending", "draft", "ordered", "shipped"}
+        pending_orders = [o for o in orders if o.status in active_statuses]
         received_orders = [o for o in orders if o.status == "received"]
 
         total_pending_items = sum(o.total_items for o in pending_orders)

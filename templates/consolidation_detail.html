@@ -3,17 +3,31 @@
 {% block title %}{{ con.id }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+{% set is_ordered = con.status == 'ordered' and con.order_id %}
+<div class="page-header">
     <div>
-        <h1 class="mb-1">{{ con.id }}</h1>
-        <p class="text-muted mb-0">
+        <h1>{{ con.id }}</h1>
+        <p class="subtitle mb-2">
             {{ con.name }} ·
             {% for p in con.projects %}
                 {{ p.name }} ×{{ p.qty }}{{ ' + ' if not loop.last }}
             {% endfor %}
         </p>
+        <div class="d-flex gap-2 flex-wrap">
+            <span class="chip">
+                <i class="bi bi-list-ul"></i> {{ lines|length }} line(s)
+            </span>
+            <span class="chip">
+                <i class="bi bi-cart"></i> {{ lines|sum(attribute='to_order') }} unit(s) to order
+            </span>
+            {% if is_ordered %}
+            <span class="chip chip-success"><i class="bi bi-check-circle"></i> Ordered</span>
+            {% else %}
+            <span class="chip">Draft</span>
+            {% endif %}
+        </div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <a href="{{ url_for('orders.consolidation_export', consolidation_id=con.id) }}"
            class="btn btn-outline-secondary">
             <i class="bi bi-download"></i> Download CSV
@@ -24,42 +38,78 @@
     </div>
 </div>
 
-<form method="POST" action="{{ url_for('orders.consolidation_set_vendors', consolidation_id=con.id) }}">
+{% if is_ordered %}
+<div class="alert alert-success d-flex align-items-center gap-2">
+    <i class="bi bi-check-circle-fill"></i>
+    <div>
+        Ordered — <strong>{{ con.order_id }}</strong>.
+        <a href="{{ url_for('orders.order_tracking') }}" class="alert-link">Track these orders</a>.
+        Create a new consolidation to order more parts.
+    </div>
+</div>
+{% endif %}
+
+{% if not lines %}
+<div class="alert alert-info">This consolidation has no line items.</div>
+{% else %}
+<form method="POST" id="consolidationForm"
+      action="{{ url_for('orders.consolidation_set_vendors', consolidation_id=con.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div class="card shadow-sm mb-3">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <div class="table-responsive fi-table-scroll" id="conScroll" data-page-size="50">
                 <table class="table table-sm table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 34px;">
+                                <input type="checkbox" id="selectAllLines" class="form-check-input line-select"
+                                       title="Select all lines" aria-label="Select all lines">
+                            </th>
                             <th>#</th>
                             <th>Component</th>
-                            <th>Footprint</th>
+                            <th>Spec</th>
                             <th>MPN</th>
                             <th>References (per project)</th>
                             <th class="text-end">To Order</th>
-                            <th>Vendor</th>
+                            <th style="min-width: 150px;">Vendor</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for comp in con.components %}
+                        {% for line in lines %}
                         <tr>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input line-select" name="sel_{{ line.index }}">
+                            </td>
                             <td>{{ loop.index }}</td>
-                            <td class="fw-semibold">{{ comp.value }}</td>
-                            <td class="small text-muted">{{ comp.footprint }}</td>
-                            <td class="small text-muted">{{ comp.mpn }}</td>
+                            <td class="fw-semibold">
+                                {{ line.name }}
+                                {% if line.category != 'electrical' %}
+                                <span class="badge bg-light text-dark border ms-1">{{ line.category }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ line.spec or '—' }}</td>
+                            <td class="small text-muted">{{ line.mpn or '—' }}</td>
                             <td class="small text-muted">
-                                {% for ref in comp.project_references %}
+                                {% for ref in line.project_references %}
                                     {{ ref.project }}: {{ ref.reference }}{{ '<br>'|safe if not loop.last }}
                                 {% endfor %}
                             </td>
-                            <td class="text-end fw-bold">{{ comp.to_order }}</td>
-                            <td style="min-width: 150px;">
-                                <select class="form-select form-select-sm" name="vendor_{{ loop.index0 }}">
+                            <td class="text-end">
+                                <input type="number" class="form-control form-control-sm line-qty"
+                                       name="qty_{{ line.index }}"
+                                       value="{{ line.to_order }}"
+                                       min="0" step="1"
+                                       title="Change this quantity, then Save — plans change"
+                                       {% if is_ordered %}disabled{% endif %}>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm"
+                                        name="vendor_{{ line.index }}"
+                                        {% if is_ordered %}disabled{% endif %}>
                                     <option value="">—</option>
                                     {% for v in vendors %}
-                                    <option value="{{ v.name }}" {{ 'selected' if comp.vendor == v.name }}>
+                                    <option value="{{ v.name }}" {{ 'selected' if line.vendor == v.name }}>
                                         {{ v.name }}
                                     </option>
                                     {% endfor %}
@@ -73,17 +123,63 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-outline-primary">
-        <i class="bi bi-save"></i> Save Vendors
-    </button>
+    <div class="toolbar-card">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <select class="form-select form-select-sm" id="bulkVendor"
+                    style="width:auto; min-width: 200px;"
+                    {% if is_ordered %}disabled{% endif %}>
+                <option value="">— Assign a vendor to selected lines —</option>
+                {% for v in vendors %}
+                <option value="{{ v.name }}">{{ v.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="applyBulkVendorBtn"
+                    {% if is_ordered %}disabled{% endif %}
+                    title="Tick the lines above, pick a vendor, then click here">
+                <i class="bi bi-people"></i> Apply &amp; Save
+            </button>
+            <span class="text-muted small d-none d-md-inline">Tick multiple lines to set one vendor on all of them at once.</span>
+        </div>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <button type="submit" class="btn btn-outline-primary" {% if is_ordered %}disabled{% endif %}>
+                <i class="bi bi-save"></i> Save Vendors &amp; Quantities
+            </button>
+            {% if is_ordered %}
+            <span class="text-muted small">Already ordered — see Order Tracking.</span>
+            {% else %}
+            <button type="submit" class="btn btn-success"
+                    formaction="{{ url_for('orders.consolidation_create_orders', consolidation_id=con.id) }}"
+                    title="Creates one purchase order per vendor">
+                <i class="bi bi-cart-check"></i> Create Orders (one per vendor)
+            </button>
+            <span class="text-muted small">Vendors and quantities above are used automatically.</span>
+            {% endif %}
+        </div>
+    </div>
 </form>
+{% endif %}
+{% endblock %}
 
-<form method="POST"
-      action="{{ url_for('orders.consolidation_create_orders', consolidation_id=con.id) }}"
-      class="mt-2">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-success">
-        <i class="bi bi-cart-check"></i> Create Orders (one per vendor)
-    </button>
-</form>
+{% block scripts %}
+<script>
+    // Bulk vendor: tick multiple lines, pick one vendor, one click sets
+    // it on every selected line and saves the form (vendors + quantities).
+    document.getElementById('applyBulkVendorBtn').addEventListener('click', function () {
+        const vendor = document.getElementById('bulkVendor').value;
+        if (!vendor) { alert('Pick a vendor from the dropdown first'); return; }
+        const selected = document.querySelectorAll('.line-select:checked');
+        if (!selected.length) { alert('Tick at least one line first'); return; }
+        selected.forEach(cb => {
+            const select = cb.closest('tr').querySelector('select[name^="vendor_"]');
+            if (select && !select.disabled) select.value = vendor;
+        });
+        document.getElementById('consolidationForm').requestSubmit();
+    });
+
+    document.getElementById('selectAllLines').addEventListener('change', function () {
+        document.querySelectorAll('.line-select').forEach(cb => {
+            if (!cb.disabled) cb.checked = this.checked;
+        });
+    });
+</script>
 {% endblock %}

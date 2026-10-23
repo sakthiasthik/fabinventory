@@ -3,10 +3,10 @@
 {% block title %}BOM Consolidation{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+<div class="page-header">
     <div>
-        <h1 class="mb-1">Consolidate BOM</h1>
-        <p class="text-muted mb-0">
+        <h1>Consolidate BOM</h1>
+        <p class="subtitle">
             Pick projects and board quantities → all BOMs get consolidated into one list →
             create a purchase order from the result.
         </p>
@@ -75,6 +75,12 @@
                                href="{{ url_for('orders.consolidation_export', consolidation_id=con.id) }}">
                                 <i class="bi bi-download"></i> CSV
                             </a>
+                            {% if con.order_id %}
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="{{ url_for('orders.order_tracking') }}">
+                                <i class="bi bi-truck"></i> Track
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -113,10 +119,9 @@
 
 <!-- Project Selection Card -->
 <div class="card mb-4">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0">
-            <i class="bi bi-folder2-open"></i> Select Project to View Components
-        </h5>
+    <div class="card-header d-flex align-items-center gap-2">
+        <span class="header-icon"><i class="bi bi-folder2-open"></i></span>
+        <h5 class="mb-0">Select Project to View Components</h5>
     </div>
     <div class="card-body">
         <div class="row">
@@ -179,10 +184,10 @@
                     <button class="btn btn-sm btn-success me-2" onclick="orderAllFromProject()">
                         <i class="bi bi-cart-plus"></i> Order All Components
                     </button>
-                    <button class="btn btn-sm btn-info me-2" onclick="exportProjectComponents()">
+                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="exportProjectComponents()">
                         <i class="bi bi-download"></i> Export to CSV
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="showAddComponentModal()">
+                    <button class="btn btn-sm btn-outline-primary" onclick="showAddComponentModal()">
                         <i class="bi bi-plus-circle"></i> Add Custom Component
                     </button>
                 </div>
@@ -357,32 +362,57 @@
 
     // Save the current consolidated list as a record with a sequence number
     async function saveConsolidation() {
-        if (!currentProjectComponents.length) {
-            alert('Nothing to save — add projects first');
+        // Hand-added custom components must be saved too — posting only
+        // currentProjectComponents silently dropped them from the record
+        // and from every order created out of it.
+        const custom = additionalComponents.map(c => ({
+            id: `CUSTOM-${c.id}`,
+            internal_id: `CUSTOM-${c.id}`,
+            category: 'custom',
+            label: c.value,
+            value: c.value,
+            footprint: c.footprint || '',
+            mpn: c.mpn || '',
+            qty: c.qty,
+            total_required: c.qty,
+            to_order: c.qty,
+            current_stock: 0,
+            project_references: [],
+        }));
+        const components = [...currentProjectComponents, ...custom];
+
+        if (!components.length) {
+            alert('Nothing to save — add projects or custom components first');
             return;
         }
-        const defaultName = selectedProjects.map(p => p.name).join(' + ');
+        const defaultName =
+            selectedProjects.map(p => p.name).join(' + ') || 'Custom order';
         const name = prompt('Name this consolidation:', defaultName);
         if (!name) return;
 
-        const response = await fetch('/api/save-consolidation', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            body: JSON.stringify({
-                name: name,
-                projects: selectedProjects,
-                components: currentProjectComponents,
-            })
-        });
-        const data = await response.json();
-        if (data.success) {
-            alert(`Consolidation saved as ${data.consolidation_id}`);
-            location.reload();
-        } else {
-            alert('Failed to save: ' + (data.error || 'Unknown error'));
+        try {
+            const response = await fetch('/api/save-consolidation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    name: name,
+                    projects: selectedProjects,
+                    components: components,
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`Consolidation saved as ${data.consolidation_id}`);
+                location.reload();
+            } else {
+                alert('Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            // A failed fetch used to be invisible: no try/catch at all
+            alert('Failed to save: ' + err.message);
         }
     }
 
@@ -399,7 +429,11 @@
         const items = (con.components || [])
             .map(comp => ({
                 internal_id: comp.id || comp.internal_id,
-                qty: comp.to_order || comp.total_required || 0
+                // to_order = 0 is a real value (part fully stocked);
+                // `|| total_required` would order the whole requirement.
+                qty: (comp.to_order === undefined || comp.to_order === null)
+                    ? (comp.total_required || 0)
+                    : comp.to_order
             }))
             .filter(item => item.qty > 0);
 
@@ -768,6 +802,12 @@
             ).value
         
         ) || 0;
+
+        // Manual qty edits must be written back so Save Consolidation
+        // (and the record it creates) uses the edited quantity, not the
+        // originally computed to_order.
+        const comp = currentProjectComponents.find(c => c.id === id);
+        if (comp) comp.to_order = qty;
 
         const checkbox = document.querySelector(
 

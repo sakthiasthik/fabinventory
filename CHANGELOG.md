@@ -6,6 +6,119 @@
 
 ---
 
+## 2026-10-23 — UI round 2: galleries & lightbox, paged BOM blocks, vendor IDs/edit, consolidation editing
+
+### ✅ What changed
+
+- **Projects page** — bigger project blocks, bigger image area (250px) showing the **full image** (`object-fit: contain`, never cropped); clicking an image opens it in a **lightbox overlay** (arrow keys / Esc, counter, caption).
+- **Project detail** — the image box is now a big (300px, contain) **slideshow** of all project images (cover + PCB gallery, indicators + arrows). Clicking any slide opens the lightbox at that slide; the PCB tab preview is wired to the same lightbox.
+- **Fixed-length BOM blocks with in-block pagination** — project BOM (electrical), mechanical, 3D print, master inventory, purchase orders and consolidation detail tables now live in a fixed-height scrollable block with sticky headers and a pager (25 / 50 / 100 / All rows, Prev/Next, "Showing x–y of n"). Search and order filters re-run the pager. Default 50 rows per page.
+- **Inventory** — ID column is now wide and non-wrapping (`min-width: 130px`) so internal IDs are easy to read.
+- **Vendors** — every vendor gets a **Vendor ID** (`VEN-001…`, auto-assigned, editable, unique; existing vendors are backfilled); **Edit** button opens a modal (name, ID, contact, email, website, notes) posting to the new `/vendors/update` route; renames follow through into saved consolidations that reference the vendor by name; adding a duplicate name is refused with a warning.
+- **Consolidation detail** — quantities are now **editable per line** (`to_order` inputs). Saved quantities are applied by *both* Save and Create Orders, so a quantity changed right before ordering is never silently dropped. **Bulk vendor assignment**: tick multiple lines (or Select all), pick one vendor, click "Apply & Save" — one vendor on many lines at once.
+- Search boxes on the BOM and inventory pages switched from `keyup` to `input`, so paste / clear / autofill also filter.
+
+### ❌ Mistakes we made (and learned from)
+
+1. **Jinja `{% set %}` inside a `{% for %}` loop does not persist outside the loop** — the gallery list I accumulated that way silently kept only the first image, so the slideshow rendered a single image. Fixed with `namespace(gallery=[])` + `{% set ns.gallery = ... %}`. *The test client caught the HTML; the browser check caught the symptom. Loop accumulation in Jinja always needs a namespace object.*
+2. I tried to syntax-check JavaScript with Python's `ast.parse` — obviously wrong tool; the real JS validator is the browser pass.
+3. Hit the template-cache lesson again: the first re-run of browser checks still showed the old gallery because the temp server (non-debug Flask) cached the pre-fix template. Restarting the port owner fixed it.
+
+### 🔧 Fixes done
+
+- Gallery list built via Jinja `namespace` (main gallery + PCB tab gallery).
+- `_apply_line_edits()` helper shared by Save Vendors and Create Orders; `_ensure_vendor_ids()` helper + `/vendors/update` route with name/id uniqueness checks.
+- New regression tests: `test_vendor_ids_are_assigned_uniquely`, `test_line_edits_apply_vendors_and_quantities`, `test_line_edits_ignore_junk_quantities`.
+
+### ✅ Verification
+
+- **56 unit tests pass** · **29/29 browser checks pass** on a seeded temp data folder (64-row BOM so pagination really paginates, 3-image gallery, one order per lifecycle status) · 13 page renders 200 · 9-page phone sweep at 400px: zero console errors, zero page errors, zero horizontal scroll · lightbox keyboard/close, pager next/page-size, qty edit persistence, bulk vendor, vendor edit round-trip, order filter pills all exercised in Chromium.
+
+---
+
+## 2026-10-23 — Visible UI refresh (design system) + order-status display fix
+
+### ✅ What changed
+
+- **New design system** appended to `static/css/style.css`: indigo/slate palette as CSS tokens, system-font type scale, 14px cards with soft shadows, pill tabs, rounded inputs/buttons, refined tables, badges, alerts, modals, empty states and a small footer. Legacy hover-lift-on-every-card and harsh `!important` table headers overridden.
+- **Navbar**: sticky dark navy bar, gradient brand tile, pill links with a clear active state, rounded sync button.
+- **Dashboard**: page header with subtitle, four icon stat cards (accent rail, icon tile, arrow on hover), styled "needs ordering" table, new empty state.
+- **Projects**: responsive card grid — image/placeholder, description, component/qty chips, full-width Open button, icon-only delete with confirmation.
+- **Inventory**: pill category tabs, toolbar card (actions + search), table card, friendly empty state.
+- **Order pages**: `/orders` gets a page header, lifecycle filters (Draft / Ordered / Shipped / Received / Cancelled) and correct status badges; Order Tracking gets page header, status-accent cards and a proper empty state.
+- **BOM Consolidation**: neutral "Select Project" card header (was a loud cyan block), quieter quick-action buttons, shared header/chip styling; saved-consolidation cards inherit the new look.
+- **Consolidation detail**: summary chips instead of plain badges.
+- **Vendors**: page header, table card, empty state; mailto links preserved.
+- **Login**: matched the dark indigo theme with the brand tile and primary Sign In button.
+- **Status fix**: the Purchase Orders page displayed every status other than `received` as **Cancelled** (including real draft/ordered/shipped orders). It now renders the actual lifecycle status and filters by it. Dashboard "Pending Orders" counted only the legacy `pending` status (never written by current code); it now counts `draft`, `ordered`, `shipped` (and legacy `pending`).
+- **Verification:** 53 unit tests pass · 13 page loads (9 desktop at 1440px + 4 phone at 400px) with zero console/page errors and zero horizontal page scroll · computed styles confirm the new tokens (navbar `rgb(11,18,32)`, stat radius `14px`, pill tabs `rgb(238,241,247)`).
+
+### ❌ Mistakes we made (and learned from)
+
+1. **My first CSS append silently did nothing.** `.pcb-image-placeholder` was missing its closing `}` in the legacy file; the new section was parsed as declarations inside that rule, so browsers dropped it. The template render check passed because it only proves HTML/Jinja. *Caught only by asserting computed styles in Playwright (`body` background was `none`, stat radius `0px`). CSS changes need a computed-style assertion, not a screenshot alone.*
+2. **`kill <shell pid>` did not kill the dev server.** The Bash wrapper PID exited while its Python child kept port 9123; the next "restarted" server could not bind, so I re-ran checks against the old process and stale templates. *Kill the listening PID (or the process group) and verify the port is free before restarting.*
+3. The `/orders` "everything is Cancelled" bug had been there since the new lifecycle statuses were introduced; only the seeded screenshots exposed it. *Seed realistic statuses in UI checks, not just empty pages.*
+
+### 🔧 Fixes done
+
+- Closed the missing `.pcb-image-placeholder` brace — CSS now parses as one balanced sheet (194 `{` / 194 `}`).
+- `/orders`: correct status chain + filters; filter pills styled via `.filter-btn` and a one-line `.active` toggle; detail-modal badge mapping updated.
+- `InventoryManager.get_order_summary()`: active-status set replaces the legacy `pending`-only check; regression test `test_order_summary_counts_active_statuses`.
+- Temporary UI server now started detached, with the port-owner PID verified before checks.
+
+### 🐛 Errors hit & solved
+
+| Error | Cause | Fix |
+|---|---|---|
+| Entire new CSS section ignored (navbar old colour, no stat cards) | missing `}` before the new section nested it inside `.pcb-image-placeholder` | closed the rule; re-ran computed-style checks |
+| Browser checks showed old UI after "restart" | killed the nohup wrapper, Python child kept port 9123 | killed the listening PID, verified `port free`, restarted |
+
+### ⏳ Still open (found while styling)
+
+- No UI action moves an order `draft → ordered → shipped`; `receive_order` only accepts `shipped → received` and the Receive button only appears for legacy `pending`. Real orders therefore cannot reach "received" from the UI yet. Recorded in `BUG.md`.
+
+---
+
+## 2026-10-23 — Max-effort code review (12 findings) + fixes + UI/UX pass
+
+### ✅ What changed
+
+- Ran the `code-review` skill at max effort over the **entire uncommitted changeset** (~2,000-line diff): 10 finder angles → one verifier per candidate → final sweep. ~25 min, 8 sub-agents.
+- **12 findings survived verification, and I re-read all 12 in the code — all real.** Top 3 were money/data bugs: fully stocked lines ordered at full quantity, the PCB gallery dropped on restart, and a second "Create Orders" click duplicating every PO.
+- **All 12 are now fixed locally** (not committed — commit gate), each with a regression test where testable. Per-finding fix table in `BUG.md`.
+- **Verification:** 52 unit tests pass · 26 automated browser checks pass against a **temporary** data folder · 14-page headless crawl clean (the `/git-settings` 500 in that crawl is the harness only: `git_manager` was deliberately disabled so verification could never commit into the source repo).
+- **UI/UX pass:** active navbar highlighting; success/info flashes auto-dismiss after 5s (warnings/errors stay); consolidation detail gained summary chips (lines / units / Draft-Ordered); ordered consolidations show a banner, disabled controls and a Track button; PCB delete is per-image with confirmation; vendor rows show mailto links and `—` instead of blanks.
+
+### ❌ Mistakes we made (and learned from)
+
+1. **I claimed the per-tab stats fix was "verified" — it wasn't.** The swap script sits at `project_details.html:167-179`, *before* `#projectTabs` exists at line 188, so zero listeners attach and the cards never change. My test-client check only proved the page renders; it cannot catch JS execution-order bugs. *Lesson: a UI feature is not verified until the JS is exercised in a browser.*
+2. `save_project` hand-builds `meta_data` and omitted `pcb_images` — the same class of bug as `save_order` dropping fields earlier today. *Dataclass `to_dict()` must be the single serializer.*
+3. Splitting the consolidation page into three separate `<form>`s created a hidden dependency: vendor dropdowns live in "Save Vendors" while "Create Orders" posts its own form, so unsaved vendor changes are silently ignored.
+4. **The app's `GitManager` still targets the source repo**, so verification had to run with `git_manager` disabled by hand — otherwise every test order would have created a real commit. That is the 2026-10-16 bug, still open, and it means testing the app can never be done naively against the repo checkout.
+
+### 🔧 Fixes done
+
+- **#1** `_order_qty()` — only a *missing* `to_order` falls back to `total_required`; `0` stays `0`. Manual qty edits now write back to `currentProjectComponents`; the same falsy-zero bug in `createOrderFromConsolidation` (JS) fixed too.
+- **#2** `save_project` persists `pcb_images` — the gallery survives restarts.
+- **#3** Create Orders writes `status` / `order_id` / `ordered_at` back and refuses to run twice; the button disappears once ordered.
+- **#4** Per-image PCB delete (`image` form field, membership-checked) with a confirm per slide.
+- **#5** `_component_fields()` gives every category a readable name/spec/MPN in the detail table **and** the CSV.
+- **#6** Vendor selects and Create Orders share one form; the route applies posted vendors before splitting.
+- **#7** Custom line items are included in saved consolidations; save failures surface instead of failing silently.
+- **#8** Stats-swap script now runs on `DOMContentLoaded` (it sat before `#projectTabs`).
+- **#9** Vendor delete uses `data-name` + a listener (apostrophes work, no injection).
+- **#10** Consolidation id is validated before any PO is created; `FileManager` rejects bad ids on load/save.
+- **#11** `_merge_tree()` merges setup leftovers recursively and keeps clashes as `-migrated-N`.
+- **#12** `FileManager.create_consolidation()` assigns the sequence under the id lock.
+
+### 🐛 Errors hit & solved
+
+| Error | Cause | Fix |
+|---|---|---|
+| Background "wait for review" shell never exited | `pgrep -f 'code-review'` matched its own command line → infinite spin loop | killed via TaskStop; wait on the task notification instead |
+
+---
+
 ## 2026-10-23 — Order-flow bug fixes (all 4 bugs from BUG.md)
 
 ### ✅ What changed

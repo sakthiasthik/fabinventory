@@ -183,7 +183,28 @@ def vendors_page():
     if not state.init_app():
         return redirect(url_for('main.setup'))
     vendors = state.file_manager.list_vendors()
+    # Backfill IDs for vendors created before vendor IDs existed
+    if _ensure_vendor_ids(vendors):
+        state.file_manager.save_vendors(vendors)
     return render_template('vendors.html', vendors=vendors)
+
+
+def _ensure_vendor_ids(vendors) -> bool:
+    """Assign a VEN-001… id to every vendor that lacks one.
+
+    Returns True if anything was assigned (caller persists)."""
+    existing = {v.get('id') for v in vendors if v.get('id')}
+    changed = False
+    for v in vendors:
+        if v.get('id'):
+            continue
+        num = 1
+        while f'VEN-{num:03d}' in existing:
+            num += 1
+        v['id'] = f'VEN-{num:03d}'
+        existing.add(v['id'])
+        changed = True
+    return changed
 
 
 @orders_bp.route('/vendors/add', methods=['POST'])
@@ -195,18 +216,80 @@ def add_vendor():
         return redirect(url_for('orders.vendors_page'))
 
     vendors = state.file_manager.list_vendors()
+    if any(v.get('name') == name for v in vendors):
+        flash(f'Vendor "{name}" already exists — use Edit to change it', 'warning')
+        return redirect(url_for('orders.vendors_page'))
+
     vendor = {
+        'id': (request.form.get('id') or '').strip() or None,
         'name': name,
         'contact': (request.form.get('contact') or '').strip(),
         'email': (request.form.get('email') or '').strip(),
         'website': _normalize_link(request.form.get('website', '')),
         'notes': (request.form.get('notes') or '').strip(),
     }
-    # Update if the same name exists, otherwise append
-    vendors = [v for v in vendors if v.get('name') != name]
+    if vendor['id'] and any(v.get('id') == vendor['id'] for v in vendors):
+        flash(f'Vendor ID "{vendor["id"]}" is already taken', 'error')
+        return redirect(url_for('orders.vendors_page'))
+
     vendors.append(vendor)
+    _ensure_vendor_ids(vendors)
     state.file_manager.save_vendors(vendors)
-    flash(f'Vendor "{name}" saved', 'success')
+    flash(f'Vendor "{name}" saved (ID {vendor["id"]})', 'success')
+    return redirect(url_for('orders.vendors_page'))
+
+
+@orders_bp.route('/vendors/update', methods=['POST'])
+@login_required
+def update_vendor():
+    """Edit an existing vendor. The old name arrives as a hidden field
+    (names may contain characters that don't survive URL paths)."""
+    old_name = (request.form.get('old_name') or '').strip()
+    new_name = (request.form.get('name') or '').strip()
+    if not old_name or not new_name:
+        flash('Vendor name is required', 'error')
+        return redirect(url_for('orders.vendors_page'))
+
+    vendors = state.file_manager.list_vendors()
+    vendor = next((v for v in vendors if v.get('name') == old_name), None)
+    if not vendor:
+        flash(f'Vendor "{old_name}" not found', 'error')
+        return redirect(url_for('orders.vendors_page'))
+
+    if any(v.get('name') == new_name and v is not vendor for v in vendors):
+        flash(f'A vendor named "{new_name}" already exists', 'error')
+        return redirect(url_for('orders.vendors_page'))
+
+    new_id = (request.form.get('id') or '').strip() or vendor.get('id')
+    if any(v.get('id') == new_id and v is not vendor for v in vendors):
+        flash(f'Vendor ID "{new_id}" is already taken', 'error')
+        return redirect(url_for('orders.vendors_page'))
+
+    # Lines in saved consolidations reference the vendor BY NAME, so a
+    # rename must follow through to those records too.
+    if new_name != old_name:
+        for con in state.file_manager.list_consolidations():
+            changed = False
+            for comp in con.get('components', []):
+                if (comp.get('vendor') or '').strip() == old_name:
+                    comp['vendor'] = new_name
+                    changed = True
+            if (con.get('vendor') or '').strip() == old_name:
+                con['vendor'] = new_name
+                changed = True
+            if changed:
+                state.file_manager.save_consolidation(con)
+
+    vendor.update({
+        'id': new_id,
+        'name': new_name,
+        'contact': (request.form.get('contact') or '').strip(),
+        'email': (request.form.get('email') or '').strip(),
+        'website': _normalize_link(request.form.get('website', '')),
+        'notes': (request.form.get('notes') or '').strip(),
+    })
+    state.file_manager.save_vendors(vendors)
+    flash(f'Vendor "{new_name}" updated', 'success')
     return redirect(url_for('orders.vendors_page'))
 
 
@@ -223,6 +306,76 @@ def delete_vendor(name):
 
 # ── Consolidation detail: per-line vendors → per-vendor orders ─────
 
+def _component_fields(comp: dict):
+    """Return ``(name, spec, mpn)`` for any component category.
+
+    Consolidation records store the raw dicts emitted by
+    ``/api/project/<name>/components``, and those fields differ per
+    category — reading only ``value``/``footprint`` leaves PCB and
+    3D-print lines blank.
+    """
+    category = comp.get('category', 'electrical')
+    if category == 'mechanical':
+        name = comp.get('part_name') or comp.get('value', '')
+        spec = comp.get('value', '') if comp.get('part_name') else ''
+    elif category == 'pcb':
+        name = f"PCB: {comp.get('board_name', '')}" if comp.get('board_name') else ''
+        spec = ''
+    elif category == '3dprint':
+        name = comp.get('part_name', '')
+        spec = comp.get('material', '')
+    else:  # electrical and custom line items
+        name = comp.get('value', '')
+        spec = comp.get('footprint', '')
+
+    if not name:
+        name = comp.get('label') or comp.get('id', '')
+    return name, spec, comp.get('mpn', '')
+
+
+def _order_qty(comp: dict) -> int:
+    """Quantity to order for one consolidation line.
+
+    ``to_order == 0`` is a valid value (the part is fully stocked) and
+    must never fall back to ``total_required`` — only a *missing* value
+    falls back.
+    """
+    raw = comp.get('to_order')
+    if raw is None:
+        raw = comp.get('total_required') or 0
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _apply_line_edits(record, form) -> bool:
+    """Apply posted per-line vendor and quantity edits to a consolidation.
+
+    The detail page posts ``vendor_{i}`` and ``qty_{i}`` for every line;
+    this is shared by Save and Create Orders so a quantity change made
+    right before ordering is never silently dropped. Returns True when
+    anything changed (the caller persists the record)."""
+    changed = False
+    for i, comp in enumerate(record.get('components', [])):
+        posted_vendor = form.get(f'vendor_{i}')
+        if posted_vendor is not None:
+            new = posted_vendor.strip()
+            if comp.get('vendor') != new:
+                comp['vendor'] = new
+                changed = True
+
+        qty_raw = form.get(f'qty_{i}')
+        if qty_raw is not None and qty_raw != '':
+            try:
+                qty = max(0, int(float(qty_raw)))
+            except (TypeError, ValueError):
+                continue  # junk input — keep the old quantity
+            if comp.get('to_order') != qty:
+                comp['to_order'] = qty
+                changed = True
+    return changed
+
 @orders_bp.route('/order/consolidation/<consolidation_id>')
 @login_required
 def consolidation_detail(consolidation_id):
@@ -237,8 +390,26 @@ def consolidation_detail(consolidation_id):
         return redirect(url_for('orders.create_order'))
 
     vendors = state.file_manager.list_vendors()
+
+    # Consolidation records store raw per-category component dicts
+    # (value/footprint, part_name/value, board_name, material…), so
+    # rendering only value/footprint left PCB and 3D lines anonymous.
+    lines = []
+    for i, comp in enumerate(record.get('components', [])):
+        name, spec, mpn = _component_fields(comp)
+        lines.append({
+            'index': i,
+            'name': name,
+            'spec': spec,
+            'mpn': mpn,
+            'category': comp.get('category', 'electrical'),
+            'project_references': comp.get('project_references', []),
+            'to_order': comp.get('to_order') or 0,
+            'vendor': comp.get('vendor', ''),
+        })
+
     return render_template(
-        'consolidation_detail.html', con=record, vendors=vendors
+        'consolidation_detail.html', con=record, vendors=vendors, lines=lines
     )
 
 
@@ -250,12 +421,9 @@ def consolidation_set_vendors(consolidation_id):
         flash(f'Consolidation {consolidation_id} not found', 'error')
         return redirect(url_for('orders.create_order'))
 
-    for i, comp in enumerate(record.get('components', [])):
-        comp['vendor'] = (request.form.get(f'vendor_{i}') or '').strip()
-    record['components'][:] = record.get('components', [])
-
+    _apply_line_edits(record, request.form)
     state.file_manager.save_consolidation(record)
-    flash('Vendors saved on all line items', 'success')
+    flash('Vendors and quantities saved on all line items', 'success')
     return redirect(url_for('orders.consolidation_detail', consolidation_id=consolidation_id))
 
 
@@ -268,11 +436,28 @@ def consolidation_create_orders(consolidation_id):
         flash(f'Consolidation {consolidation_id} not found', 'error')
         return redirect(url_for('orders.create_order'))
 
+    if record.get('status') == 'ordered' and record.get('order_id'):
+        flash(
+            f'{consolidation_id} already has order(s) {record["order_id"]} — '
+            'create a new consolidation for more parts',
+            'warning',
+        )
+        return redirect(url_for(
+            'orders.consolidation_detail', consolidation_id=consolidation_id
+        ))
+
+    # Vendor dropdowns, quantity inputs and this button share one form,
+    # so fresh selections arrive with the request. Persist them before
+    # splitting — a qty the user just changed must not be silently
+    # replaced by the saved value.
+    if _apply_line_edits(record, request.form):
+        state.file_manager.save_consolidation(record)
+
     groups = {}
     unassigned = 0
     for comp in record.get('components', []):
         vendor = (comp.get('vendor') or '').strip()
-        qty = int(comp.get('to_order') or comp.get('total_required') or 0)
+        qty = _order_qty(comp)
         if qty <= 0:
             continue
         if vendor:
@@ -300,6 +485,20 @@ def consolidation_create_orders(consolidation_id):
         )
         if order:
             order_ids.append(order.order_id)
+
+    # Write the outcome back to the record (api.py already did this for
+    # single orders). Without it the record stayed Draft and a second
+    # click created a duplicate set of POs.
+    if order_ids:
+        record['status'] = 'ordered'
+        record['order_id'] = ', '.join(order_ids)
+        record['order_ids'] = order_ids
+        record['ordered_at'] = datetime.now().isoformat()
+        if len(groups) == 1:
+            only_vendor = next(iter(groups))
+            record['vendor'] = only_vendor
+            record['vendor_link'] = vendors.get(only_vendor, {}).get('website', '')
+        state.file_manager.save_consolidation(record)
 
     if state.git_manager:
         state.git_manager.commit(
@@ -341,11 +540,8 @@ def consolidation_export(consolidation_id):
             refs_by_project.setdefault(ref.get('project', ''), []).append(
                 ref.get('reference', '')
             )
-        row = [
-            comp.get('value', ''),
-            comp.get('footprint', ''),
-            comp.get('mpn', ''),
-        ]
+        name, spec, mpn = _component_fields(comp)
+        row = [name, spec, mpn]
         row += [
             ', '.join(r for r in refs_by_project.get(n, []) if r)
             for n in project_names

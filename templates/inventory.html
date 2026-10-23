@@ -3,7 +3,12 @@
 {% block title %}Inventory{% endblock %}
 
 {% block content %}
-<h1 class="mb-3">Master Inventory</h1>
+<div class="page-header">
+    <div>
+        <h1>Master Inventory</h1>
+        <p class="subtitle">Aggregated demand across every project, with live stock levels.</p>
+    </div>
+</div>
 
 <!-- ========================================
      CATEGORY TABS
@@ -38,8 +43,8 @@
 <!-- ========================================
      TOOLBAR
 ======================================== -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex gap-2 align-items-center">
+<div class="toolbar-card">
+    <div class="d-flex gap-2 align-items-center flex-wrap">
         {% if active_tab == 'electrical' %}
         <button class="btn btn-primary" onclick="showAddInventoryModal()">
             <i class="bi bi-plus-circle"></i> Add Component
@@ -50,18 +55,19 @@
         </button>
     </div>
     <input type="text" id="inventorySearch" class="form-control"
-           placeholder="Search…" style="max-width:220px;">
+           placeholder="Search inventory…" style="max-width:240px;">
 </div>
 
 <!-- ========================================
      INVENTORY TABLE
 ======================================== -->
 {% if inventory %}
-<div class="table-responsive">
-    <table class="table table-striped table-hover" id="inventoryTable">
+<div class="table-card">
+<div class="table-responsive fi-table-scroll" id="inventoryScroll" data-page-size="50">
+    <table class="table table-striped table-hover mb-0" id="inventoryTable">
         <thead>
             <tr>
-                <th>ID</th>
+                <th class="fi-id-col">ID</th>
                 {% if active_tab == 'electrical' %}
                 <th>Value</th>
                 <th>Footprint</th>
@@ -85,7 +91,7 @@
         <tbody>
             {% for item in inventory %}
             <tr>
-                <td><code>{{ item.internal_id }}</code></td>
+                <td class="fi-id-col"><code>{{ item.internal_id }}</code></td>
 
                 {% if active_tab == 'electrical' %}
                 <td><strong>{{ item.value }}</strong></td>
@@ -132,9 +138,12 @@
         </tbody>
     </table>
 </div>
+</div>
 {% else %}
-<div class="alert alert-info">
-    No components in this category. Upload BOMs to projects to build inventory.
+<div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-inboxes"></i></div>
+    <h5>Nothing in this category yet</h5>
+    <p>Upload a BOM in a project and its components will appear here with live stock levels.</p>
 </div>
 {% endif %}
 
@@ -270,11 +279,14 @@ document.querySelectorAll('.edit-stock').forEach(button => {
 });
 
 // ── Search ──────────────────────────────────────────────────
-document.getElementById('inventorySearch').addEventListener('keyup', function() {
+// 'input' (not 'keyup'): also reacts to paste, clear and autofill
+document.getElementById('inventorySearch').addEventListener('input', function() {
     const term = this.value.toLowerCase();
     document.querySelectorAll('#inventoryTable tbody tr').forEach(row => {
         row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
     });
+    // Re-run the in-block pagination over the filtered rows
+    refreshFiPager(document.getElementById('inventoryScroll'));
 });
 
 // ── Add component (electrical only) ─────────────────────────

@@ -282,6 +282,15 @@ def api_create_order():
     consolidation_id = data.get('consolidation_id') or None
     vendor_link = data.get('vendor_link') or None
 
+    # Validate BEFORE creating anything: an unvalidated id used to crash
+    # after the PO existed, leaving a duplicate on retry.
+    if consolidation_id and not state.file_manager.load_consolidation(
+        consolidation_id
+    ):
+        return jsonify({
+            'error': f'Unknown consolidation id: {consolidation_id}'
+        }), 400
+
     if not supplier:
         return jsonify({'error': 'Supplier is required — enter a vendor name'}), 400
 
@@ -360,20 +369,9 @@ def api_save_consolidation():
             'error': 'Nothing to save — add projects and consolidate first'
         }), 400
 
-    # Sequence number: CON-YYYYMM-NNN (count existing records this month)
-    year_month = datetime.now().strftime('%Y%m')
-    max_num = 0
-    for c in state.file_manager.list_consolidations():
-        cid = c.get('id', '')
-        if cid.startswith(f'CON-{year_month}-'):
-            try:
-                max_num = max(max_num, int(cid.rsplit('-', 1)[-1]))
-            except ValueError:
-                pass
-    consolidation_id = f"CON-{year_month}-{max_num + 1:03d}"
-
-    record = {
-        'id': consolidation_id,
+    # Sequence number (CON-YYYYMM-NNN) is assigned inside the file
+    # manager under a lock — computing it here was a read-then-write race.
+    record = state.file_manager.create_consolidation({
         'name': name,
         'created_at': datetime.now().isoformat(),
         'projects': projects,
@@ -382,10 +380,10 @@ def api_save_consolidation():
         'vendor_link': '',
         'status': 'draft',
         'order_id': '',
-    }
-
-    if not state.file_manager.save_consolidation(record):
+    })
+    if not record:
         return jsonify({'error': 'Failed to save consolidation'}), 500
+    consolidation_id = record['id']
 
     if state.git_manager:
         state.git_manager.commit(f"Saved consolidation {consolidation_id}")

@@ -145,6 +145,48 @@ def _normalize_link(link: str) -> str:
     return link
 
 
+def _merge_tree(src: Path, dest_dir: Path) -> list:
+    """Move ``src`` into ``dest_dir`` without ever losing data.
+
+    - Both directories → merge their children recursively.
+    - A name collision (or a file-vs-directory clash) → keep both: the
+      incoming item is stored as ``<name>-migrated-N``.
+
+    Returns the list of renamed destinations so setup can tell the user.
+    """
+    dest = dest_dir / src.name
+
+    # Two same-named project folders are different projects, not two
+    # halves of one tree — keep the incoming project whole under a
+    # collision name instead of mixing their bom/meta files.
+    both_projects = (
+        src.is_dir() and dest.is_dir()
+        and (src / 'meta.json').exists()
+        and (dest / 'meta.json').exists()
+    )
+
+    if src.is_dir() and dest.is_dir() and not both_projects:
+        renamed = []
+        for child in list(src.iterdir()):
+            renamed.extend(_merge_tree(child, dest))
+        try:
+            src.rmdir()
+        except OSError:
+            pass  # leftover unreadable entries are left in place
+        return renamed
+
+    if dest.exists():
+        n = 2
+        while (dest_dir / f"{src.name}-migrated-{n}").exists():
+            n += 1
+        dest = dest_dir / f"{src.name}-migrated-{n}"
+        shutil.move(str(src), str(dest))
+        return [dest]
+
+    shutil.move(str(src), str(dest))
+    return []
+
+
 def _update_env_data_path(new_path: str) -> None:
     """Rewrite DATA_PATH in .env so restarts keep using the new folder."""
     try:
@@ -206,25 +248,22 @@ def setup():
         if new_path != old_path:
             if old_path.exists():
                 if new_path.exists():
-                    # Merge leftovers from an earlier attempt — never crash
-                    # when items already exist on both sides
-                    for item in old_path.iterdir():
-                        dest = new_path / item.name
-                        if dest.exists():
-                            if item.is_dir():
-                                for sub in item.iterdir():
-                                    if not (dest / sub.name).exists():
-                                        shutil.move(str(sub), str(dest / sub.name))
-                                try:
-                                    item.rmdir()
-                                except OSError:
-                                    pass
-                        else:
-                            shutil.move(str(item), str(dest))
+                    # Merge leftovers from an earlier attempt. Colliding
+                    # names are kept as "-migrated-N" instead of being
+                    # skipped or raising NotADirectoryError mid-setup.
+                    renamed = []
+                    for item in list(old_path.iterdir()):
+                        renamed.extend(_merge_tree(item, new_path))
                     try:
                         old_path.rmdir()
                     except OSError:
                         pass
+                    if renamed:
+                        flash(
+                            f'{len(renamed)} item(s) already existed and were '
+                            f'kept as "-migrated-N" in {new_path}',
+                            'warning',
+                        )
                 else:
                     shutil.move(str(old_path), str(new_path))
             else:

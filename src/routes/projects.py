@@ -888,22 +888,44 @@ def remove_pcb_image(name):
 
     project_dir = state.project_manager.file_manager._project_dir(name)
 
-    # Delete every PCB image (single or slide-show list)
+    # All images known to this project (single image + gallery list)
     all_images = list(project.pcb_images or [])
     if project.pcb_image and project.pcb_image not in all_images:
         all_images.append(project.pcb_image)
 
-    for rel_path in all_images:
-        image_path = os.path.join(project_dir, rel_path)
+    # `image` names the exact slide to delete. Without it (old forms,
+    # bookmarks) remove everything, but per-image is what the UI uses.
+    target = (request.form.get('image') or '').strip()
+
+    if target:
+        if target not in all_images:
+            flash("Image not found on this project", "error")
+            return redirect(
+                url_for('project.project_detail', name=name, tab='pcb')
+            )
+
+        image_path = os.path.join(project_dir, target)
         if os.path.exists(image_path):
             os.remove(image_path)
 
-    project.pcb_image = None
-    project.pcb_images = []
+        project.pcb_images = [
+            p for p in (project.pcb_images or []) if p != target
+        ]
+        if project.pcb_image == target:
+            project.pcb_image = (
+                project.pcb_images[0] if project.pcb_images else None
+            )
+        flash("PCB image removed", "success")
+    else:
+        for rel_path in all_images:
+            image_path = os.path.join(project_dir, rel_path)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        project.pcb_image = None
+        project.pcb_images = []
+        flash("All PCB images removed", "success")
 
     state.file_manager.save_project(project)
-
-    flash("PCB image removed", "success")
 
     return redirect(
         url_for(
