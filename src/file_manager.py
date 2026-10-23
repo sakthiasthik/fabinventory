@@ -357,6 +357,8 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         """Load configuration from disk"""
         data = self._load_json(self.config_file)
         if data:
+            import dataclasses
             from src.models import Config
-            return Config(**data)
+            valid_keys = {f.name for f in dataclasses.fields(Config)}
+            return Config(**{k: v for k, v in data.items() if k in valid_keys})
         return None

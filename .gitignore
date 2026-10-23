@@ -66,8 +66,10 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
-# FabInventory — user data (auto-generated on first run)
+# FabInventory — user data (auto-generated on first run; NEVER commit)
 fabinventory_data/
+fabinventory_data*/
+fabinventory-data*/
 
 # Scrapy stuff:
 .scrapy
