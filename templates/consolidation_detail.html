@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ con.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="mb-1">{{ con.id }}</h1>
+        <p class="text-muted mb-0">
+            {{ con.name }} ·
+            {% for p in con.projects %}
+                {{ p.name }} ×{{ p.qty }}{{ ' + ' if not loop.last }}
+            {% endfor %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('orders.consolidation_export', consolidation_id=con.id) }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-download"></i> Download CSV
+        </a>
+        <a href="{{ url_for('orders.create_order') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('orders.consolidation_set_vendors', consolidation_id=con.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Component</th>
+                            <th>Footprint</th>
+                            <th>MPN</th>
+                            <th>References (per project)</th>
+                            <th class="text-end">To Order</th>
+                            <th>Vendor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comp in con.components %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-semibold">{{ comp.value }}</td>
+                            <td class="small text-muted">{{ comp.footprint }}</td>
+                            <td class="small text-muted">{{ comp.mpn }}</td>
+                            <td class="small text-muted">
+                                {% for ref in comp.project_references %}
+                                    {{ ref.project }}: {{ ref.reference }}{{ '<br>'|safe if not loop.last }}
+                                {% endfor %}
+                            </td>
+                            <td class="text-end fw-bold">{{ comp.to_order }}</td>
+                            <td style="min-width: 150px;">
+                                <select class="form-select form-select-sm" name="vendor_{{ loop.index0 }}">
+                                    <option value="">—</option>
+                                    {% for v in vendors %}
+                                    <option value="{{ v.name }}" {{ 'selected' if comp.vendor == v.name }}>
+                                        {{ v.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-outline-primary">
+        <i class="bi bi-save"></i> Save Vendors
+    </button>
+</form>
+
+<form method="POST"
+      action="{{ url_for('orders.consolidation_create_orders', consolidation_id=con.id) }}"
+      class="mt-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-success">
+        <i class="bi bi-cart-check"></i> Create Orders (one per vendor)
+    </button>
+</form>
+{% endblock %}

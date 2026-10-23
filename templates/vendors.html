@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Vendors{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1">Vendors</h1>
+        <p class="text-muted mb-0">
+            Suppliers you order from — used when splitting a consolidation
+            into one order per vendor.
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Add Vendor</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('orders.add_vendor') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" required
+                               placeholder="e.g., Mouser, LCSC">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" name="contact">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Website</label>
+                        <input type="text" class="form-control" name="website"
+                               placeholder="www.mouser.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-save"></i> Save Vendor
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        {% if vendors %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white shadow-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th><th>Contact</th><th>Email</th><th>Website</th><th>Notes</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vendors %}
+                    <tr>
+                        <td class="fw-semibold">{{ v.name }}</td>
+                        <td>{{ v.contact }}</td>
+                        <td>{{ v.email }}</td>
+                        <td>
+                            {% if v.website %}
+                            <a href="{{ v.website }}" target="_blank">
+                                {{ v.website.replace('https://', '') }}
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ v.notes }}</td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('orders.delete_vendor', name=v.name) }}"
+                                  onsubmit="return confirm('Remove {{ v.name }}?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No vendors yet — add your first one (e.g. Mouser, LCSC).
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

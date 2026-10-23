@@ -19,6 +19,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         self.master_dir = self.data_path / "master"
         self.orders_dir = self.data_path / "orders"
         self.consolidations_dir = self.data_path / "consolidations"
+        self.vendors_dir = self.data_path / "vendors"
         self.config_file = self.data_path / "config.json"
         self._id_lock = threading.Lock()
 
@@ -49,6 +50,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         self.master_dir.mkdir(parents=True, exist_ok=True)
         self.orders_dir.mkdir(parents=True, exist_ok=True)
         self.consolidations_dir.mkdir(parents=True, exist_ok=True)
+        self.vendors_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize master inventory files if not exists
         for filename in ("electronics.json", "mechanical.json", "pcb.json", "print3d.json"):
@@ -381,6 +383,22 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         return self._load_json(
             self.consolidations_dir / f"{consolidation_id}.json"
         )
+
+    # ── Vendors ───────────────────────────────────────────────────
+
+    def list_vendors(self) -> List[Dict]:
+        """All saved vendors (name, contact, email, website, notes)."""
+        data = self._load_json(self.vendors_dir / "vendors.json") or []
+        return data if isinstance(data, list) else []
+
+    def save_vendors(self, vendors: List[Dict]) -> bool:
+        """Persist the full vendor list."""
+        try:
+            self._save_json(self.vendors_dir / "vendors.json", vendors)
+            return True
+        except Exception as e:
+            print(f"Error saving vendors: {e}")
+            return False
 
     # Configuration
     def save_config(self, config) -> bool:

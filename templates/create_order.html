@@ -66,12 +66,16 @@
                             {% endif %}
                         </div>
                         {% endif %}
-                        {% if not con.order_id %}
-                        <button class="btn btn-sm btn-success mt-2"
-                                onclick="createOrderFromConsolidation({{ loop.index0 }})">
-                            <i class="bi bi-cart-check"></i> Create Order
-                        </button>
-                        {% endif %}
+                        <div class="d-flex gap-2 mt-2">
+                            <a class="btn btn-sm btn-success"
+                               href="{{ url_for('orders.consolidation_detail', consolidation_id=con.id) }}">
+                                <i class="bi bi-folder2-open"></i> Open
+                            </a>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('orders.consolidation_export', consolidation_id=con.id) }}">
+                                <i class="bi bi-download"></i> CSV
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
