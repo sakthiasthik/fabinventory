@@ -80,6 +80,7 @@ def create_order():
     pcb_items = [i for i in state.inventory_manager.pcb_inventory if i.to_order > 0]
     prn_items = [i for i in state.inventory_manager.print3d_inventory if i.to_order > 0]
     projects_list = state.project_manager.list_projects()
+    consolidations = state.file_manager.list_consolidations()
 
     return render_template(
         'create_order.html',
@@ -88,6 +89,7 @@ def create_order():
         pcb_items=pcb_items,
         prn_items=prn_items,
         projects=projects_list,
+        consolidations=consolidations,
     )
 
 
@@ -149,6 +151,8 @@ def order_tracking():
             'total_qty': order.total_items,
             'cost': order.estimated_cost,
             'notes': order.notes,
+            'consolidation_id': order.consolidation_id,
+            'vendor_link': order.vendor_link,
         })
 
     return render_template(

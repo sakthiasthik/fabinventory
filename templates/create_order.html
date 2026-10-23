@@ -3,7 +3,7 @@
 {% block title %}BOM Consolidation{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
     <div>
         <h1 class="mb-1">Consolidate BOM</h1>
         <p class="text-muted mb-0">
@@ -11,10 +11,75 @@
             create a purchase order from the result.
         </p>
     </div>
-    <a href="{{ url_for('orders.orders') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-list-ul"></i> View Purchase Orders
-    </a>
+    <div class="d-flex flex-column gap-2 align-items-end">
+        <button class="btn btn-primary" onclick="orderSelectedComponents()">
+            <i class="bi bi-cart-check"></i> Create Order from Consolidated BOM
+        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-success" onclick="saveConsolidation()">
+                <i class="bi bi-save"></i> Save Consolidation
+            </button>
+            <a href="{{ url_for('orders.orders') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> View Purchase Orders
+            </a>
+        </div>
+    </div>
 </div>
+
+<!-- Saved consolidations -->
+{% if consolidations %}
+<div class="card mb-4 border-success">
+    <div class="card-header bg-success bg-opacity-10">
+        <h6 class="mb-0"><i class="bi bi-archive"></i> Saved Consolidations</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for con in consolidations %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-bold">{{ con.id }}</div>
+                                <div class="small text-muted">{{ con.name }}</div>
+                            </div>
+                            {% if con.order_id %}
+                                <span class="badge bg-primary">Ordered → {{ con.order_id }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mt-2">
+                            {% for p in con.projects %}
+                                {{ p.name }} ×{{ p.qty }}{{ ' + ' if not loop.last }}
+                            {% endfor %}
+                        </div>
+                        <div class="small mt-1">
+                            {{ con.components|length }} line(s) ·
+                            to order: {{ con.components|sum(attribute='to_order') }}
+                        </div>
+                        {% if con.vendor %}
+                        <div class="small mt-1">
+                            <i class="bi bi-shop"></i> {{ con.vendor }}
+                            {% if con.vendor_link %}
+                                <a href="{{ con.vendor_link }}" target="_blank" class="ms-1">Site ↗</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if not con.order_id %}
+                        <button class="btn btn-sm btn-success mt-2"
+                                onclick="createOrderFromConsolidation({{ loop.index0 }})">
+                            <i class="bi bi-cart-check"></i> Create Order
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- All Items to Order (across inventory) -->
 {% set total_to_order = (items_to_order|length) + (mech_items|length) + (pcb_items|length) + (prn_items|length) %}
@@ -278,6 +343,86 @@
     function getCsrfToken() {
         const match = document.cookie.match(/csrf_token=([^;]+)/);
         return match ? match[1] : '';
+    }
+
+    // Saved consolidations from the server (rendered by Jinja)
+    const savedConsolidations = {{ consolidations|tojson }};
+
+    // Save the current consolidated list as a record with a sequence number
+    async function saveConsolidation() {
+        if (!currentProjectComponents.length) {
+            alert('Nothing to save — add projects first');
+            return;
+        }
+        const defaultName = selectedProjects.map(p => p.name).join(' + ');
+        const name = prompt('Name this consolidation:', defaultName);
+        if (!name) return;
+
+        const response = await fetch('/api/save-consolidation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                name: name,
+                projects: selectedProjects,
+                components: currentProjectComponents,
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(`Consolidation saved as ${data.consolidation_id}`);
+            location.reload();
+        } else {
+            alert('Failed to save: ' + (data.error || 'Unknown error'));
+        }
+    }
+
+    // Create an order FROM a saved consolidation (vendor + vendor link)
+    async function createOrderFromConsolidation(index) {
+        const con = savedConsolidations[index];
+        if (!con) return;
+
+        const vendor = prompt(`Vendor for ${con.id}:`, con.vendor || 'Mouser');
+        if (!vendor) return;
+        const vendorLink = prompt('Vendor website link (optional):', con.vendor_link || '');
+        if (vendorLink === null) return;
+
+        const items = (con.components || [])
+            .map(comp => ({
+                internal_id: comp.id || comp.internal_id,
+                qty: comp.to_order || comp.total_required || 0
+            }))
+            .filter(item => item.qty > 0);
+
+        if (!items.length) {
+            alert('Nothing to order in this consolidation (to order = 0 everywhere)');
+            return;
+        }
+
+        const response = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                project_name: con.name,
+                supplier: vendor,
+                vendor_link: vendorLink || '',
+                consolidation_id: con.id,
+                items: items,
+                notes: `From consolidation ${con.id}`
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert(`Order ${data.order_id} created from ${con.id}`);
+            location.reload();
+        } else {
+            alert('Failed: ' + (data.error || 'Unknown error'));
+        }
     }
 
     // Load project components via API

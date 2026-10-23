@@ -1,4 +1,5 @@
 """FabInventory — API Blueprint"""
+from datetime import datetime
 from pathlib import Path
 from flask import Blueprint, jsonify, request
 from src.core import state, api_login_required
@@ -278,19 +279,25 @@ def api_create_order():
     project_name = data.get('project_name')
     items_data = data.get('items', [])
     notes = data.get('notes', '')
+    consolidation_id = data.get('consolidation_id') or None
+    vendor_link = data.get('vendor_link') or None
 
     if not supplier:
-        return jsonify({'error': 'Supplier is required'}), 400
+        return jsonify({'error': 'Supplier is required — enter a vendor name'}), 400
 
     if not items_data:
-        return jsonify({'error': 'No items selected'}), 400
+        print('create-order rejected: no items —', data)
+        return jsonify({'error': 'No items selected — tick at least one component'}), 400
 
     # Convert items to the format expected by inventory_manager
     items = []
     for item in items_data:
         # Find the actual internal_id from inventory
         internal_id = item.get('id') or item.get('internal_id')
-        qty = item.get('qty', 0)
+        try:
+            qty = int(item.get('qty', 0) or 0)
+        except (TypeError, ValueError):
+            qty = 0
 
         if qty > 0:
             items.append({
@@ -299,12 +306,27 @@ def api_create_order():
             })
 
     if not items:
+        print('create-order rejected: no valid items —', items_data)
         return jsonify({'error': 'No valid items with quantity > 0'}), 400
 
     # Create the order
-    order = state.inventory_manager.create_order(supplier, items, notes)
+    order = state.inventory_manager.create_order(
+        supplier, items, notes,
+        consolidation_id=consolidation_id,
+        vendor_link=vendor_link,
+    )
 
     if order:
+        # Link the order back to its consolidation record
+        if consolidation_id:
+            record = state.file_manager.load_consolidation(consolidation_id)
+            if record:
+                record['status'] = 'ordered'
+                record['order_id'] = order.order_id
+                record['vendor'] = supplier
+                record['vendor_link'] = vendor_link or ''
+                state.file_manager.save_consolidation(record)
+
         if state.git_manager:
             state.git_manager.commit(f"Created order {order.order_id} for project '{project_name}'")
 
@@ -315,6 +337,64 @@ def api_create_order():
         })
     else:
         return jsonify({'error': 'Failed to create order'}), 500
+
+
+@api_bp.route('/save-consolidation', methods=['POST'])
+@api_login_required
+def api_save_consolidation():
+    """Save the current consolidation as a record with a sequence number
+    (CON-YYYYMM-NNN). Orders can then be created FROM that record."""
+    if not state.init_app():
+        return jsonify({'error': 'Not initialized'}), 500
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    name = (data.get('name') or '').strip() or 'Consolidation'
+    projects = data.get('projects', [])
+    components = data.get('components', [])
+
+    if not components:
+        return jsonify({
+            'error': 'Nothing to save — add projects and consolidate first'
+        }), 400
+
+    # Sequence number: CON-YYYYMM-NNN (count existing records this month)
+    year_month = datetime.now().strftime('%Y%m')
+    max_num = 0
+    for c in state.file_manager.list_consolidations():
+        cid = c.get('id', '')
+        if cid.startswith(f'CON-{year_month}-'):
+            try:
+                max_num = max(max_num, int(cid.rsplit('-', 1)[-1]))
+            except ValueError:
+                pass
+    consolidation_id = f"CON-{year_month}-{max_num + 1:03d}"
+
+    record = {
+        'id': consolidation_id,
+        'name': name,
+        'created_at': datetime.now().isoformat(),
+        'projects': projects,
+        'components': components,
+        'vendor': '',
+        'vendor_link': '',
+        'status': 'draft',
+        'order_id': '',
+    }
+
+    if not state.file_manager.save_consolidation(record):
+        return jsonify({'error': 'Failed to save consolidation'}), 500
+
+    if state.git_manager:
+        state.git_manager.commit(f"Saved consolidation {consolidation_id}")
+
+    return jsonify({
+        'success': True,
+        'consolidation_id': consolidation_id,
+        'record': record,
+    })
 
 
 @api_bp.route('/projects-list')

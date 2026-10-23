@@ -201,10 +201,25 @@ def setup():
         if new_path != old_path:
             if old_path.exists():
                 if new_path.exists():
-                    # Merge leftovers from an earlier attempt
+                    # Merge leftovers from an earlier attempt — never crash
+                    # when items already exist on both sides
                     for item in old_path.iterdir():
-                        shutil.move(str(item), str(new_path / item.name))
-                    old_path.rmdir()
+                        dest = new_path / item.name
+                        if dest.exists():
+                            if item.is_dir():
+                                for sub in item.iterdir():
+                                    if not (dest / sub.name).exists():
+                                        shutil.move(str(sub), str(dest / sub.name))
+                                try:
+                                    item.rmdir()
+                                except OSError:
+                                    pass
+                        else:
+                            shutil.move(str(item), str(dest))
+                    try:
+                        old_path.rmdir()
+                    except OSError:
+                        pass
                 else:
                     shutil.move(str(old_path), str(new_path))
             else:

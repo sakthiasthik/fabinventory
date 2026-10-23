@@ -18,6 +18,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         self.projects_dir = self.data_path / "projects"
         self.master_dir = self.data_path / "master"
         self.orders_dir = self.data_path / "orders"
+        self.consolidations_dir = self.data_path / "consolidations"
         self.config_file = self.data_path / "config.json"
         self._id_lock = threading.Lock()
 
@@ -47,6 +48,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
         self.projects_dir.mkdir(parents=True, exist_ok=True)
         self.master_dir.mkdir(parents=True, exist_ok=True)
         self.orders_dir.mkdir(parents=True, exist_ok=True)
+        self.consolidations_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize master inventory files if not exists
         for filename in ("electronics.json", "mechanical.json", "pcb.json", "print3d.json"):
@@ -343,7 +345,38 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                         orders.append(order)
         
         return sorted(orders, key=lambda x: x.created_at, reverse=True)
-    
+
+    # ── Consolidations ─────────────────────────────────────────────
+
+    def list_consolidations(self) -> List[Dict]:
+        """All saved BOM consolidations, newest first (plain dicts)."""
+        items = []
+        if self.consolidations_dir.exists():
+            for f in sorted(
+                self.consolidations_dir.glob("CON-*.json"), reverse=True
+            ):
+                data = self._load_json(f)
+                if data:
+                    items.append(data)
+        return items
+
+    def save_consolidation(self, data: Dict) -> bool:
+        """Save a consolidation record (data must include its 'id')."""
+        try:
+            self._save_json(
+                self.consolidations_dir / f"{data['id']}.json", data
+            )
+            return True
+        except Exception as e:
+            print(f"Error saving consolidation: {e}")
+            return False
+
+    def load_consolidation(self, consolidation_id: str) -> Optional[Dict]:
+        """Load one consolidation record by id."""
+        return self._load_json(
+            self.consolidations_dir / f"{consolidation_id}.json"
+        )
+
     # Configuration
     def save_config(self, config) -> bool:
         """Save configuration to disk"""

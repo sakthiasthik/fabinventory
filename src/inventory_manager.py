@@ -213,7 +213,9 @@ class InventoryManager:
 
     # ── Orders ──────────────────────────────────────────────────
 
-    def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "") -> Optional[Order]:
+    def create_order(self, supplier: str, items: List[Dict[str, Any]], notes: str = "",
+                     consolidation_id: Optional[str] = None,
+                     vendor_link: Optional[str] = None) -> Optional[Order]:
         existing_orders = self.file_manager.list_orders()
         max_num = 0
         for o in existing_orders:
@@ -239,7 +241,9 @@ class InventoryManager:
             order_id=order_id,
             supplier=supplier,
             line_items=line_items,
-            notes=notes
+            notes=notes,
+            consolidation_id=consolidation_id,
+            vendor_link=vendor_link
         )
 
         if self.file_manager.save_order(order):

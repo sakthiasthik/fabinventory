@@ -173,6 +173,8 @@ class Order:
     shipped_at: Optional[str] = None
     tracking_info: Optional[str] = None
     shipping_info: Optional[str] = None
+    consolidation_id: Optional[str] = None
+    vendor_link: Optional[str] = None
 
     def can_transition_to(self, new_status: str) -> bool:
         """Check if transitioning to new_status is allowed."""
@@ -219,7 +221,9 @@ class Order:
             "received_at": self.received_at,
             "shipped_at": self.shipped_at,
             "tracking_info": self.tracking_info,
-            "shipping_info": self.shipping_info
+            "shipping_info": self.shipping_info,
+            "consolidation_id": self.consolidation_id,
+            "vendor_link": self.vendor_link
         }
 
     @classmethod
@@ -235,7 +239,9 @@ class Order:
             received_at=data.get("received_at"),
             shipped_at=data.get("shipped_at"),
             tracking_info=data.get("tracking_info"),
-            shipping_info=data.get("shipping_info")
+            shipping_info=data.get("shipping_info"),
+            consolidation_id=data.get("consolidation_id"),
+            vendor_link=data.get("vendor_link")
         )
 
 @dataclass
