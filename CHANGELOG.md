@@ -6,6 +6,34 @@
 
 ---
 
+## 2026-10-23 — Order-flow bug fixes (all 4 bugs from BUG.md)
+
+### ✅ What changed
+
+- **Bug 1 fixed** — `/api/project/<name>/components` now SUMS all BOM rows per part key (it kept only the first row, so order qty showed 1 instead of 10). Applied to all four categories (elec/mech/PCB/3D); references + MPNs collected.
+- **Bug 2 fixed** — DNP detection split into DNP-style vs Populate-style columns: `Populate = YES/1` now correctly means *populated* (was inverted → fitted parts silently vanished from orders). Added `DNF` / `NO POP` / `N/F` markers; empty cells default to populated; explicit DNP column wins when both exist.
+- **Bug 3 fixed** — quantities parse tolerantly (`2.5` → 3 half-up, `1,000`, `10 pcs`, `5 nos`); bad rows are no longer silently dropped — all four upload pages now flash row warnings, and unparseable files are rejected with a message.
+- **Bug 4 fixed** — one `normalize_part_key` helper (collapse whitespace + lowercase) used everywhere: `100nF 0603` and `100nf  0603 ` now merge into ONE master item with shared stock.
+
+### ❌ Mistakes we made (and learned from)
+
+1. The original components endpoint de-duplicated by *dropping* rows instead of summing them — "keep the first row" is never a safe de-duplication.
+2. DNP aliases mixed two opposite column conventions under one key — column *names* carry meaning; parse `DNP` and `Populate` semantics separately.
+
+### 🔧 Fixes done
+
+- Each fix has unit tests (30 → 34 tests, all passing) and its own commit: `a40da3c`, `1df296f`, `698d9e9`, `cd0b8fa`.
+
+### 🐛 Errors hit & solved
+
+| Error | Cause | Fix |
+|---|---|---|
+| `pytest: No module named pytest` in venv | dev dependency missing | installed pytest into `.venv` |
+| `round(2.5) == 2` in quantity parsing | Python banker's rounding | half-up via `floor(x + 0.5)` |
+| Marker set mismatch (`NO POP` vs normalized `NOPOP`) | markers stored un-normalized | marker sets stored pre-normalized |
+
+---
+
 ## 2026-10-16 — Repo cleanup, history rewrite, fresh data start
 
 ### ✅ What changed
