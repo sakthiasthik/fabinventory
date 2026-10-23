@@ -100,3 +100,56 @@ def test_placeholder_dnp_value_is_ignored():
     )
     assert rows[0].dnp is False
     assert rows[1].dnp is False
+
+
+# ── Tolerant quantity parsing & warnings (Bug 3) ────────────────
+
+def test_parse_quantity_variants():
+    assert BOMParser.parse_quantity(5) == 5
+    assert BOMParser.parse_quantity("2.5") == 3
+    assert BOMParser.parse_quantity("1,000") == 1000
+    assert BOMParser.parse_quantity("10 pcs") == 10
+    assert BOMParser.parse_quantity("5 nos") == 5
+    assert BOMParser.parse_quantity("") == 0
+    assert BOMParser.parse_quantity(None) == 0
+
+
+def test_parse_quantity_rejects_junk():
+    import pytest as _pytest
+    with _pytest.raises(ValueError):
+        BOMParser.parse_quantity("ten")
+
+
+def _parse_csv_detailed(content):
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        f.write(content)
+        tmp_path = f.name
+    try:
+        return BOMParser.parse_file_with_warnings(tmp_path, bom_type="electrical")
+    finally:
+        os.unlink(tmp_path)
+
+
+def test_bad_quantity_row_is_reported_not_silent():
+    """A bad qty cell must produce a warning with the sheet row number."""
+    rows, warnings = _parse_csv_detailed(
+        "si.no,reference,value,footprint,mpn,manufacturer,qty\n"
+        "1,R1,10k,0603,M1,Yageo,5\n"
+        "2,R2,10k,0603,M1,Yageo,ten\n"
+        "3,R3,10k,0603,M1,Yageo,2\n"
+    )
+    assert len(rows) == 2              # bad row skipped…
+    assert len(warnings) == 1          # …but reported
+    assert "Row 3" in warnings[0]      # header row 1 → data line 3 is sheet row 3
+    assert "quantity" in warnings[0].lower()
+
+
+def test_non_numeric_si_no_falls_back_instead_of_dropping_row():
+    rows, warnings = _parse_csv_detailed(
+        "si.no,reference,value,footprint,mpn,manufacturer,qty\n"
+        "A,R1,10k,0603,M1,Yageo,5\n"
+        "2,R2,10k,0603,M1,Yageo,3\n"
+    )
+    assert len(rows) == 2
+    assert rows[0].si_no == 1          # fallback = dataframe row index + 1
+    assert rows[1].si_no == 2

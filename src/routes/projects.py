@@ -184,6 +184,13 @@ def upload_bom(name):
         file.save(filepath)
 
         try:
+            # Parse first so problem rows are shown to the user, not swallowed
+            _, parse_warnings = BOMParser.parse_file_with_warnings(str(filepath))
+            for w in parse_warnings[:10]:
+                flash(w, 'warning')
+            if len(parse_warnings) > 10:
+                flash(f'…and {len(parse_warnings) - 10} more row(s) skipped', 'warning')
+
             # Parse and update BOM
             updated = state.project_manager.update_project_bom(name, str(filepath))
             if updated:
@@ -347,6 +354,21 @@ def upload_3d_bom(name):
         name, '3dprint', filename, file.read()
     )
 
+    # Validate the file and surface row warnings to the user
+    try:
+        _, parse_warnings = BOMParser.parse_file_with_warnings(
+            str(saved_path), bom_type='3dprint'
+        )
+    except Exception as e:
+        saved_path.unlink(missing_ok=True)
+        flash(f'BOM rejected — {e}', 'error')
+        return redirect(url_for('project.project_detail', name=name, tab='3dprint'))
+
+    for w in parse_warnings[:10]:
+        flash(w, 'warning')
+    if len(parse_warnings) > 10:
+        flash(f'…and {len(parse_warnings) - 10} more row(s) skipped', 'warning')
+
     # SAVE RELATIVE PATH IN PROJECT (from project dir)
     project.print3d_bom = f"3dprint/{filename}"
 
@@ -395,6 +417,21 @@ def upload_mechanical_bom(name):
         name, 'mechanical', filename, file.read()
     )
 
+    # Validate the file and surface row warnings to the user
+    try:
+        _, parse_warnings = BOMParser.parse_file_with_warnings(
+            str(saved_path), bom_type='mechanical'
+        )
+    except Exception as e:
+        saved_path.unlink(missing_ok=True)
+        flash(f'BOM rejected — {e}', 'error')
+        return redirect(url_for('project.project_detail', name=name, tab='mechanical'))
+
+    for w in parse_warnings[:10]:
+        flash(w, 'warning')
+    if len(parse_warnings) > 10:
+        flash(f'…and {len(parse_warnings) - 10} more row(s) skipped', 'warning')
+
     project.mechanical_bom = f"mechanical/{filename}"
 
     state.project_manager.file_manager.save_project(project)
@@ -441,6 +478,21 @@ def upload_pcb_bom(name):
     saved_path = state.project_manager.file_manager.save_project_file(
         name, 'pcb', filename, file.read()
     )
+
+    # Validate the file and surface row warnings to the user
+    try:
+        _, parse_warnings = BOMParser.parse_file_with_warnings(
+            str(saved_path), bom_type='pcb'
+        )
+    except Exception as e:
+        saved_path.unlink(missing_ok=True)
+        flash(f'BOM rejected — {e}', 'error')
+        return redirect(url_for('project.project_detail', name=name, tab='pcb'))
+
+    for w in parse_warnings[:10]:
+        flash(w, 'warning')
+    if len(parse_warnings) > 10:
+        flash(f'…and {len(parse_warnings) - 10} more row(s) skipped', 'warning')
 
     project.pcb_bom = f"pcb/{filename}"
 
