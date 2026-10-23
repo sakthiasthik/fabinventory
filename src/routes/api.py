@@ -6,6 +6,174 @@ from src.core import state, api_login_required
 api_bp = Blueprint('api', __name__)
 
 
+# ── Components-endpoint helpers ────────────────────────────────
+# Group BOM rows by part key and SUM quantities. The order page must
+# show the same totals as the master inventory (aggregator), so
+# duplicate rows with the same value+footprint must accumulate —
+# never be dropped.
+
+
+def _elec_components(bom_rows, stock_lookup):
+    """Aggregate electrical BOM rows by value|footprint (or internal id),
+    summing quantities and collecting references + MPNs."""
+    aggregated = {}
+    for bom_row in bom_rows:
+        if not bom_row.is_active():
+            continue
+        key = f"{bom_row.value}|{bom_row.footprint}"
+        stock_info = stock_lookup.get(key, {'current_stock': 0, 'internal_id': None})
+        cid = stock_info.get('internal_id') or key
+        entry = aggregated.get(cid)
+        if entry is None:
+            entry = aggregated[cid] = {
+                'stock_info': stock_info,
+                'value': bom_row.value,
+                'footprint': bom_row.footprint,
+                'qty': 0,
+                'references': [],
+                'mpns': [],
+            }
+        entry['qty'] += bom_row.qty
+        if bom_row.reference and bom_row.reference not in entry['references']:
+            entry['references'].append(bom_row.reference)
+        if (bom_row.manufacturer_part_number
+                and bom_row.manufacturer_part_number not in entry['mpns']):
+            entry['mpns'].append(bom_row.manufacturer_part_number)
+
+    components = []
+    for cid, entry in aggregated.items():
+        stock = entry['stock_info'].get('current_stock', 0)
+        components.append({
+            'id': cid,
+            'internal_id': entry['stock_info'].get('internal_id') or '',
+            'category': 'electrical',
+            'label': f"{entry['value']} — {entry['footprint']}",
+            'value': entry['value'],
+            'footprint': entry['footprint'],
+            'mpn': ', '.join(entry['mpns']),
+            'qty': entry['qty'],
+            'to_order': max(0, entry['qty'] - stock),
+            'current_stock': stock,
+            'reference': ', '.join(entry['references']),
+        })
+    return components
+
+
+def _mech_components(rows, mech_inventory):
+    """Sum mechanical BOM rows sharing the same part_name|value key."""
+    aggregated = {}
+    for row in rows:
+        raw_key = f"{row.get('part_name', '')}|{row.get('value', '')}"
+        cid = f"mech-{raw_key}"
+        entry = aggregated.get(cid)
+        if entry is None:
+            stock, int_id = 0, ''
+            for mi in mech_inventory:
+                if mi.get_aggregation_key() == raw_key:
+                    stock, int_id = mi.current_stock, mi.internal_id
+                    break
+            entry = aggregated[cid] = {
+                'stock': stock,
+                'int_id': int_id,
+                'qty': 0,
+                'part_name': row.get('part_name', ''),
+                'value': row.get('value', ''),
+            }
+        entry['qty'] += int(row.get('quantity', 0))
+
+    return [
+        {
+            'id': cid,
+            'internal_id': entry['int_id'],
+            'category': 'mechanical',
+            'label': f"{entry['part_name']} — {entry['value']}",
+            'part_name': entry['part_name'],
+            'value': entry['value'],
+            'qty': entry['qty'],
+            'to_order': max(0, entry['qty'] - entry['stock']),
+            'current_stock': entry['stock'],
+            'reference': '',
+        }
+        for cid, entry in aggregated.items()
+    ]
+
+
+def _pcb_components(rows, pcb_inventory):
+    """Sum PCB BOM rows sharing the same board_name."""
+    aggregated = {}
+    for row in rows:
+        board_name = row.get('board_name', '')
+        cid = f"pcb-{board_name}"
+        entry = aggregated.get(cid)
+        if entry is None:
+            stock, int_id = 0, ''
+            for pi in pcb_inventory:
+                if pi.board_name == board_name:
+                    stock, int_id = pi.current_stock, pi.internal_id
+                    break
+            entry = aggregated[cid] = {
+                'stock': stock,
+                'int_id': int_id,
+                'qty': 0,
+                'board_name': board_name,
+            }
+        entry['qty'] += int(row.get('quantity', 0))
+
+    return [
+        {
+            'id': cid,
+            'internal_id': entry['int_id'],
+            'category': 'pcb',
+            'label': f"PCB: {entry['board_name']}",
+            'board_name': entry['board_name'],
+            'qty': entry['qty'],
+            'to_order': max(0, entry['qty'] - entry['stock']),
+            'current_stock': entry['stock'],
+            'reference': '',
+        }
+        for cid, entry in aggregated.items()
+    ]
+
+
+def _prn_components(rows, prn_inventory):
+    """Sum 3D-print BOM rows sharing the same part_name."""
+    aggregated = {}
+    for row in rows:
+        part_name = row.get('part_name', '')
+        cid = f"3d-{part_name}"
+        entry = aggregated.get(cid)
+        if entry is None:
+            stock, int_id = 0, ''
+            for pi in prn_inventory:
+                if pi.part_name == part_name:
+                    stock, int_id = pi.current_stock, pi.internal_id
+                    break
+            entry = aggregated[cid] = {
+                'stock': stock,
+                'int_id': int_id,
+                'qty': 0,
+                'part_name': part_name,
+                'material': row.get('material', ''),
+            }
+        entry['qty'] += int(row.get('quantity', 0))
+
+    return [
+        {
+            'id': cid,
+            'internal_id': entry['int_id'],
+            'category': '3dprint',
+            'label': f"3D: {entry['part_name']} ({entry['material']})",
+            'part_name': entry['part_name'],
+            'material': entry['material'],
+            'qty': entry['qty'],
+            'to_order': max(0, entry['qty'] - entry['stock']),
+            'current_stock': entry['stock'],
+            'reference': '',
+        }
+        for cid, entry in aggregated.items()
+    ]
+
+
 @api_bp.route('/order/<order_id>')
 @api_login_required
 def api_order_details(order_id):
@@ -33,7 +201,6 @@ def api_project_components(project_name):
 
     data_root = Path(state.data_path) / "projects" / project_name
     components = []
-    seen_ids = set()
 
     # ── Electrical ──────────────────────────────────────────────
     inventory_items = state.inventory_manager.get_inventory()
@@ -45,28 +212,9 @@ def api_project_components(project_name):
             'internal_id': item.internal_id,
         }
 
-    for bom_row in project.bom:
-        if not bom_row.is_active():
-            continue
-        key = f"{bom_row.value}|{bom_row.footprint}"
-        stock_info = stock_lookup.get(key, {'current_stock': 0, 'internal_id': None})
-        cid = stock_info.get('internal_id') or key
-        if cid in seen_ids:
-            continue
-        seen_ids.add(cid)
-        components.append({
-            'id': cid,
-            'internal_id': stock_info.get('internal_id') or '',
-            'category': 'electrical',
-            'label': f"{bom_row.value} — {bom_row.footprint}",
-            'value': bom_row.value,
-            'footprint': bom_row.footprint,
-            'mpn': bom_row.manufacturer_part_number,
-            'qty': bom_row.qty,
-            'to_order': max(0, bom_row.qty - stock_info.get('current_stock', 0)),
-            'current_stock': stock_info.get('current_stock', 0),
-            'reference': bom_row.reference,
-        })
+    # Sum ALL rows per value|footprint — duplicate rows (one row per
+    # reference) must accumulate, matching the master inventory totals.
+    components.extend(_elec_components(project.bom, stock_lookup))
 
     # ── Mechanical ──────────────────────────────────────────────
     if project.mechanical_bom:
@@ -74,32 +222,10 @@ def api_project_components(project_name):
         mech_path = data_root / project.mechanical_bom
         if mech_path.exists():
             try:
-                for row in BOMParser.parse_file(str(mech_path), bom_type='mechanical'):
-                    cid = f"mech-{row.get('part_name','')}|{row.get('value','')}"
-                    if cid in seen_ids:
-                        continue
-                    seen_ids.add(cid)
-                    qty = int(row.get('quantity', 0))
-                    mech_inv = state.inventory_manager.mech_inventory
-                    stock = 0
-                    int_id = ''
-                    for mi in mech_inv:
-                        if mi.get_aggregation_key() == f"{row.get('part_name','')}|{row.get('value','')}":
-                            stock = mi.current_stock
-                            int_id = mi.internal_id
-                            break
-                    components.append({
-                        'id': cid,
-                        'internal_id': int_id,
-                        'category': 'mechanical',
-                        'label': f"{row.get('part_name','')} — {row.get('value','')}",
-                        'part_name': row.get('part_name', ''),
-                        'value': row.get('value', ''),
-                        'qty': qty,
-                        'to_order': max(0, qty - stock),
-                        'current_stock': stock,
-                        'reference': '',
-                    })
+                rows = BOMParser.parse_file(str(mech_path), bom_type='mechanical')
+                components.extend(
+                    _mech_components(rows, state.inventory_manager.mech_inventory)
+                )
             except Exception as e:
                 print(f"Mech parse error: {e}")
 
@@ -109,31 +235,10 @@ def api_project_components(project_name):
         pcb_path = data_root / project.pcb_bom
         if pcb_path.exists():
             try:
-                for row in BOMParser.parse_file(str(pcb_path), bom_type='pcb'):
-                    cid = f"pcb-{row.get('board_name','')}"
-                    if cid in seen_ids:
-                        continue
-                    seen_ids.add(cid)
-                    qty = int(row.get('quantity', 0))
-                    pcb_inv = state.inventory_manager.pcb_inventory
-                    stock = 0
-                    int_id = ''
-                    for pi in pcb_inv:
-                        if pi.board_name == row.get('board_name', ''):
-                            stock = pi.current_stock
-                            int_id = pi.internal_id
-                            break
-                    components.append({
-                        'id': cid,
-                        'internal_id': int_id,
-                        'category': 'pcb',
-                        'label': f"PCB: {row.get('board_name','')}",
-                        'board_name': row.get('board_name', ''),
-                        'qty': qty,
-                        'to_order': max(0, qty - stock),
-                        'current_stock': stock,
-                        'reference': '',
-                    })
+                rows = BOMParser.parse_file(str(pcb_path), bom_type='pcb')
+                components.extend(
+                    _pcb_components(rows, state.inventory_manager.pcb_inventory)
+                )
             except Exception as e:
                 print(f"PCB parse error: {e}")
 
@@ -143,32 +248,10 @@ def api_project_components(project_name):
         prn_path = data_root / project.print3d_bom
         if prn_path.exists():
             try:
-                for row in BOMParser.parse_file(str(prn_path), bom_type='3dprint'):
-                    cid = f"3d-{row.get('part_name','')}"
-                    if cid in seen_ids:
-                        continue
-                    seen_ids.add(cid)
-                    qty = int(row.get('quantity', 0))
-                    prn_inv = state.inventory_manager.print3d_inventory
-                    stock = 0
-                    int_id = ''
-                    for pi in prn_inv:
-                        if pi.part_name == row.get('part_name', ''):
-                            stock = pi.current_stock
-                            int_id = pi.internal_id
-                            break
-                    components.append({
-                        'id': cid,
-                        'internal_id': int_id,
-                        'category': '3dprint',
-                        'label': f"3D: {row.get('part_name','')} ({row.get('material','')})",
-                        'part_name': row.get('part_name', ''),
-                        'material': row.get('material', ''),
-                        'qty': qty,
-                        'to_order': max(0, qty - stock),
-                        'current_stock': stock,
-                        'reference': '',
-                    })
+                rows = BOMParser.parse_file(str(prn_path), bom_type='3dprint')
+                components.extend(
+                    _prn_components(rows, state.inventory_manager.print3d_inventory)
+                )
             except Exception as e:
                 print(f"3D parse error: {e}")
 
