@@ -123,8 +123,8 @@
         <div class="card bg-light h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted">3D Print Parts</h6>
-                <h3>{{ tab_stats.print3d.lines }}</h3>
-                <div class="small text-muted lh-sm">Line items: {{ tab_stats.print3d.lines }}</div>
+                <h3>{{ tab_stats['3dprint'].lines }}</h3>
+                <div class="small text-muted lh-sm">Line items: {{ tab_stats['3dprint'].lines }}</div>
             </div>
         </div>
     </div>
@@ -132,7 +132,7 @@
         <div class="card bg-light h-100">
             <div class="card-body text-center">
                 <h6 class="text-muted">Total Quantity</h6>
-                <h3>{{ tab_stats.print3d.qty }}</h3>
+                <h3>{{ tab_stats['3dprint'].qty }}</h3>
             </div>
         </div>
     </div>
