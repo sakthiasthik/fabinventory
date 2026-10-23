@@ -762,52 +762,41 @@
         orderSelectedComponents();
     }
 
-    // Export project components to CSV
+    // Export consolidated components to CSV — one reference column per
+    // project, so each project's designators are side by side and easy
+    // to filter in Excel
     function exportProjectComponents() {
         if (!currentProjectComponents.length) {
             alert('No components to export');
             return;
         }
-        
-        const projectName =
-            selectedProjects
-                .map(p => p.name)
-                .join('_');
-        let csv = 'Component,Footprint,MPN,Reference,DNP,Required Qty,In Stock,To Order\n';
+
+        const projectNames = selectedProjects.map(p => p.name);
+        let csv = 'Component,Footprint,MPN,' +
+            projectNames.map(n => `"${n} Reference"`).join(',') +
+            ',DNP,Required Qty,In Stock,To Order\n';
+
         currentProjectComponents.forEach(comp => {
-            const projectRefs =
-
-                (comp.project_references || [])
-
-                .map(ref =>
-
-                    `${ref.project} x${ref.qty} -> ${ref.reference}`
-                )
-
-                .join("\n");
+            const refsByProject = {};
+            (comp.project_references || []).forEach(ref => {
+                refsByProject[ref.project] = refsByProject[ref.project] || [];
+                if (ref.reference) refsByProject[ref.project].push(ref.reference);
+            });
 
             csv +=
-
-                `"${comp.value}",` +
-
-                `"${comp.footprint}",` +
-
+                `"${comp.value || ''}",` +
+                `"${comp.footprint || ''}",` +
                 `"${comp.mpn || ''}",` +
-
-                `"${projectRefs}",` +
-
+                projectNames.map(n => `"${(refsByProject[n] || []).join(', ')}"`).join(',') + ',' +
                 `"${comp.dnp_raw || ''}",` +
-
                 `${comp.total_required},` +
-
                 `${comp.current_stock},` +
-
                 `${comp.to_order}\n`;
         });
-        
+
         const blob = new Blob([csv], {type: 'text/csv'});
         const a = document.createElement('a');
-        a.download = `${projectName}_components.csv`;
+        a.download = `${projectNames.join('_')}_consolidated.csv`;
         a.href = URL.createObjectURL(blob);
         a.click();
     }

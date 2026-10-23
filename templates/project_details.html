@@ -3,31 +3,38 @@
 {% block title %}{{ project.name }}{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center gap-4 mb-1">
+<div class="row g-4 mb-4">
 
-    {% if project.image %}
-        <img src="{{ url_for('project.serve_project_file', name=project.name, filepath='images/' ~ project.image) }}"
-             alt="{{ project.name }}"
-             class="project-thumbnail">
-    {% else %}
-        <div class="project-thumb-placeholder">
-            <i class="bi bi-cpu fs-2 text-secondary"></i>
+    <!-- Left: project image + name -->
+    <div class="col-lg-3">
+        <div class="text-center text-lg-start">
+
+            {% if project.image %}
+                <img src="{{ url_for('project.serve_project_file', name=project.name, filepath='images/' ~ project.image) }}"
+                     alt="{{ project.name }}"
+                     class="project-thumbnail">
+            {% else %}
+                <div class="project-thumb-placeholder">
+                    <i class="bi bi-cpu fs-2 text-secondary"></i>
+                </div>
+            {% endif %}
+
+            <div class="mt-3">
+                <div class="text-muted small text-uppercase fw-semibold">Project</div>
+                <h1 class="h3 mb-1">{{ project.name }}</h1>
+
+                {% if project.description %}
+                <p class="text-muted mb-0">
+                    {{ project.description }}
+                </p>
+                {% endif %}
+            </div>
+
         </div>
-    {% endif %}
-
-    <div>
-        <div class="text-muted small text-uppercase fw-semibold">Project</div>
-        <h1 class="mb-1">{{ project.name }}</h1>
-
-        {% if project.description %}
-        <p class="text-muted mb-0">
-            {{ project.description }}
-        </p>
-        {% endif %}
     </div>
 
-</div>
-
+    <!-- Right: per-tab stats -->
+    <div class="col-lg-9">
 
 <!-- Project Stats — one block per category, follows the active tab -->
 {% set active_tab = request.args.get('tab', 'electrical') %}
@@ -151,6 +158,9 @@
         </div>
     </div>
 </div>
+
+    </div><!-- /col-lg-9 (stats) -->
+</div><!-- /row (header + stats) -->
 
 <script>
     // Swap the stats cards to match the active category tab
@@ -639,7 +649,31 @@
                             PCB Preview
                         </h5>
 
-                        {% if project.pcb_image %}
+                        {% set pcb_imgs = project.pcb_images or ([project.pcb_image] if project.pcb_image else []) %}
+
+                        {% if pcb_imgs|length > 1 %}
+
+                            <div id="pcbCarousel" class="carousel slide pcb-image-wrapper" data-bs-ride="carousel" data-bs-interval="4000">
+                                <div class="carousel-inner">
+                                    {% for img in pcb_imgs %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                        <img
+                                            src="{{ url_for('project.serve_project_file', name=project.name, filepath=img) }}"
+                                            class="d-block w-100 pcb-preview-image"
+                                            alt="PCB image {{ loop.index }}"
+                                        >
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#pcbCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#pcbCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </button>
+                            </div>
+
+                        {% elif pcb_imgs|length == 1 %}
 
                             <div class="pcb-image-wrapper">
 
@@ -647,30 +681,12 @@
                                     src="{{ url_for(
                                         'project.serve_project_file',
                                         name=project.name,
-                                        filepath=project.pcb_image
+                                        filepath=pcb_imgs[0]
                                     ) }}"
                                     class="pcb-preview-image"
                                 >
 
                             </div>
-
-                            <form method="POST"
-                                action="{{ url_for('project.remove_pcb_image', name=project.name) }}"
-                                class="mt-3">
-
-                                <input type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}">
-
-                                <button class="btn btn-outline-danger">
-
-                                    <i class="bi bi-trash"></i>
-
-                                    Remove Image
-
-                                </button>
-
-                            </form>
 
                         {% else %}
 
@@ -679,6 +695,28 @@
                                 No PCB Image Uploaded
 
                             </div>
+
+                        {% endif %}
+
+                        {% if pcb_imgs %}
+
+                        <form method="POST"
+                            action="{{ url_for('project.remove_pcb_image', name=project.name) }}"
+                            class="mt-3">
+
+                            <input type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}">
+
+                            <button class="btn btn-outline-danger">
+
+                                <i class="bi bi-trash"></i>
+
+                                Remove Image
+
+                            </button>
+
+                        </form>
 
                         {% endif %}
 

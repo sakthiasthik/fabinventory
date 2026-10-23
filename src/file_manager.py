@@ -155,6 +155,7 @@ class FileManager:  # Make sure this is exactly "FileManager" (capital F, capita
                 bom=bom_rows,
                 mechanical_bom=meta_data.get("mechanical_bom"),
                 pcb_image=meta_data.get("pcb_image", ""),
+                pcb_images=meta_data.get("pcb_images", []),
                 print3d_bom=meta_data.get("print3d_bom"),
                 model_3d_file=meta_data.get("model_3d_file", ""),
                 pcb_gerber_zip=meta_data.get("pcb_gerber_zip"),

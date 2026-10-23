@@ -90,6 +90,8 @@ class Project:
 
     pcb_image: Optional[str] = None
 
+    pcb_images: List[str] = field(default_factory=list)
+
     pcb_gerber_folder: Optional[str] = None
 
     pcb_repo_link: str = ""

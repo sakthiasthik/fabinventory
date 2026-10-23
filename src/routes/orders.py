@@ -115,3 +115,42 @@ def order_summary():
 
     summary = state.inventory_manager.get_order_summary()
     return render_template('order_summary.html', summary=summary)
+
+
+@orders_bp.route('/order-tracking')
+@login_required
+def order_tracking():
+    """Visual tracking of every purchase order's progress."""
+    if not state.init_app():
+        return redirect(url_for('main.setup'))
+
+    STATUS_STEPS = ["draft", "ordered", "shipped", "received"]
+    all_orders = state.inventory_manager.file_manager.list_orders()
+
+    orders_data = []
+    for order in all_orders:
+        if order.status == order.STATUS_CANCELLED:
+            step_index = -1
+        else:
+            step_index = (
+                STATUS_STEPS.index(order.status)
+                if order.status in STATUS_STEPS else 0
+            )
+        orders_data.append({
+            'order_id': order.order_id,
+            'supplier': order.supplier,
+            'status': order.status,
+            'step_index': step_index,
+            'created_at': order.created_at,
+            'shipped_at': order.shipped_at,
+            'received_at': order.received_at,
+            'tracking_info': order.tracking_info,
+            'line_items': len(order.line_items),
+            'total_qty': order.total_items,
+            'cost': order.estimated_cost,
+            'notes': order.notes,
+        })
+
+    return render_template(
+        'order_tracking.html', orders_data=orders_data, steps=STATUS_STEPS
+    )

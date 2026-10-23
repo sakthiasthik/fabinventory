@@ -27,6 +27,31 @@ from src.bom_parser import BOMParser
 project_bp = Blueprint('project', __name__)
 
 
+def _next_project_image_name(project_name: str, ext: str) -> str:
+    """Return '<project>_img_<n>.<ext>' with the next free number,
+    so every uploaded image gets a predictable, project-scoped name."""
+    images_dir = Path(state.data_path) / "projects" / project_name / "images"
+    existing = set()
+    if images_dir.exists():
+        existing = {f.name for f in images_dir.iterdir() if f.is_file()}
+    n = 1
+    while f"{project_name}_img_{n}{ext}" in existing:
+        n += 1
+    return f"{project_name}_img_{n}{ext}"
+
+
+def _next_pcb_image_name(project_name: str, ext: str) -> str:
+    """Same numbering scheme, but scoped to the project's pcb_images dir."""
+    pcb_dir = Path(state.data_path) / "projects" / project_name / "pcb_images"
+    existing = set()
+    if pcb_dir.exists():
+        existing = {f.name for f in pcb_dir.iterdir() if f.is_file()}
+    n = 1
+    while f"{project_name}_img_{n}{ext}" in existing:
+        n += 1
+    return f"{project_name}_img_{n}{ext}"
+
+
 # ── Project detail ────────────────────────────────────────────────
 
 
@@ -173,7 +198,8 @@ def create_project():
             # Step 3: Handle project image (optional)
             image_file = request.files.get('project_image')
             if image_file and image_file.filename != "":
-                img_name = secure_filename(image_file.filename)
+                ext = Path(image_file.filename).suffix.lower()
+                img_name = _next_project_image_name(name, ext)
                 state.project_manager.file_manager.save_project_file(
                     name, 'images', img_name, image_file.read()
                 )
@@ -281,9 +307,10 @@ def upload_project_image(name):
         flash("No selected image", "danger")
         return redirect(url_for('project.project_detail', name=name))
 
-    # SAVE TO PROJECT FOLDER
-    filename = secure_filename(file.filename)
-    saved = state.project_manager.file_manager.save_project_file(
+    # SAVE TO PROJECT FOLDER — renamed to <project>_img_<n>.<ext>
+    ext = Path(file.filename).suffix.lower()
+    filename = _next_project_image_name(name, ext)
+    state.project_manager.file_manager.save_project_file(
         name, 'images', filename, file.read()
     )
 
@@ -788,7 +815,10 @@ def upload_pcb_image(name):
         flash("No file selected", "danger")
         return redirect(url_for("project.project_detail", name=name, tab="pcb"))
 
-    filename = secure_filename(file.filename)
+    # Renamed to <project>_img_<n>.<ext> and kept in a LIST so the PCB tab
+    # can show a slide-show when there are several images
+    ext = Path(file.filename).suffix.lower()
+    filename = _next_pcb_image_name(name, ext)
 
     # SAVE INSIDE PROJECT FOLDER
     state.project_manager.file_manager.save_project_file(
@@ -798,8 +828,15 @@ def upload_pcb_image(name):
         file.read()
     )
 
-    # SAVE RELATIVE PATH
-    project.pcb_image = f"pcb_images/{filename}"
+    rel_path = f"pcb_images/{filename}"
+
+    # SAVE RELATIVE PATH(S)
+    if not hasattr(project, 'pcb_images') or project.pcb_images is None:
+        project.pcb_images = []
+    if rel_path not in project.pcb_images:
+        project.pcb_images.append(rel_path)
+    if not project.pcb_image:
+        project.pcb_image = rel_path
 
     project.updated_at = datetime.now().isoformat()
 
@@ -846,19 +883,20 @@ def remove_pcb_image(name):
         flash("Project not found", "danger")
         return redirect(url_for('main.projects'))
 
-    if project.pcb_image:
+    project_dir = state.project_manager.file_manager._project_dir(name)
 
-        project_dir = state.project_manager.file_manager._project_dir(name)
+    # Delete every PCB image (single or slide-show list)
+    all_images = list(project.pcb_images or [])
+    if project.pcb_image and project.pcb_image not in all_images:
+        all_images.append(project.pcb_image)
 
-        image_path = os.path.join(
-            project_dir,
-            project.pcb_image
-        )
-
+    for rel_path in all_images:
+        image_path = os.path.join(project_dir, rel_path)
         if os.path.exists(image_path):
             os.remove(image_path)
 
     project.pcb_image = None
+    project.pcb_images = []
 
     state.file_manager.save_project(project)
 
