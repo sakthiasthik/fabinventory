@@ -27,6 +27,18 @@
 1. Duplicating the create-project form in two templates with different fields — one modal must be a shared include, or the two will drift apart.
 2. Jinja: `tab_stats.print3d` fails — dict keys must use `tab_stats['3dprint']` when the key isn't an exact identifier; caught by the isolated verification run, not the unit tests.
 
+### ✅ Consolidation workflow (same session — local, not yet committed)
+
+- **Create Order button moved to the TOP** of the BOM Consolidation page (also fixed 400 diagnostics: the API now logs rejected items and returns clearer error messages)
+- **Save Consolidation**: the consolidated list can be saved as a record with a sequence number (`CON-YYYYMM-NNN`) — separate from projects on purpose, so the master inventory never double-counts. Saved records show on the page with their projects × board quantities, line count and to-order totals
+- **Create Order FROM a saved consolidation**: prompts vendor + vendor website link → order stores `consolidation_id` + `vendor_link`; the consolidation record flips to "Ordered → PO-…"
+- **Order Tracking page** shows the CON badge + clickable vendor site per order
+- `Order` model gained `consolidation_id` + `vendor_link` (old order files load fine); `save_order` also now persists `shipped_at`/`tracking_info`/`shipping_info` which it silently dropped before
+
+### ❌ Mistakes we made (and learned from)
+
+1. `save_order` hand-built its dict and silently dropped fields — dataclass `to_dict()` is the single source of serialization; adding a field in two places is how fields get lost.
+
 ### ✅ Setup page reworked (same session)
 
 - Setup now collects **company name** (required) + **optional prefix** — blank prefix auto-derives from the name (`Sakthi Electronics` → `SA`), with a live preview in the form
