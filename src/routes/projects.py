@@ -1,6 +1,7 @@
 """Projects Flask Blueprint — /project/* routes."""
 import os
 import io
+import re
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -27,28 +28,30 @@ from src.bom_parser import BOMParser
 project_bp = Blueprint('project', __name__)
 
 
+def _next_image_number(image_dir: Path, project_name: str) -> int:
+    """Next free '<project>_img_<n>' number across ALL extensions."""
+    pattern = re.compile(rf"^{re.escape(project_name)}_img_(\d+)\.[^.]+$")
+    max_n = 0
+    if image_dir.exists():
+        for f in image_dir.iterdir():
+            m = pattern.match(f.name)
+            if m:
+                max_n = max(max_n, int(m.group(1)))
+    return max_n + 1
+
+
 def _next_project_image_name(project_name: str, ext: str) -> str:
     """Return '<project>_img_<n>.<ext>' with the next free number,
     so every uploaded image gets a predictable, project-scoped name."""
     images_dir = Path(state.data_path) / "projects" / project_name / "images"
-    existing = set()
-    if images_dir.exists():
-        existing = {f.name for f in images_dir.iterdir() if f.is_file()}
-    n = 1
-    while f"{project_name}_img_{n}{ext}" in existing:
-        n += 1
+    n = _next_image_number(images_dir, project_name)
     return f"{project_name}_img_{n}{ext}"
 
 
 def _next_pcb_image_name(project_name: str, ext: str) -> str:
     """Same numbering scheme, but scoped to the project's pcb_images dir."""
     pcb_dir = Path(state.data_path) / "projects" / project_name / "pcb_images"
-    existing = set()
-    if pcb_dir.exists():
-        existing = {f.name for f in pcb_dir.iterdir() if f.is_file()}
-    n = 1
-    while f"{project_name}_img_{n}{ext}" in existing:
-        n += 1
+    n = _next_image_number(pcb_dir, project_name)
     return f"{project_name}_img_{n}{ext}"
 
 
